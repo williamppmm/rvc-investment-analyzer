@@ -135,50 +135,18 @@ def save_score(ticker: str, score: Dict[str, Any]) -> None:
         conn.commit()
 
 
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-
-@app.route("/analyze", methods=["POST"])
-def analyze():
-    payload = request.get_json(silent=True) or {}
-    ticker = (payload.get("ticker") or "").strip().upper()
-    if not ticker:
-        return jsonify({"error": "Por favor ingrese un ticker"}), 400
-
-    logger.info("Analyzing ticker %s", ticker)
-    cached = get_cached_data(ticker)
-    metrics: Optional[Dict[str, Any]] = None
-    if cached and not cache_expired(cached["last_updated"]):
-        logger.info("Using cached metrics for %s", ticker)
-        metrics = json.loads(cached["data"])
-        if metrics and not metrics.get("asset_type"):
-            logger.info("Cached metrics desactualizados para %s, recargando", ticker)
-            metrics = data_agent.fetch_financial_data(ticker)
-            if metrics:
-                save_cache(ticker, metrics)
-        elif metrics and metrics.get("schema_version") != METRIC_SCHEMA_VERSION:
-            logger.info("Actualizando métricas a esquema vigente para %s", ticker)
-            metrics = data_agent.fetch_financial_data(ticker)
-            if metrics:
-                save_cache(ticker, metrics)
-    else:
-        logger.info("Fetching fresh metrics for %s", ticker)
-        metrics = data_agent.fetch_financial_data(ticker)
-        if metrics:
-            save_cache(ticker, metrics)
-
-    if not metrics:
-        return jsonify({"error": f"No se encontraron datos suficientes para {ticker}"}), 404
-
-    etf_summary: Optional[Dict[str, Any]] = None
+def prepare_analysis_response(
+    ticker: str,
+    metrics: Dict[str, Any],
+    save_scores_flag: bool = True,
+    extra: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     asset_type = metrics.get("asset_type")
     analysis_allowed = metrics.get("analysis_allowed", False)
+    etf_summary: Optional[Dict[str, Any]] = None
 
     if asset_type == "EQUITY" and analysis_allowed:
         investment_scores = investment_scorer.calculate_all_scores(metrics)
-        # Mantener compatibilidad con el score RVC anterior
         rvc_score = rvc_calculator.calculate_score(metrics)
     elif asset_type == "ETF":
         investment_scores = None
@@ -216,7 +184,7 @@ def analyze():
             "confidence_level": "Baja",
         }
 
-    if analysis_allowed:
+    if analysis_allowed and save_scores_flag:
         save_score(ticker, rvc_score)
 
     response = {
@@ -228,16 +196,106 @@ def analyze():
         "price_converted": metrics.get("price_converted"),
         "market_cap_converted": metrics.get("market_cap_converted"),
         "exchange_rates": metrics.get("exchange_rates"),
-        "asset_type": metrics.get("asset_type"),
+        "asset_type": asset_type,
         "asset_type_label": metrics.get("asset_type_label"),
         "analysis_allowed": analysis_allowed,
         "analysis_note": metrics.get("analysis_note"),
         "metrics": metrics,
-        "rvc_score": rvc_score,  # Score legacy para compatibilidad
-        "investment_scores": investment_scores,  # Nuevos scores mejorados
+        "rvc_score": rvc_score,
+        "investment_scores": investment_scores,
         "etf_summary": etf_summary,
         "timestamp": datetime.now().isoformat(timespec="seconds"),
     }
+    if extra:
+        response.update(extra)
+    return response
+
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.route("/analyze", methods=["POST"])
+def analyze():
+    payload = request.get_json(silent=True) or {}
+    ticker = (payload.get("ticker") or "").strip().upper()
+    if not ticker:
+        return jsonify({"error": "Por favor ingrese un ticker"}), 400
+
+    logger.info("Analyzing ticker %s", ticker)
+    cached = get_cached_data(ticker)
+    metrics: Optional[Dict[str, Any]] = None
+    if cached and not cache_expired(cached["last_updated"]):
+        logger.info("Using cached metrics for %s", ticker)
+        metrics = json.loads(cached["data"])
+        if metrics and not metrics.get("asset_type"):
+            logger.info("Cached metrics desactualizados para %s, recargando", ticker)
+            metrics = data_agent.fetch_financial_data(ticker)
+            if metrics:
+                save_cache(ticker, metrics)
+        elif metrics and metrics.get("schema_version") != METRIC_SCHEMA_VERSION:
+            logger.info("Actualizando métricas a esquema vigente para %s", ticker)
+            metrics = data_agent.fetch_financial_data(ticker)
+            if metrics:
+                save_cache(ticker, metrics)
+    else:
+        logger.info("Fetching fresh metrics for %s", ticker)
+        metrics = data_agent.fetch_financial_data(ticker)
+        if metrics:
+            save_cache(ticker, metrics)
+
+    if not metrics:
+        return jsonify({"error": f"No se encontraron datos suficientes para {ticker}"}), 404
+
+    response = prepare_analysis_response(ticker, metrics)
+    return jsonify(response)
+
+
+@app.route("/api/manual-metrics", methods=["POST"])
+def manual_metrics():
+    payload = request.get_json(silent=True) or {}
+    ticker = (payload.get("ticker") or "").strip().upper()
+    overrides = payload.get("overrides") or {}
+
+    if not ticker:
+        return jsonify({"error": "Debe proporcionar un ticker"}), 400
+    if not isinstance(overrides, dict) or not overrides:
+        return jsonify({"error": "Debe proporcionar al menos una métrica a ajustar"}), 400
+
+    logger.info("Manual override request for %s", ticker)
+    cached = get_cached_data(ticker)
+    metrics: Optional[Dict[str, Any]] = None
+    if cached:
+        try:
+            metrics = json.loads(cached["data"])
+        except (TypeError, json.JSONDecodeError):
+            metrics = None
+
+    if not metrics:
+        logger.info("No cached metrics for %s, attempting fresh fetch before manual overrides", ticker)
+        metrics = data_agent.fetch_financial_data(ticker)
+        if not metrics:
+            metrics = {"ticker": ticker, "warnings": [], "provenance": {}}
+
+    updated_metrics, applied, invalid = data_agent.apply_manual_overrides(metrics, overrides)
+    if not applied and invalid:
+        return jsonify(
+            {
+                "error": "Algunos valores manuales no pudieron interpretarse.",
+                "invalid_fields": invalid,
+            }
+        ), 400
+    if not applied and not invalid:
+        return jsonify({"error": "No se aplicaron ajustes manuales válidos."}), 400
+
+    save_cache(ticker, updated_metrics)
+    response = prepare_analysis_response(
+        ticker,
+        updated_metrics,
+        save_scores_flag=True,
+        extra={"manual_overrides": {"applied": applied, "invalid": invalid}},
+    )
     return jsonify(response)
 
 

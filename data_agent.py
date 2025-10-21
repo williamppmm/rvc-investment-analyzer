@@ -8,10 +8,11 @@ import json
 import logging
 import re
 import time
+from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 from bs4 import BeautifulSoup
@@ -40,6 +41,33 @@ class DataAgent:
     Aggregator that fetches public metrics from multiple sources (Yahoo, Finviz,
     MarketWatch) with fallbacks and provenance tracking.
     """
+
+    MANUAL_EDITABLE_FIELDS: Dict[str, str] = {
+        "current_price": "number",
+        "market_cap": "number",
+        "pe_ratio": "number",
+        "peg_ratio": "number",
+        "price_to_book": "number",
+        "price_to_sales": "number",
+        "ev_to_ebitda": "number",
+        "roe": "percent",
+        "roic": "percent",
+        "roa": "percent",
+        "gross_margin": "percent",
+        "operating_margin": "percent",
+        "net_margin": "percent",
+        "debt_to_equity": "number",
+        "current_ratio": "number",
+        "quick_ratio": "number",
+        "revenue_growth": "percent",
+        "revenue_growth_qoq": "percent",
+        "revenue_growth_5y": "percent",
+        "earnings_growth": "percent",
+        "earnings_growth_this_y": "percent",
+        "earnings_growth_next_y": "percent",
+        "earnings_growth_next_5y": "percent",
+        "earnings_growth_qoq": "percent",
+    }
 
     def __init__(self):
         self.session = requests.Session()
@@ -160,12 +188,14 @@ class DataAgent:
         ]
 
         for source in sources:
+            logger.info("Consultando %s para %s", source.__name__, ticker)
             result = None
             try:
                 result = source(ticker)
             except Exception as exc:  # pragma: no cover - defensive
                 logger.warning("Source %s failed for %s: %s", source.__name__, ticker, exc)
             if not result:
+                logger.info("%s no aportó datos para %s", source.__name__, ticker)
                 continue
 
             for key, value in result.data.items():
@@ -173,34 +203,19 @@ class DataAgent:
                     metrics[key] = value
                     self._merge_provenance({key: result.source})
             metrics["primary_source"] = metrics.get("primary_source") or result.source
+            logger.info(
+                "%s aportó %s campos para %s (origen %s)",
+                source.__name__,
+                len(result.data),
+                ticker,
+                result.source,
+            )
 
             if self._calculate_completeness(metrics) >= 80:
                 break
             time.sleep(0.6)
 
-        metrics = self._clean_metrics(metrics)
-        self._apply_sanity_checks(metrics)
-        self._maybe_recalc_peg(metrics)
-
-        classification = self._classify_asset(metrics)
-        metrics["asset_type"] = classification.asset_type
-        metrics["asset_type_label"] = classification.type_label
-        metrics["asset_classification"] = {
-            "raw_type": classification.raw_type,
-            "source": classification.source,
-            "needs_special_metrics": classification.needs_special_metrics,
-            "is_analyzable": classification.is_analyzable,
-        }
-        metrics["analysis_allowed"] = classification.asset_type == "EQUITY"
-
-        metrics["data_completeness"] = self._calculate_completeness(metrics)
-        metrics["metrics_collected"] = self._metrics_collected(metrics)
-        self._flag_missing_critical(metrics)
-        self._apply_asset_special_cases(metrics, classification)
-        self._attach_currency_metadata(metrics)
-        metrics["schema_version"] = METRIC_SCHEMA_VERSION
-        metrics["provenance"] = self.provenance
-        metrics["scraped_at"] = datetime.utcnow().isoformat(timespec="seconds")
+        metrics = self._finalize_metrics(metrics)
         return metrics if len(metrics) > 2 else None
 
     def _merge_provenance(self, prov: Dict[str, str]) -> None:
@@ -994,6 +1009,112 @@ class DataAgent:
                 metrics["peg_ratio"] = round(pe / (growth_decimal * 100) if growth > 1 else pe / growth_decimal, 2)
                 metrics.setdefault("warnings", []).append("PEG recalculado a partir de P/E y crecimiento de utilidades.")
 
+    def _finalize_metrics(self, metrics: Dict) -> Dict:
+        metrics = self._clean_metrics(metrics)
+        self._apply_sanity_checks(metrics)
+        self._maybe_recalc_peg(metrics)
+
+        classification = self._classify_asset(metrics)
+        metrics["asset_type"] = classification.asset_type
+        metrics["asset_type_label"] = classification.type_label
+        metrics["asset_classification"] = {
+            "raw_type": classification.raw_type,
+            "source": classification.source,
+            "needs_special_metrics": classification.needs_special_metrics,
+            "is_analyzable": classification.is_analyzable,
+        }
+        metrics["analysis_allowed"] = classification.asset_type == "EQUITY"
+
+        metrics["data_completeness"] = self._calculate_completeness(metrics)
+        metrics["metrics_collected"] = self._metrics_collected(metrics)
+        self._flag_missing_critical(metrics)
+        self._apply_asset_special_cases(metrics, classification)
+        self._attach_currency_metadata(metrics)
+        metrics["schema_version"] = METRIC_SCHEMA_VERSION
+        metrics["provenance"] = self.provenance
+        metrics["scraped_at"] = datetime.utcnow().isoformat(timespec="seconds")
+        return metrics
+
+    def _parse_manual_override_value(self, field: str, value) -> Optional[float]:
+        if value is None:
+            return None
+        if isinstance(value, str):
+            normalized = value.strip()
+            if not normalized:
+                return None
+            if normalized.lower() in {"na", "n/a", "none"}:
+                return None
+            if self.MANUAL_EDITABLE_FIELDS.get(field) == "percent":
+                parsed = self._parse_percentage(normalized)
+            else:
+                parsed = self._parse_number(normalized)
+        elif isinstance(value, (int, float)):
+            parsed = float(value)
+        else:
+            raise ValueError("Tipo de dato no soportado para override manual.")
+        if parsed is None:
+            raise ValueError(f"Valor no válido para {field}.")
+        return parsed
+
+    def apply_manual_overrides(
+        self, metrics: Dict, overrides: Dict[str, Optional[Any]]
+    ) -> Tuple[Dict, List[str], Dict[str, str]]:
+        if not overrides:
+            return metrics, [], {}
+
+        updated = deepcopy(metrics) if metrics else {"warnings": [], "provenance": {}}
+        if "ticker" not in updated and overrides.get("ticker"):
+            updated["ticker"] = overrides.get("ticker")
+        updated.setdefault("warnings", [])
+        updated.setdefault("provenance", {})
+
+        provenance = dict(updated.get("provenance") or {})
+        self.provenance = provenance
+
+        warnings = updated.setdefault("warnings", [])
+        cleaned_warnings = []
+        for warning in warnings:
+            if isinstance(warning, str):
+                lowered = warning.lower()
+                if "datos de ejemplo" in lowered or "las apis no devolvieron" in lowered:
+                    continue
+            cleaned_warnings.append(warning)
+        warnings[:] = cleaned_warnings
+
+        applied: List[str] = []
+        invalid: Dict[str, str] = {}
+
+        for field, raw_value in overrides.items():
+            if field not in self.MANUAL_EDITABLE_FIELDS:
+                invalid[field] = "Campo no editable manualmente."
+                continue
+            try:
+                parsed = self._parse_manual_override_value(field, raw_value)
+            except ValueError as exc:
+                invalid[field] = str(exc)
+                continue
+            updated[field] = parsed
+            provenance[field] = "manual_override"
+            applied.append(field)
+
+        if not applied:
+            updated["warnings"] = warnings
+            updated["manual_input_recommended"] = updated.get("manual_input_recommended", True)
+            return updated, applied, invalid
+
+        summary = "Metricas actualizadas manualmente: " + ", ".join(applied)
+        warnings[:] = [w for w in warnings if "Metricas actualizadas manualmente" not in w]
+        warnings.append(summary)
+
+        updated["source"] = "manual_override"
+        updated["primary_source"] = "manual_override"
+        updated["manual_input_recommended"] = False
+
+        finalized = self._finalize_metrics(updated)
+        finalized["manual_overrides"] = applied
+        logger.info("Overrides manuales aplicados para %s: %s", finalized.get("ticker"), ", ".join(applied))
+        return finalized, applied, invalid
+
     def _calculate_completeness(self, metrics: Dict) -> float:
         required = [
             "pe_ratio",
@@ -1057,13 +1178,19 @@ class DataAgent:
         warnings = metrics.setdefault("warnings", [])
         ignored = []
         pe = metrics.get("pe_ratio")
-        if pe is not None and pe > 80:
-            ignored.append(f"P/E ({pe:.2f})")
-            metrics["pe_ratio"] = None
+        if pe is not None:
+            if pe <= 0 or pe > 1000:
+                ignored.append(f"P/E ({pe:.2f})")
+                metrics["pe_ratio"] = None
+            elif pe > 80:
+                warnings.append(f"P/E elevado ({pe:.2f}). Revisar expectativas de crecimiento.")
         peg = metrics.get("peg_ratio")
-        if peg is not None and peg > 8:
-            ignored.append(f"PEG ({peg:.2f})")
-            metrics["peg_ratio"] = None
+        if peg is not None:
+            if peg <= 0 or peg > 50:
+                ignored.append(f"PEG ({peg:.2f})")
+                metrics["peg_ratio"] = None
+            elif peg > 8:
+                warnings.append(f"PEG elevado ({peg:.2f}).")
 
         roe = metrics.get("roe")
         if roe is not None:
@@ -1095,7 +1222,11 @@ class DataAgent:
             warnings.append("ROIC estimado a partir de ROE.")
 
         if metrics.get("source") == "fallback_example":
-            warnings.append("Datos de ejemplo utilizados: referencias aproximadas, no reales.")
+            metrics["manual_input_recommended"] = True
+            warnings.append(
+                "Datos de ejemplo utilizados: referencias aproximadas, no reales. "
+                "Reemplaza los valores con informacion actualizada antes de tomar decisiones."
+            )
 
         if ignored:
             warnings.append("Ignorados por rango: " + ", ".join(ignored) + ".")
@@ -1117,13 +1248,18 @@ class DataAgent:
                 continue
             missing.append(field)
         if missing:
-            warnings.append("Faltan métricas críticas: " + ", ".join(missing))
+            warnings.append(
+                "Las APIs no devolvieron metricas criticas: "
+                + ", ".join(missing)
+                + ". Ingresa estos valores de forma manual si los tienes y vuelve a ejecutar."
+            )
+            metrics["manual_input_recommended"] = True
 
     def _classify_asset(self, metrics: Dict) -> AssetClassification:
         payload = {
             "ticker": metrics.get("ticker"),
             "quoteType": metrics.get("quoteType"),
-            "type": metrics.get("type"),
+            "type": metrics.get("type") or metrics.get("asset_type"),
             "company_name": metrics.get("company_name"),
             "sector": metrics.get("sector"),
             "category": metrics.get("category"),
@@ -1142,16 +1278,23 @@ class DataAgent:
             )
         else:
             classification = self.classifier.classify(payload)
-        if metrics.get("ticker") in ETF_REFERENCE and classification.asset_type != "ETF":
+        ticker = payload["ticker"] or ""
+        if ticker in ETF_REFERENCE and classification.asset_type != "ETF":
             classification.asset_type = "ETF"
             classification.type_label = "ETF"
             classification.needs_special_metrics = True
             classification.is_analyzable = False
         if classification.asset_type in {None, "", "UNKNOWN"}:
-            classification.asset_type = "UNKNOWN"
-            classification.type_label = "Desconocido"
-            classification.is_analyzable = False
-            classification.needs_special_metrics = False
+            if ticker and ticker.replace("^", "").isalpha() and len(ticker) <= 5:
+                classification.asset_type = "EQUITY"
+                classification.type_label = AssetClassifier.ASSET_NAMES.get("EQUITY", "Acción")
+                classification.is_analyzable = True
+                classification.needs_special_metrics = False
+            else:
+                classification.asset_type = "UNKNOWN"
+                classification.type_label = "Desconocido"
+                classification.is_analyzable = False
+                classification.needs_special_metrics = False
         classification.is_analyzable = classification.asset_type == "EQUITY"
         classification.needs_special_metrics = classification.asset_type in AssetClassifier.SPECIAL_METRICS
         self._cache_classification(classification)

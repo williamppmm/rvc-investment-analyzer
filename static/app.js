@@ -6,6 +6,45 @@ const resultsSection = document.getElementById("results");
 const errorMessage = document.getElementById("error-message");
 const rvcScoreSection = document.querySelector(".rvc-score");
 const breakdownSection = document.querySelector(".breakdown");
+const manualToggleBtn = document.getElementById("toggle-manual-btn");
+const manualSection = document.getElementById("manual-input");
+const manualHint = document.getElementById("manual-hint");
+const manualFieldsContainer = document.getElementById("manual-fields");
+const manualFeedback = document.getElementById("manual-feedback");
+const applyManualBtn = document.getElementById("apply-manual-btn");
+const cancelManualBtn = document.getElementById("cancel-manual-btn");
+
+const MANUAL_TOGGLE_LABEL_DEFAULT = "Editar metricas manualmente";
+const MANUAL_TOGGLE_LABEL_PROMPT = "Completar metricas manualmente";
+const MANUAL_TOGGLE_LABEL_CLOSE = "Ocultar formulario manual";
+const MANUAL_HINT_DEFAULT =
+    "Si las APIs no devuelven datos recientes puedes capturar los valores de fuentes confiables e ingresarlos aqui.";
+const MANUAL_HINT_RECOMMENDED =
+    "No se pudieron obtener todas las metricas criticas. Completa los valores manualmente antes de recalcular.";
+
+const MANUAL_FIELDS = [
+    { key: "current_price", label: "Precio actual", placeholder: "ej. 257.45", format: "number" },
+    { key: "market_cap", label: "Market cap (USD)", placeholder: "ej. 1.2T", format: "number" },
+    { key: "pe_ratio", label: "P/E", placeholder: "ej. 32.4", format: "number" },
+    { key: "peg_ratio", label: "PEG", placeholder: "ej. 1.8", format: "number" },
+    { key: "price_to_book", label: "P/B", placeholder: "ej. 6.5", format: "number" },
+    { key: "roe", label: "ROE %", placeholder: "ej. 25.3%", format: "percent" },
+    { key: "roic", label: "ROIC %", placeholder: "ej. 18.4%", format: "percent" },
+    { key: "operating_margin", label: "Margen operativo %", placeholder: "ej. 21.7%", format: "percent" },
+    { key: "net_margin", label: "Margen neto %", placeholder: "ej. 15.2%", format: "percent" },
+    { key: "debt_to_equity", label: "Deuda/Patrimonio", placeholder: "ej. 0.45", format: "number" },
+    { key: "current_ratio", label: "Razon corriente", placeholder: "ej. 1.9", format: "number" },
+    { key: "quick_ratio", label: "Razon rapida", placeholder: "ej. 1.5", format: "number" },
+    { key: "revenue_growth", label: "Crecimiento ingresos %", placeholder: "ej. 12.4%", format: "percent" },
+    { key: "earnings_growth", label: "Crecimiento utilidades %", placeholder: "ej. 18.6%", format: "percent" },
+    { key: "revenue_growth_5y", label: "Crecimiento ingresos 5y %", placeholder: "ej. 8.2%", format: "percent" },
+    { key: "earnings_growth_next_y", label: "Crecimiento utilidades proximo ano %", placeholder: "ej. 14.0%", format: "percent" },
+];
+
+const manualInputs = new Map();
+let currentTicker = null;
+
+buildManualForm();
 
 analyzeBtn.addEventListener("click", analyzeStock);
 tickerInput.addEventListener("keypress", (event) => {
@@ -14,6 +53,21 @@ tickerInput.addEventListener("keypress", (event) => {
     }
 });
 clearCacheBtn.addEventListener("click", clearCache);
+if (manualToggleBtn && manualSection) {
+    manualToggleBtn.addEventListener("click", () => {
+        if (manualSection.classList.contains("hidden")) {
+            openManualSection();
+        } else {
+            closeManualSection();
+        }
+    });
+}
+if (applyManualBtn) {
+    applyManualBtn.addEventListener("click", applyManualOverrides);
+}
+if (cancelManualBtn) {
+    cancelManualBtn.addEventListener("click", () => closeManualSection());
+}
 
 async function analyzeStock() {
     const ticker = tickerInput.value.trim().toUpperCase();
@@ -54,6 +108,10 @@ function toggleLoading(state) {
 function displayResults(data) {
     resultsSection.classList.remove("hidden");
     errorMessage.classList.add("hidden");
+
+    currentTicker = data.ticker;
+    populateManualForm(data.metrics);
+    updateManualControls(data.metrics, data.manual_overrides || null);
 
     const isEtf = Boolean(data.metrics.is_etf);
     const assetType = data.asset_type || data.metrics.asset_type;
@@ -303,6 +361,223 @@ function populateMetrics(metrics) {
     });
 }
 
+function buildManualForm() {
+    if (!manualFieldsContainer) {
+        return;
+    }
+    manualFieldsContainer.innerHTML = "";
+    manualInputs.clear();
+
+    MANUAL_FIELDS.forEach((field) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "manual-field";
+
+        const label = document.createElement("label");
+        label.setAttribute("for", `manual-${field.key}`);
+        label.textContent = field.label;
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.id = `manual-${field.key}`;
+        input.name = field.key;
+        input.dataset.field = field.key;
+        if (field.placeholder) {
+            input.placeholder = field.placeholder;
+        }
+        input.autocomplete = "off";
+        input.inputMode = "decimal";
+        input.addEventListener("input", () => clearManualFeedback());
+
+        label.appendChild(input);
+        wrapper.appendChild(label);
+        manualFieldsContainer.appendChild(wrapper);
+        manualInputs.set(field.key, input);
+    });
+}
+
+function formatManualFieldValue(value, field) {
+    if (value === null || value === undefined) {
+        return "";
+    }
+    if (typeof value === "number") {
+        if (field && field.format === "percent") {
+            return value.toFixed(1).replace(/\.0$/, "");
+        }
+        if (!Number.isInteger(value) && Math.abs(value) < 1000) {
+            return value.toFixed(2).replace(/\.?0+$/, "");
+        }
+        return value.toString();
+    }
+    return String(value);
+}
+
+function populateManualForm(metrics) {
+    if (!manualInputs.size) {
+        return;
+    }
+    MANUAL_FIELDS.forEach((field) => {
+        const input = manualInputs.get(field.key);
+        if (!input) {
+            return;
+        }
+        const rawValue = metrics ? metrics[field.key] : null;
+        const formatted = formatManualFieldValue(rawValue, field);
+        input.value = formatted;
+        input.dataset.original = formatted;
+    });
+}
+
+function openManualSection() {
+    if (!manualSection) {
+        return;
+    }
+    manualSection.classList.remove("hidden");
+    if (manualToggleBtn) {
+        manualToggleBtn.textContent = MANUAL_TOGGLE_LABEL_CLOSE;
+    }
+}
+
+function closeManualSection() {
+    if (!manualSection) {
+        return;
+    }
+    manualSection.classList.add("hidden");
+    if (manualToggleBtn) {
+        const recommended = manualSection.classList.contains("manual-input--highlight");
+        manualToggleBtn.textContent = recommended
+            ? MANUAL_TOGGLE_LABEL_PROMPT
+            : MANUAL_TOGGLE_LABEL_DEFAULT;
+    }
+}
+
+function updateManualControls(metrics, manualOverrides) {
+    if (!manualToggleBtn || !manualSection) {
+        return;
+    }
+    manualToggleBtn.classList.remove("hidden");
+    const recommended = Boolean(metrics && metrics.manual_input_recommended);
+    manualSection.classList.toggle("manual-input--highlight", recommended);
+    if (manualHint) {
+        manualHint.textContent = recommended ? MANUAL_HINT_RECOMMENDED : MANUAL_HINT_DEFAULT;
+    }
+    if (recommended) {
+        manualToggleBtn.textContent = MANUAL_TOGGLE_LABEL_PROMPT;
+        openManualSection();
+    } else if (manualSection.classList.contains("hidden")) {
+        manualToggleBtn.textContent = MANUAL_TOGGLE_LABEL_DEFAULT;
+    } else {
+        manualToggleBtn.textContent = MANUAL_TOGGLE_LABEL_CLOSE;
+    }
+
+    if (manualOverrides) {
+        const messages = [];
+        if (Array.isArray(manualOverrides.applied) && manualOverrides.applied.length) {
+            messages.push(`Se aplicaron ${manualOverrides.applied.length} ajustes manuales.`);
+        }
+        const invalidKeys = manualOverrides.invalid
+            ? Object.keys(manualOverrides.invalid)
+            : [];
+        if (invalidKeys.length) {
+            messages.push(`Valores ignorados: ${invalidKeys.join(", ")}`);
+        }
+        if (messages.length) {
+            showManualFeedback(messages.join(" "), invalidKeys.length > 0);
+        } else {
+            clearManualFeedback();
+        }
+    } else {
+        clearManualFeedback();
+    }
+}
+
+async function applyManualOverrides() {
+    if (!currentTicker) {
+        showManualFeedback("Analiza un ticker antes de editar las metricas.", true);
+        return;
+    }
+    const overrides = {};
+    let hasChanges = false;
+    manualInputs.forEach((input, key) => {
+        const value = input.value.trim();
+        const original = input.dataset.original ?? "";
+        if (value === "" && original === "") {
+            return;
+        }
+        if (value === "" && original !== "") {
+            overrides[key] = null;
+            hasChanges = true;
+            return;
+        }
+        if (value !== original) {
+            overrides[key] = value;
+            hasChanges = true;
+        }
+    });
+    if (!hasChanges) {
+        showManualFeedback("No hay cambios para aplicar.", true);
+        return;
+    }
+
+    try {
+        showManualFeedback("Aplicando ajustes manuales...", false);
+        const response = await fetch("/api/manual-metrics", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ticker: currentTicker, overrides }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            const invalidKeys = data.invalid_fields ? Object.keys(data.invalid_fields) : [];
+            let message = data.error || "No se pudieron aplicar los ajustes manuales.";
+            if (invalidKeys.length) {
+                message += ` Valores ignorados: ${invalidKeys.join(", ")}.`;
+            }
+            showManualFeedback(message, true);
+            return;
+        }
+
+        displayResults(data);
+        const messages = [];
+        if (data.manual_overrides && Array.isArray(data.manual_overrides.applied) && data.manual_overrides.applied.length) {
+            messages.push(`Se aplicaron ${data.manual_overrides.applied.length} ajustes manuales.`);
+        }
+        const invalidKeys = data.manual_overrides && data.manual_overrides.invalid
+            ? Object.keys(data.manual_overrides.invalid)
+            : [];
+        if (invalidKeys.length) {
+            messages.push(`Valores ignorados: ${invalidKeys.join(", ")}`);
+        }
+        if (messages.length) {
+            showManualFeedback(messages.join(" "), invalidKeys.length > 0);
+        } else {
+            clearManualFeedback();
+        }
+    } catch (error) {
+        showManualFeedback(
+            error.message || "No se pudieron aplicar los ajustes manuales.",
+            true
+        );
+    }
+}
+
+function showManualFeedback(message, isError = false) {
+    if (!manualFeedback) {
+        return;
+    }
+    manualFeedback.textContent = message;
+    manualFeedback.classList.remove("hidden");
+    manualFeedback.classList.toggle("manual-feedback--error", Boolean(isError));
+}
+
+function clearManualFeedback() {
+    if (!manualFeedback) {
+        return;
+    }
+    manualFeedback.textContent = "";
+    manualFeedback.classList.add("hidden");
+    manualFeedback.classList.remove("manual-feedback--error");
+}
+
 function showWarnings(warnings) {
     const panel = document.getElementById("warnings-panel");
     const list = document.getElementById("warnings-list");
@@ -323,6 +598,14 @@ function showError(message) {
     errorMessage.textContent = message;
     errorMessage.classList.remove("hidden");
     resultsSection.classList.add("hidden");
+    if (manualToggleBtn) {
+        manualToggleBtn.classList.add("hidden");
+    }
+    if (manualSection) {
+        manualSection.classList.add("hidden");
+    }
+    clearManualFeedback();
+    currentTicker = null;
 }
 
 function updateMetaBadge(id, text) {
@@ -499,6 +782,14 @@ async function clearCache() {
         );
         resultsSection.classList.add("hidden");
         errorMessage.classList.add("hidden");
+        if (manualToggleBtn) {
+            manualToggleBtn.classList.add("hidden");
+        }
+        if (manualSection) {
+            manualSection.classList.add("hidden");
+        }
+        clearManualFeedback();
+        currentTicker = null;
     } catch (error) {
         showError(error.message);
     }

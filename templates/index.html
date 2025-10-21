@@ -1,44 +1,62 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RADAR DE VALORACIÓN Y CALIDAD</title>
+    <title>RVC Radar de Valoracion y Calidad</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
 </head>
 <body>
     <div class="container">
-        <header>
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 2rem; flex-wrap: wrap;">
-                <div>
-                    <h1>📊 RADAR DE VALORACIÓN Y CALIDAD (RVC)</h1>
-                    <p>Sistema de análisis fundamental</p>
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-logo">
+                    <img src="{{ url_for("static", filename="img/logo.svg") }}" alt="Logo RVC" loading="lazy">
                 </div>
-                <div style="display: flex; gap: 1rem;">
-                    <a href="/comparador" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; transition: transform 0.2s;">
-                        📊 Comparador
-                    </a>
-                    <a href="/calculadora" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; transition: transform 0.2s;">
-                        💰 Calculadora
-                    </a>
+                <div class="brand-text">
+                    <h1 class="brand-title">Radar de Valoracion y Calidad</h1>
+                    <p class="brand-subtitle">Sistema de analisis fundamental</p>
                 </div>
+            </div>
+            <div class="header-actions">
+                <a href="/comparador" class="header-link header-link--compare">Comparador</a>
+                <a href="/calculadora" class="header-link header-link--calculator">Calculadora</a>
             </div>
         </header>
 
         <main>
             <section class="search-section">
-                <h2>Analizar acción individual</h2>
-                <p style="color: #6c757d; font-size: 0.95rem; margin-bottom: 1rem;">
-                    💡 ¿Quieres comparar varias acciones? Prueba el <a href="/comparador" style="color: #667eea; font-weight: 600;">Comparador</a>
+                <h2>Analizar accion individual</h2>
+                <p class="search-hint">
+                    ¿Quieres comparar varias acciones? Prueba el
+                    <a href="/comparador" class="link-inline">Comparador</a>
                 </p>
                 <div class="search-form">
                     <input id="ticker-input" type="text" placeholder="Ticker (ej: AAPL, MSFT, GOOGL)" maxlength="10">
-                    <button id="analyze-btn" type="button">🔍 Analizar</button>
-                    <button id="clear-cache-btn" type="button" class="secondary-btn">🧹 Limpiar caché</button>
+                    <button id="analyze-btn" type="button">Analizar</button>
+                    <button id="clear-cache-btn" type="button" class="secondary-btn">Limpiar cache</button>
                 </div>
                 <div id="loading" class="loading hidden">
                     <span class="spinner"></span>
                     Buscando datos financieros...
+                </div>
+
+                <button id="toggle-manual-btn" type="button" class="secondary-btn hidden">
+                    Editar metricas manualmente
+                </button>
+                <div id="manual-input" class="manual-input hidden">
+                    <h3>Ajustar metricas manualmente</h3>
+                    <p id="manual-hint" class="manual-hint">
+                        Si las APIs no devuelven datos recientes puedes capturar los valores de fuentes confiables,
+                        ingresarlos aqui y volver a ejecutar el analisis.
+                    </p>
+                    <div id="manual-fields" class="manual-fields"></div>
+                    <div class="manual-actions">
+                        <button id="apply-manual-btn" type="button" class="manual-primary-btn">Aplicar ajustes</button>
+                        <button id="cancel-manual-btn" type="button" class="secondary-btn">Cerrar</button>
+                    </div>
+                    <div id="manual-feedback" class="manual-feedback hidden"></div>
                 </div>
             </section>
 
@@ -67,28 +85,28 @@
                 </div>
 
                 <div class="breakdown">
-                    <h3>Desglose del análisis</h3>
+                    <h3>Desglose del analisis</h3>
                     <div class="breakdown-grid">
                         <div class="dimension">
-                            <h4>📈 Valoración (40%)</h4>
+                            <h4>Valoracion (40%)</h4>
                             <div class="progress-bar"><div id="val-progress" class="progress"></div></div>
                             <span id="val-score" class="dimension-score">-</span>
                             <div id="val-metrics" class="metrics-used">-</div>
                         </div>
                         <div class="dimension">
-                            <h4>⭐ Calidad (35%)</h4>
+                            <h4>Calidad (35%)</h4>
                             <div class="progress-bar"><div id="qual-progress" class="progress"></div></div>
                             <span id="qual-score" class="dimension-score">-</span>
                             <div id="qual-metrics" class="metrics-used">-</div>
                         </div>
                         <div class="dimension">
-                            <h4>💪 Salud (15%)</h4>
+                            <h4>Salud (15%)</h4>
                             <div class="progress-bar"><div id="health-progress" class="progress"></div></div>
                             <span id="health-score" class="dimension-score">-</span>
                             <div id="health-metrics" class="metrics-used">-</div>
                         </div>
                         <div class="dimension">
-                            <h4>🚀 Crecimiento (10%)</h4>
+                            <h4>Crecimiento (10%)</h4>
                             <div class="progress-bar"><div id="growth-progress" class="progress"></div></div>
                             <span id="growth-score" class="dimension-score">-</span>
                             <div id="growth-metrics" class="metrics-used">-</div>
@@ -97,10 +115,10 @@
                 </div>
 
                 <div class="metrics-found">
-                    <h3>Métricas encontradas</h3>
+                    <h3>Metricas encontradas</h3>
                     <div id="metrics-grid" class="metrics-grid"></div>
                     <div class="data-quality">
-                        📊 Completitud de datos: <span id="completeness">0</span>%
+                        Completitud de datos: <span id="completeness">0</span>%
                         <span id="data-timestamp"></span>
                     </div>
                 </div>
@@ -116,7 +134,7 @@
                 </div>
 
                 <div id="warnings-panel" class="warnings hidden">
-                    <h3>⚠️ Advertencias</h3>
+                    <h3>Advertencias</h3>
                     <ul id="warnings-list"></ul>
                 </div>
             </section>
@@ -125,7 +143,7 @@
         </main>
 
         <footer>
-            <p>RVC Analyzer v1.0 — Datos de fuentes públicas. No constituye recomendación de inversión.</p>
+            <p>RVC Analyzer v1.0 - Datos de fuentes publicas. No constituye recomendacion de inversion.</p>
         </footer>
     </div>
 
