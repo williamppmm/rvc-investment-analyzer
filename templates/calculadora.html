@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Inversión - RVC Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .calc-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .calc-tab {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            color: #6c757d;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .calc-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .calc-tab:hover {
+            color: #667eea;
+        }
+
+        .calc-content {
+            display: none;
+        }
+
+        .calc-content.active {
+            display: block;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #495057;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .scenario-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .scenario-card {
+            padding: 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .scenario-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .scenario-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+
+        .scenario-card .scenario-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #212529;
+        }
+
+        .scenario-card .scenario-return {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.25rem;
+        }
+
+        .scenario-card .scenario-desc {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .result-card {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-card .label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .result-card .subvalue {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .result-card.success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .result-card.info {
+            background: linear-gradient(135deg, #17a2b8 0%, #0056b3 100%);
+        }
+
+        .result-card.warning {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        }
+
+        .chart-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .insights-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .insights-section h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+
+        .insight-item {
+            padding: 0.75rem;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
+        }
+
+        .insight-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .comparison-table {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+        }
+
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .winner-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #28a745;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .milestone-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .milestone-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .milestone-year {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            min-width: 80px;
+        }
+
+        .milestone-bar {
+            flex: 1;
+            height: 40px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .milestone-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.2);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .milestone-value {
+            font-weight: 700;
+            color: #212529;
+            min-width: 150px;
+            text-align: right;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .nav-buttons a {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .nav-buttons .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .nav-buttons .btn-secondary {
+            background: #f8f9fa;
+            color: #495057;
+            border: 2px solid #e9ecef;
+        }
+
+        .nav-buttons a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 2rem; flex-wrap: wrap;">
+                <div>
+                    <h1>💰 CALCULADORA DE INVERSIÓN</h1>
+                    <p>Planifica tu futuro financiero con proyecciones realistas</p>
+                </div>
+                <div class="nav-buttons">
+                    <a href="/" class="btn-secondary">🏠 Home</a>
+                    <a href="/comparador" class="btn-secondary">📊 Comparador</a>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <!-- Tabs de calculadoras -->
+            <div class="calc-tabs">
+                <button class="calc-tab active" data-tab="dca">
+                    📈 Dollar Cost Averaging
+                </button>
+                <button class="calc-tab" data-tab="lump-sum">
+                    💵 Lump Sum vs DCA
+                </button>
+                <button class="calc-tab" data-tab="compound">
+                    ⚡ Interés Compuesto
+                </button>
+            </div>
+
+            <!-- Tab 1: DCA Calculator -->
+            <div class="calc-content active" id="dca-content">
+                <h2>Simulador Dollar Cost Averaging (DCA)</h2>
+                <p style="color: #6c757d; margin-bottom: 2rem;">
+                    Calcula cuánto acumularás invirtiendo una cantidad fija cada mes durante varios años.
+                </p>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="dca-monthly">Inversión mensual ($)</label>
+                        <input type="number" id="dca-monthly" value="500" min="1" step="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="dca-years">Años de inversión</label>
+                        <input type="number" id="dca-years" value="10" min="1" max="50" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="dca-timing">Timing del mercado</label>
+                        <select id="dca-timing">
+                            <option value="normal" selected>Normal</option>
+                            <option value="crisis">Crisis (Caída 40%)</option>
+                            <option value="burbuja">Burbuja (Sobrevaluado +40%)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h3>Selecciona un escenario</h3>
+                <div class="scenario-cards">
+                    <div class="scenario-card" data-scenario="conservador">
+                        <div class="scenario-title">🛡️ Conservador</div>
+                        <div class="scenario-return">7%</div>
+                        <div class="scenario-desc">Bonos + fondos indexados</div>
+                    </div>
+                    <div class="scenario-card selected" data-scenario="moderado">
+                        <div class="scenario-title">📊 Moderado</div>
+                        <div class="scenario-return">10%</div>
+                        <div class="scenario-desc">S&P 500 histórico</div>
+                    </div>
+                    <div class="scenario-card" data-scenario="optimista">
+                        <div class="scenario-title">🚀 Optimista</div>
+                        <div class="scenario-return">12%</div>
+                        <div class="scenario-desc">Acciones de crecimiento</div>
+                    </div>
+                </div>
+
+                <button id="calculate-dca" type="button" style="width: 100%; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: transform 0.2s;">
+                    🚀 Calcular Proyección
+                </button>
+
+                <div id="dca-loading" class="loading hidden" style="margin-top: 2rem;">
+                    <span class="spinner"></span>
+                    Calculando proyección...
+                </div>
+
+                <div id="dca-results" class="hidden" style="margin-top: 2rem;"></div>
+            </div>
+
+            <!-- Tab 2: Lump Sum vs DCA -->
+            <div class="calc-content" id="lump-sum-content">
+                <h2>Comparación: Lump Sum vs DCA</h2>
+                <p style="color: #6c757d; margin-bottom: 2rem;">
+                    ¿Qué es mejor? ¿Invertir todo de una vez o distribuirlo mensualmente?
+                </p>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="ls-total">Monto total disponible ($)</label>
+                        <input type="number" id="ls-total" value="10000" min="100" step="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="ls-years">Período de comparación (años)</label>
+                        <input type="number" id="ls-years" value="10" min="1" max="50" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="ls-scenario">Escenario</label>
+                        <select id="ls-scenario">
+                            <option value="conservador">Conservador (7%)</option>
+                            <option value="moderado" selected>Moderado (10%)</option>
+                            <option value="optimista">Optimista (12%)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="calculate-lump-sum" type="button" style="width: 100%; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: transform 0.2s;">
+                    📊 Comparar Estrategias
+                </button>
+
+                <div id="ls-loading" class="loading hidden" style="margin-top: 2rem;">
+                    <span class="spinner"></span>
+                    Comparando estrategias...
+                </div>
+
+                <div id="ls-results" class="hidden" style="margin-top: 2rem;"></div>
+            </div>
+
+            <!-- Tab 3: Compound Interest -->
+            <div class="calc-content" id="compound-content">
+                <h2>El Poder del Interés Compuesto</h2>
+                <p style="color: #6c757d; margin-bottom: 2rem;">
+                    Descubre cómo el interés compuesto multiplica tu dinero con el tiempo.
+                </p>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="ci-initial">Inversión inicial ($)</label>
+                        <input type="number" id="ci-initial" value="5000" min="0" step="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="ci-monthly">Aporte mensual ($)</label>
+                        <input type="number" id="ci-monthly" value="300" min="0" step="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="ci-years">Años de inversión</label>
+                        <input type="number" id="ci-years" value="20" min="1" max="50" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="ci-scenario">Retorno esperado</label>
+                        <select id="ci-scenario">
+                            <option value="conservador">Conservador (7%)</option>
+                            <option value="moderado" selected>Moderado (10%)</option>
+                            <option value="optimista">Optimista (12%)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="calculate-compound" type="button" style="width: 100%; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: transform 0.2s;">
+                    ⚡ Calcular Impacto
+                </button>
+
+                <div id="ci-loading" class="loading hidden" style="margin-top: 2rem;">
+                    <span class="spinner"></span>
+                    Calculando impacto...
+                </div>
+
+                <div id="ci-results" class="hidden" style="margin-top: 2rem;"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='calculadora.js') }}"></script>
+</body>
+</html>

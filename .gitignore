@@ -1,0 +1,23 @@
+# Entornos virtuales
+.venv/
+env/
+
+# Variables de entorno y credenciales
+.env
+
+# Archivos generados
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Datos locales y cachés
+data/cache.db
+data/asset_classifications.json
+
+# Configuraciones de IDE / sistema
+.vscode/
+.idea/
+.DS_Store
+

@@ -1,0 +1,584 @@
+/* ============================================
+   COMPARADOR DE ACCIONES - ESTILOS
+   ============================================ */
+
+/* Header con botón de volver */
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.btn-back {
+    background: #6c757d;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.3s;
+}
+
+.btn-back:hover {
+    background: #5a6268;
+}
+
+/* Selector Section */
+.selector-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.selector-section h2 {
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+}
+
+.helper-text {
+    color: #6c757d;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+.ticker-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.ticker-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.ticker-input-row label {
+    font-weight: 600;
+    min-width: 70px;
+    color: #495057;
+}
+
+.ticker-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 1rem;
+    text-transform: uppercase;
+    transition: border-color 0.3s;
+}
+
+.ticker-input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 3rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.3s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+/* Loading Spinner */
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: #667eea;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Results Container */
+.results-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Ranking Section */
+.ranking-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ranking-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.ranking-card {
+    display: grid;
+    grid-template-columns: 60px 120px 1fr auto auto;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 2px solid #dee2e6;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ranking-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ranking-card.gold {
+    background: linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%);
+    border-color: #ffc107;
+}
+
+.ranking-card.silver {
+    background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+    border-color: #9e9e9e;
+}
+
+.ranking-card.bronze {
+    background: linear-gradient(135deg, #fff3e0 0%, #fff8f0 100%);
+    border-color: #ff9800;
+}
+
+.rank-position {
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.rank-ticker {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.rank-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.rank-company {
+    font-size: 1rem;
+    color: #495057;
+}
+
+.rank-source {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.rank-source-warning {
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+.rank-category {
+    font-size: 0.9rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+    display: inline-block;
+    font-weight: 600;
+}
+
+.rank-score {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.rank-recommendation {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Category Colors */
+.category-sweet-spot {
+    background: #d4edda;
+    color: #155724;
+}
+
+.category-premium {
+    background: #cfe2ff;
+    color: #084298;
+}
+
+.category-valor {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.category-cara {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.category-trampa {
+    background: #ffe5cc;
+    color: #8b4513;
+}
+
+.category-evitar {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Recommendation Colors */
+.rec-green {
+    background: #28a745;
+    color: white;
+}
+
+.rec-yellow {
+    background: #ffc107;
+    color: #000;
+}
+
+.rec-orange {
+    background: #fd7e14;
+    color: white;
+}
+
+.rec-red {
+    background: #dc3545;
+    color: white;
+}
+
+/* Visualization Section */
+.visualization-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #6c757d;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: color 0.3s, border-color 0.3s;
+}
+
+.tab-btn:hover {
+    color: #495057;
+}
+
+.tab-btn.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.chart-container {
+    min-height: 500px;
+    margin-bottom: 1rem;
+}
+
+.chart-legend {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.chart-legend h4 {
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+}
+
+.chart-legend ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.chart-legend li {
+    margin-bottom: 0.5rem;
+    color: #495057;
+}
+
+.chart-note {
+    text-align: center;
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+}
+
+/* Table Section */
+.table-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.comparison-table th,
+.comparison-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border: 1px solid #dee2e6;
+}
+
+.comparison-table th {
+    background: #667eea;
+    color: white;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.comparison-table .section-header {
+    background: #f8f9fa;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.comparison-table .metric-name {
+    font-weight: 600;
+    color: #495057;
+}
+
+.comparison-table td {
+    background: white;
+}
+
+.comparison-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+/* Value Colors */
+.value-excellent {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.value-good {
+    color: #20c997;
+    font-weight: 600;
+}
+
+.value-warning {
+    color: #ffc107;
+    font-weight: 600;
+}
+
+.value-danger {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+/* Conclusion Section */
+.conclusion-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.conclusion-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.conclusion-card {
+    padding: 2rem;
+    border-radius: 10px;
+    border: 2px solid;
+}
+
+.conclusion-card.best {
+    background: linear-gradient(135deg, #d4edda 0%, #e8f5e9 100%);
+    border-color: #28a745;
+}
+
+.conclusion-card.worst {
+    background: linear-gradient(135deg, #f8d7da 0%, #ffebee 100%);
+    border-color: #dc3545;
+}
+
+.conclusion-card h3 {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.conclusion-card .score-big {
+    font-size: 3rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+}
+
+.conclusion-card .category-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    margin: 0.5rem 0;
+}
+
+.conclusion-card .reason {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+/* Error Message */
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 1px solid #f5c6cb;
+    margin-top: 1rem;
+    font-weight: 500;
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .ticker-inputs {
+        grid-template-columns: 1fr;
+    }
+
+    .conclusion-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ranking-card {
+        grid-template-columns: 50px 1fr;
+        gap: 1rem;
+    }
+
+    .rank-score,
+    .rank-recommendation {
+        grid-column: 2 / -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .tabs {
+        flex-direction: column;
+        border-bottom: none;
+    }
+
+    .tab-btn {
+        border-bottom: none;
+        border-left: 3px solid transparent;
+        text-align: left;
+    }
+
+    .tab-btn.active {
+        border-left-color: #667eea;
+    }
+
+    .comparison-table {
+        font-size: 0.85rem;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+        padding: 0.5rem;
+    }
+}

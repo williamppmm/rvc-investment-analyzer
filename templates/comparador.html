@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparador de Acciones - RVC Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='comparador.css') }}">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div>
+                    <h1>📊 Comparador de Acciones</h1>
+                    <p>Compara hasta 5 acciones para decidir tu inversión</p>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <a href="/" class="btn-back">🏠 Inicio</a>
+                    <a href="/calculadora" class="btn-back" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">💰 Calculadora</a>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <!-- SELECTOR DE TICKERS -->
+            <section class="selector-section">
+                <h2>🔍 Selecciona los tickers a comparar</h2>
+                <p class="helper-text">💡 Ingresa entre 2 y 5 tickers para comparar (Ej: NVDA, AMD, TSM, INTC)</p>
+
+                <div class="ticker-inputs">
+                    <div class="ticker-input-row">
+                        <label>Ticker 1:</label>
+                        <input type="text" id="ticker-1" class="ticker-input" placeholder="NVDA" maxlength="10">
+                    </div>
+                    <div class="ticker-input-row">
+                        <label>Ticker 2:</label>
+                        <input type="text" id="ticker-2" class="ticker-input" placeholder="AMD" maxlength="10">
+                    </div>
+                    <div class="ticker-input-row">
+                        <label>Ticker 3:</label>
+                        <input type="text" id="ticker-3" class="ticker-input" placeholder="TSM" maxlength="10">
+                    </div>
+                    <div class="ticker-input-row">
+                        <label>Ticker 4:</label>
+                        <input type="text" id="ticker-4" class="ticker-input" placeholder="INTC (opcional)" maxlength="10">
+                    </div>
+                    <div class="ticker-input-row">
+                        <label>Ticker 5:</label>
+                        <input type="text" id="ticker-5" class="ticker-input" placeholder="QCOM (opcional)" maxlength="10">
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="compare-btn" type="button" class="btn-primary">🔍 COMPARAR</button>
+                    <button id="clear-btn" type="button" class="btn-secondary">🗑️ Limpiar</button>
+                </div>
+
+                <div id="loading" class="loading hidden">
+                    <span class="spinner"></span>
+                    Analizando empresas... Esto puede tomar unos segundos.
+                </div>
+            </section>
+
+            <!-- RESULTADOS -->
+            <div id="results-container" class="results-container hidden">
+
+                <!-- RANKING -->
+                <section class="ranking-section">
+                    <h2>🏆 Ranking de Inversión</h2>
+                    <div id="ranking-cards" class="ranking-cards"></div>
+                </section>
+
+                <!-- TABS DE VISUALIZACIÓN -->
+                <section class="visualization-section">
+                    <h2>📈 Visualización Comparativa</h2>
+
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="scatter">📍 Calidad vs Precio</button>
+                        <button class="tab-btn" data-tab="bars">📊 Scores</button>
+                        <button class="tab-btn" data-tab="radar">🎯 Perfil Multidimensional</button>
+                    </div>
+
+                    <!-- Tab Content: Scatter Plot -->
+                    <div id="scatter-tab" class="tab-content active">
+                        <div id="scatter-plot" class="chart-container"></div>
+                        <div class="chart-legend">
+                            <h4>Interpretación:</h4>
+                            <ul>
+                                <li><strong>🟢 Zona Superior Derecha (Sweet Spot):</strong> Alta calidad + Precio justo → COMPRAR</li>
+                                <li><strong>🟡 Zona Superior Izquierda:</strong> Alta calidad pero cara → ESPERAR corrección</li>
+                                <li><strong>🔴 Zona Inferior:</strong> Baja calidad → EVITAR</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Tab Content: Bar Chart -->
+                    <div id="bars-tab" class="tab-content">
+                        <div id="bars-chart" class="chart-container"></div>
+                    </div>
+
+                    <!-- Tab Content: Radar Chart -->
+                    <div id="radar-tab" class="tab-content">
+                        <div id="radar-chart" class="chart-container"></div>
+                        <p class="chart-note">
+                            <em>Nota: El radar muestra las primeras 3 empresas del ranking para mejor legibilidad.</em>
+                        </p>
+                    </div>
+                </section>
+
+                <!-- TABLA COMPARATIVA -->
+                <section class="table-section">
+                    <h2>📋 Comparación Detallada</h2>
+                    <div class="table-wrapper">
+                        <table id="comparison-table" class="comparison-table">
+                            <!-- Generado dinámicamente por JS -->
+                        </table>
+                    </div>
+                </section>
+
+                <!-- CONCLUSIÓN -->
+                <section class="conclusion-section">
+                    <h2>💡 Conclusión</h2>
+                    <div class="conclusion-grid">
+                        <div id="best-option" class="conclusion-card best">
+                            <!-- Generado dinámicamente -->
+                        </div>
+                        <div id="worst-option" class="conclusion-card worst">
+                            <!-- Generado dinámicamente -->
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- ERROR MESSAGE -->
+            <div id="error-message" class="error-message hidden"></div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 RVC Analyzer - Comparador de Inversiones</p>
+            <p>Los datos son solo informativos. No constituyen asesoramiento financiero.</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='comparador.js') }}"></script>
+</body>
+</html>

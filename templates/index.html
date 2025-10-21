@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RADAR DE VALORACIÓN Y CALIDAD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 2rem; flex-wrap: wrap;">
+                <div>
+                    <h1>📊 RADAR DE VALORACIÓN Y CALIDAD (RVC)</h1>
+                    <p>Sistema de análisis fundamental</p>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <a href="/comparador" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; transition: transform 0.2s;">
+                        📊 Comparador
+                    </a>
+                    <a href="/calculadora" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; transition: transform 0.2s;">
+                        💰 Calculadora
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <section class="search-section">
+                <h2>Analizar acción individual</h2>
+                <p style="color: #6c757d; font-size: 0.95rem; margin-bottom: 1rem;">
+                    💡 ¿Quieres comparar varias acciones? Prueba el <a href="/comparador" style="color: #667eea; font-weight: 600;">Comparador</a>
+                </p>
+                <div class="search-form">
+                    <input id="ticker-input" type="text" placeholder="Ticker (ej: AAPL, MSFT, GOOGL)" maxlength="10">
+                    <button id="analyze-btn" type="button">🔍 Analizar</button>
+                    <button id="clear-cache-btn" type="button" class="secondary-btn">🧹 Limpiar caché</button>
+                </div>
+                <div id="loading" class="loading hidden">
+                    <span class="spinner"></span>
+                    Buscando datos financieros...
+                </div>
+            </section>
+
+            <section id="results" class="results-section hidden">
+                <div class="company-info">
+                    <h2 id="company-name">-</h2>
+                    <div class="company-details">
+                        <span id="ticker-badge" class="ticker-badge">-</span>
+                        <span id="source-badge" class="source-badge">Fuente: -</span>
+                        <span id="asset-type-badge" class="asset-type-badge hidden">Tipo: -</span>
+                        <span id="sector-badge" class="sector-badge">-</span>
+                        <span id="confidence-badge" class="confidence-badge">Confianza: -</span>
+                    </div>
+                </div>
+
+                <div class="rvc-score">
+                    <h3>Score RVC</h3>
+                    <div class="score-display">
+                        <div id="score-circle" class="score-circle">
+                            <span id="score-value" class="score-value">-</span>
+                            <span class="score-label">/100</span>
+                        </div>
+                        <div id="classification" class="classification">-</div>
+                    </div>
+                    <div id="recommendation" class="recommendation">-</div>
+                </div>
+
+                <div class="breakdown">
+                    <h3>Desglose del análisis</h3>
+                    <div class="breakdown-grid">
+                        <div class="dimension">
+                            <h4>📈 Valoración (40%)</h4>
+                            <div class="progress-bar"><div id="val-progress" class="progress"></div></div>
+                            <span id="val-score" class="dimension-score">-</span>
+                            <div id="val-metrics" class="metrics-used">-</div>
+                        </div>
+                        <div class="dimension">
+                            <h4>⭐ Calidad (35%)</h4>
+                            <div class="progress-bar"><div id="qual-progress" class="progress"></div></div>
+                            <span id="qual-score" class="dimension-score">-</span>
+                            <div id="qual-metrics" class="metrics-used">-</div>
+                        </div>
+                        <div class="dimension">
+                            <h4>💪 Salud (15%)</h4>
+                            <div class="progress-bar"><div id="health-progress" class="progress"></div></div>
+                            <span id="health-score" class="dimension-score">-</span>
+                            <div id="health-metrics" class="metrics-used">-</div>
+                        </div>
+                        <div class="dimension">
+                            <h4>🚀 Crecimiento (10%)</h4>
+                            <div class="progress-bar"><div id="growth-progress" class="progress"></div></div>
+                            <span id="growth-score" class="dimension-score">-</span>
+                            <div id="growth-metrics" class="metrics-used">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metrics-found">
+                    <h3>Métricas encontradas</h3>
+                    <div id="metrics-grid" class="metrics-grid"></div>
+                    <div class="data-quality">
+                        📊 Completitud de datos: <span id="completeness">0</span>%
+                        <span id="data-timestamp"></span>
+                    </div>
+                </div>
+
+                <div id="etf-profile" class="etf-profile hidden">
+                    <h3>Perfil del ETF</h3>
+                    <p id="etf-description" class="etf-description"></p>
+                    <div class="etf-meta">
+                        <span id="etf-category" class="etf-meta-badge"></span>
+                        <span id="etf-provider" class="etf-meta-badge"></span>
+                        <span id="etf-data-source" class="etf-meta-badge"></span>
+                    </div>
+                </div>
+
+                <div id="warnings-panel" class="warnings hidden">
+                    <h3>⚠️ Advertencias</h3>
+                    <ul id="warnings-list"></ul>
+                </div>
+            </section>
+
+            <div id="error-message" class="error-message hidden"></div>
+        </main>
+
+        <footer>
+            <p>RVC Analyzer v1.0 — Datos de fuentes públicas. No constituye recomendación de inversión.</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
