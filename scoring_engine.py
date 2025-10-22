@@ -10,7 +10,7 @@ Este motor calcula:
 
 from __future__ import annotations
 
-from typing import Dict, Any, List
+from typing import Any, Dict, Iterable, List, Optional
 
 
 class InvestmentScorer:
@@ -41,6 +41,15 @@ class InvestmentScorer:
             "revenue_growth": 0.60,
             "earnings_growth": 0.40,
         }
+
+    @staticmethod
+    def _pick_metric(metrics: Dict[str, Any], keys: Iterable[str]) -> Optional[float]:
+        """Return first non-None metric value following priority order."""
+        for key in keys:
+            value = metrics.get(key)
+            if value is not None:
+                return value
+        return None
 
     def calculate_all_scores(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -325,10 +334,13 @@ class InvestmentScorer:
         used: List[str] = []
 
         # Revenue Growth
-        revenue_growth = (
-            metrics.get("revenue_growth_5y")
-            or metrics.get("revenue_growth")
-            or metrics.get("revenue_growth_qoq")
+        revenue_growth = self._pick_metric(
+            metrics,
+            (
+                "revenue_growth_5y",
+                "revenue_growth",
+                "revenue_growth_qoq",
+            ),
         )
         if revenue_growth is not None:
             if revenue_growth > 30:
@@ -349,12 +361,15 @@ class InvestmentScorer:
             used.append(f"Rev. Growth: {revenue_growth:.1f}%")
 
         # Earnings Growth
-        earnings_growth = (
-            metrics.get("earnings_growth_this_y")
-            or metrics.get("earnings_growth_next_y")
-            or metrics.get("earnings_growth_next_5y")
-            or metrics.get("earnings_growth")
-            or metrics.get("earnings_growth_qoq")
+        earnings_growth = self._pick_metric(
+            metrics,
+            (
+                "earnings_growth_this_y",
+                "earnings_growth_next_y",
+                "earnings_growth_next_5y",
+                "earnings_growth_qoq",
+                "earnings_growth",
+            ),
         )
         if earnings_growth is not None:
             if earnings_growth > 30:

@@ -11,7 +11,7 @@ import os
 import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Iterable, Optional
 
 from flask import Flask, jsonify, render_template, request
 from dotenv import load_dotenv
@@ -44,6 +44,15 @@ rvc_calculator = RVCCalculator()
 investment_scorer = InvestmentScorer()
 etf_analyzer = ETFAnalyzer()
 investment_calculator = InvestmentCalculator()
+
+
+def pick_metric(metrics: Dict[str, Any], keys: Iterable[str], default: Optional[float] = None):
+    """Return the first non-None metric value following the provided priority order."""
+    for key in keys:
+        value = metrics.get(key)
+        if value is not None:
+            return value
+    return default
 
 
 def init_database() -> None:
@@ -479,17 +488,23 @@ def comparar():
                     "debt_to_equity": metrics.get("debt_to_equity"),
                     "current_ratio": metrics.get("current_ratio"),
                     "quick_ratio": metrics.get("quick_ratio"),
-                    "revenue_growth": (
-                        metrics.get("revenue_growth_5y")
-                        or metrics.get("revenue_growth")
-                        or metrics.get("revenue_growth_qoq")
+                    "revenue_growth": pick_metric(
+                        metrics,
+                        (
+                            "revenue_growth_5y",
+                            "revenue_growth",
+                            "revenue_growth_qoq",
+                        ),
                     ),
-                    "earnings_growth": (
-                        metrics.get("earnings_growth_this_y")
-                        or metrics.get("earnings_growth_next_y")
-                        or metrics.get("earnings_growth_next_5y")
-                        or metrics.get("earnings_growth")
-                        or metrics.get("earnings_growth_qoq")
+                    "earnings_growth": pick_metric(
+                        metrics,
+                        (
+                            "earnings_growth_this_y",
+                            "earnings_growth_next_y",
+                            "earnings_growth_next_5y",
+                            "earnings_growth_qoq",
+                            "earnings_growth",
+                        ),
                     ),
                 },
 

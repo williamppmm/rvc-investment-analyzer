@@ -219,6 +219,12 @@
     color: #495057;
 }
 
+.rank-confidence {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
 .rank-source {
     font-size: 0.85rem;
     color: #6c757d;
@@ -455,6 +461,110 @@
 .value-danger {
     color: #dc3545;
     font-weight: 600;
+}
+
+/* Breakdown Section */
+.breakdown-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 2rem;
+}
+
+.breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.breakdown-card {
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    padding: 1.5rem;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.breakdown-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.breakdown-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.breakdown-ticker {
+    font-size: 1.2rem;
+}
+
+.breakdown-score {
+    font-size: 1.1rem;
+    color: #667eea;
+}
+
+.breakdown-subtitle {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    flex-wrap: wrap;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.breakdown-confidence {
+    font-weight: 600;
+}
+
+.breakdown-dimensions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.dimension-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e9ecef;
+}
+
+.dimension-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.dimension-score {
+    font-size: 0.95rem;
+    color: #667eea;
+}
+
+.dimension-metrics {
+    margin: 0;
+    padding-left: 1.2rem;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.dimension-metrics li {
+    margin-bottom: 0.3rem;
+}
+
+.dimension-metrics li:last-child {
+    margin-bottom: 0;
 }
 
 /* Conclusion Section */

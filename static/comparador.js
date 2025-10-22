@@ -29,6 +29,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    const breakdownOrder = [
+        { key: 'quality', label: 'Calidad', icon: '🏆' },
+        { key: 'valuation', label: 'Valoración', icon: '💰' },
+        { key: 'health', label: 'Salud financiera', icon: '🛡️' },
+        { key: 'growth', label: 'Crecimiento', icon: '🌱' },
+    ];
+
     // ========================================
     // MAIN FUNCTIONS
     // ========================================
@@ -124,7 +131,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // 3. Crear tabla comparativa
         createComparisonTable(companies);
 
-        // 4. Mostrar conclusión
+        // 4. Detalle por pilar
+        displayBreakdown(companies);
+
+        // 5. Mostrar conclusión
         displayConclusion(companies);
 
         // Mostrar contenedor de resultados
@@ -177,6 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="rank-category ${categoryClass}">
                     ${company.category.emoji} ${company.category.name}
                 </div>
+                <div class="rank-confidence">Confianza: ${company.confidence_level || 'N/A'}</div>
             </div>
             <div class="rank-score">${company.investment_score.toFixed(0)}</div>
             <div class="rank-recommendation ${recClass}">
@@ -539,6 +550,60 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ========================================
+    // DETALLE DEL BREAKDOWN
+    // ========================================
+
+    function displayBreakdown(companies) {
+        const container = document.getElementById('breakdown-grid');
+        if (!container) return;
+        container.innerHTML = '';
+
+        companies.forEach(company => {
+            const breakdown = company.breakdown || {};
+            const dimensions = breakdownOrder.map(dim => {
+                const data = breakdown[dim.key] || {};
+                const scoreValue = typeof data.score === 'number'
+                    ? data.score.toFixed(1)
+                    : '--';
+                const metricsUsed = Array.isArray(data.metrics_used) && data.metrics_used.length
+                    ? data.metrics_used.map(item => `<li>${item}</li>`).join('')
+                    : '<li>Sin datos disponibles</li>';
+                return `
+                    <div class="dimension-card">
+                        <div class="dimension-header">
+                            <span class="dimension-label">${dim.icon} ${dim.label}</span>
+                            <span class="dimension-score">${scoreValue}</span>
+                        </div>
+                        <ul class="dimension-metrics">
+                            ${metricsUsed}
+                        </ul>
+                    </div>
+                `;
+            }).join('');
+
+            const card = document.createElement('div');
+            card.className = 'breakdown-card';
+            card.innerHTML = `
+                <div class="breakdown-header">
+                    <div class="breakdown-title">
+                        <span class="breakdown-ticker">${company.ticker}</span>
+                        <span class="breakdown-score">${company.investment_score.toFixed(1)}/100</span>
+                    </div>
+                    <div class="breakdown-subtitle">
+                        <span>${formatCompanyName(company)}</span>
+                        <span class="breakdown-confidence">Confianza: ${company.confidence_level || 'N/A'}</span>
+                    </div>
+                </div>
+                <div class="breakdown-dimensions">
+                    ${dimensions}
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+    }
+
+    // ========================================
     // CONCLUSIÓN
     // ========================================
 
@@ -561,6 +626,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 <strong>Razón:</strong> ${best.category.desc}
             </div>
             <div class="reason">
+                <strong>Confianza:</strong> ${best.confidence_level || 'N/A'}
+            </div>
+            <div class="reason">
                 <strong>Recomendación:</strong> ${best.recommendation}
             </div>
         `;
@@ -578,6 +646,9 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="reason">
                 <strong>Razón:</strong> ${worst.category.desc}
+            </div>
+            <div class="reason">
+                <strong>Confianza:</strong> ${worst.confidence_level || 'N/A'}
             </div>
             <div class="reason">
                 <strong>Recomendación:</strong> ${worst.recommendation}

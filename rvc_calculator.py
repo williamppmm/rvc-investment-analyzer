@@ -4,7 +4,7 @@ Adaptive RVC calculator handling partial data availability.
 
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 
 class RVCCalculator:
@@ -17,6 +17,15 @@ class RVCCalculator:
             "salud": 0.15,
             "crecimiento": 0.10,
         }
+
+    @staticmethod
+    def _pick_metric(metrics: Dict, keys: List[str], default: Optional[float] = None) -> Optional[float]:
+        """Return first non-None metric value using the provided priority."""
+        for key in keys:
+            value = metrics.get(key)
+            if value is not None:
+                return value
+        return default
 
     def calculate_score(self, metrics: Dict) -> Dict:
         valuation = self._valuation(metrics)
@@ -174,19 +183,21 @@ class RVCCalculator:
             used.append(f"Net Margin: {net_margin:.1f}%")
 
         result = self._weighted_result(components, used, "Sin datos de calidad")
-        revenue_growth = (
-            metrics.get("revenue_growth_5y")
-            or metrics.get("revenue_growth")
-            or metrics.get("revenue_growth_qoq")
-            or 0
+        revenue_growth = self._pick_metric(
+            metrics,
+            ["revenue_growth_5y", "revenue_growth", "revenue_growth_qoq"],
+            default=0.0,
         )
-        earnings_growth = (
-            metrics.get("earnings_growth_this_y")
-            or metrics.get("earnings_growth_next_y")
-            or metrics.get("earnings_growth_next_5y")
-            or metrics.get("earnings_growth")
-            or metrics.get("earnings_growth_qoq")
-            or 0
+        earnings_growth = self._pick_metric(
+            metrics,
+            [
+                "earnings_growth_this_y",
+                "earnings_growth_next_y",
+                "earnings_growth_next_5y",
+                "earnings_growth_qoq",
+                "earnings_growth",
+            ],
+            default=0.0,
         )
         if result["score"] < 40 and revenue_growth >= 25 and earnings_growth >= 10:
             result["score"] = min(result["score"] + 10, 55)
@@ -248,10 +259,9 @@ class RVCCalculator:
         components = []
         used: List[str] = []
 
-        revenue_growth = (
-            metrics.get("revenue_growth_5y")
-            or metrics.get("revenue_growth")
-            or metrics.get("revenue_growth_qoq")
+        revenue_growth = self._pick_metric(
+            metrics,
+            ["revenue_growth_5y", "revenue_growth", "revenue_growth_qoq"],
         )
         if revenue_growth is not None:
             if revenue_growth > 25:
@@ -269,11 +279,15 @@ class RVCCalculator:
             components.append(("Revenue Growth", score, 0.6))
             used.append(f"Rev. Growth: {revenue_growth:.1f}%")
 
-        earnings_growth = (
-            metrics.get("earnings_growth_this_y")
-            or metrics.get("earnings_growth_next_y")
-            or metrics.get("earnings_growth_next_5y")
-            or metrics.get("earnings_growth")
+        earnings_growth = self._pick_metric(
+            metrics,
+            [
+                "earnings_growth_this_y",
+                "earnings_growth_next_y",
+                "earnings_growth_next_5y",
+                "earnings_growth_qoq",
+                "earnings_growth",
+            ],
         )
         if earnings_growth is not None:
             if earnings_growth > 25:

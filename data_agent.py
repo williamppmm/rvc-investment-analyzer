@@ -24,7 +24,7 @@ from asset_classifier import AssetClassifier, AssetClassification
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
-METRIC_SCHEMA_VERSION = 2
+METRIC_SCHEMA_VERSION = 3
 logger = logging.getLogger("DataAgent")
 logger.setLevel(logging.INFO)
 
@@ -114,6 +114,28 @@ class DataAgent:
             "earnings_growth_next_5y": {"EPS next 5Y"},
             "earnings_growth_qoq": {"EPS Q/Q"},
         }
+        self.metric_priority = {
+            "current_price": [
+                "manual_override",
+                "yahoo",
+                "twelvedata",
+                "fmp",
+                "alpha_vantage",
+                "finviz",
+                "marketwatch",
+                "fallback_example",
+            ],
+            "market_cap": [
+                "manual_override",
+                "yahoo",
+                "twelvedata",
+                "fmp",
+                "alpha_vantage",
+                "finviz",
+                "marketwatch",
+                "fallback_example",
+            ],
+        }
         self.percent_metrics = {
             "roe",
             "roic",
@@ -199,9 +221,14 @@ class DataAgent:
                 continue
 
             for key, value in result.data.items():
+                if key in self.metric_priority:
+                    self._update_metric(metrics, key, value, result.source)
+                    continue
+                if value is None:
+                    continue
                 if metrics.get(key) is None:
                     metrics[key] = value
-                    self._merge_provenance({key: result.source})
+                    self.provenance[key] = self._resolve_provenance_label(key, result.source)
             metrics["primary_source"] = metrics.get("primary_source") or result.source
             logger.info(
                 "%s aportó %s campos para %s (origen %s)",
@@ -217,6 +244,56 @@ class DataAgent:
 
         metrics = self._finalize_metrics(metrics)
         return metrics if len(metrics) > 2 else None
+
+    def _priority_rank(self, key: str, source: Optional[str]) -> int:
+        order = self.metric_priority.get(key, [])
+        if not order:
+            return 0
+        if source is None:
+            return len(order)
+        normalized = source.split(":", 1)[0]
+        try:
+            return order.index(normalized)
+        except ValueError:
+            return len(order)
+
+    def _resolve_provenance_label(self, key: str, source: str) -> str:
+        existing = self.provenance.get(key)
+        if existing and existing.split(":", 1)[0] == source:
+            return existing
+        return source
+
+    def _update_metric(self, metrics: Dict, key: str, value: Any, source: str) -> None:
+        if value is None:
+            return
+        current = metrics.get(key)
+        if current is None:
+            metrics[key] = value
+            self.provenance[key] = self._resolve_provenance_label(key, source)
+            return
+
+        priority_order = self.metric_priority.get(key)
+        if not priority_order:
+            return
+
+        current_source = self.provenance.get(key)
+        current_rank = self._priority_rank(key, current_source)
+        new_rank = self._priority_rank(key, source)
+
+        if new_rank < current_rank:
+            metrics[key] = value
+            self.provenance[key] = self._resolve_provenance_label(key, source)
+            return
+
+        if (
+            new_rank == current_rank
+            and isinstance(current, (int, float))
+            and isinstance(value, (int, float))
+        ):
+            baseline = max(abs(current), 1e-6)
+            if abs(value - current) / baseline >= 0.25:
+                metrics[key] = value
+                self.provenance[key] = self._resolve_provenance_label(key, source)
 
     def _merge_provenance(self, prov: Dict[str, str]) -> None:
         for key, value in prov.items():
