@@ -37,10 +37,41 @@
             <div class="site-footer__inner container">
                 <p class="site-footer__title">RVC Analyzer &mdash; analisis fundamental para inversionistas de largo plazo.</p>
                 <p class="site-footer__disclaimer">La informacion tiene fines educativos y no constituye recomendacion de inversion.</p>
+                <p class="site-footer__help">
+                    <a href="#" id="footer-glossary-link" class="footer-link">¿Dudas sobre los términos? Consulta el glosario</a>
+                </p>
             </div>
         </footer>
     </div>
 
+    <!-- Botón flotante de ayuda -->
+    <button id="help-button" class="help-button" aria-label="Abrir glosario de términos financieros">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <span class="help-button__text">Ayuda</span>
+    </button>
+
+    <!-- Modal de Glosario -->
+    <div id="glossary-modal" class="modal hidden">
+        <div class="modal__overlay"></div>
+        <div class="modal__container">
+            <div class="modal__header">
+                <h2 class="modal__title">Glosario de Términos Financieros</h2>
+                <button id="close-glossary" class="modal__close" aria-label="Cerrar glosario">&times;</button>
+            </div>
+            <div class="modal__search">
+                <input type="text" id="glossary-search" placeholder="Buscar término..." class="modal__search-input">
+            </div>
+            <div class="modal__body" id="glossary-content">
+                <!-- Contenido cargado dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='glossary.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
