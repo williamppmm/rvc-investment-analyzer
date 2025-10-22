@@ -1,114 +1,105 @@
-/**
- * Calculadora de Inversión - Cliente JavaScript
- */
-
-// Estado global
 let selectedScenario = 'moderado';
 
-// Inicialización
 document.addEventListener('DOMContentLoaded', () => {
-    initializeTabs();
-    initializeScenarioCards();
-    initializeCalculators();
+    initTabs();
+    initScenarioCards();
+    initCalculators();
 });
 
-/**
- * Inicializa el sistema de tabs
- */
-function initializeTabs() {
+function initTabs() {
     const tabs = document.querySelectorAll('.calc-tab');
-    const contents = document.querySelectorAll('.calc-content');
+    const sections = document.querySelectorAll('.calc-content');
 
-    tabs.forEach(tab => {
+    tabs.forEach((tab) => {
         tab.addEventListener('click', () => {
-            const targetTab = tab.getAttribute('data-tab');
+            const target = tab.getAttribute('data-tab');
 
-            // Actualizar tabs activos
-            tabs.forEach(t => t.classList.remove('active'));
+            tabs.forEach((t) => t.classList.remove('active'));
             tab.classList.add('active');
 
-            // Actualizar contenido visible
-            contents.forEach(content => {
-                content.classList.remove('active');
+            sections.forEach((section) => {
+                section.classList.toggle('active', section.id === `${target}-content`);
             });
-
-            const targetContent = {
-                'dca': 'dca-content',
-                'lump-sum': 'lump-sum-content',
-                'compound': 'compound-content'
-            }[targetTab];
-
-            document.getElementById(targetContent)?.classList.add('active');
         });
     });
 }
 
-/**
- * Inicializa las tarjetas de escenarios
- */
-function initializeScenarioCards() {
+function initScenarioCards() {
     const cards = document.querySelectorAll('.scenario-card');
 
-    cards.forEach(card => {
+    cards.forEach((card) => {
         card.addEventListener('click', () => {
-            // Remover selección anterior
-            cards.forEach(c => c.classList.remove('selected'));
-
-            // Seleccionar nueva tarjeta
+            cards.forEach((c) => c.classList.remove('selected'));
             card.classList.add('selected');
-            selectedScenario = card.getAttribute('data-scenario');
+            selectedScenario = card.getAttribute('data-scenario') || 'moderado';
         });
     });
 }
 
-/**
- * Inicializa los botones de las calculadoras
- */
-function initializeCalculators() {
-    // DCA Calculator
-    document.getElementById('calculate-dca').addEventListener('click', calculateDCA);
+function initCalculators() {
+    document.getElementById('calculate-retirement')?.addEventListener('click', calculateRetirement);
+    document.getElementById('calculate-dca')?.addEventListener('click', calculateDCA);
+    document.getElementById('calculate-lump-sum')?.addEventListener('click', calculateLumpSum);
+    document.getElementById('calculate-compound')?.addEventListener('click', calculateCompound);
 
-    // Lump Sum vs DCA
-    document.getElementById('calculate-lump-sum').addEventListener('click', calculateLumpSum);
+    const fields = [
+        'ret-current-age', 'ret-retirement-age', 'ret-initial', 'ret-monthly', 'ret-return', 'ret-inflation',
+        'dca-initial', 'dca-monthly', 'dca-years', 'dca-inflation',
+        'ls-total', 'ls-years',
+        'ci-initial', 'ci-monthly', 'ci-years'
+    ];
 
-    // Compound Interest
-    document.getElementById('calculate-compound').addEventListener('click', calculateCompound);
-
-    // Enter key support
-    ['dca-monthly', 'dca-years'].forEach(id => {
-        document.getElementById(id)?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') calculateDCA();
-        });
-    });
-
-    ['ls-total', 'ls-years'].forEach(id => {
-        document.getElementById(id)?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') calculateLumpSum();
-        });
-    });
-
-    ['ci-initial', 'ci-monthly', 'ci-years'].forEach(id => {
-        document.getElementById(id)?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') calculateCompound();
-        });
+    fields.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('keypress', (ev) => {
+                if (ev.key === 'Enter') {
+                    switch (true) {
+                        case id.startsWith('ret-'):
+                            calculateRetirement();
+                            break;
+                        case id.startsWith('dca-'):
+                            calculateDCA();
+                            break;
+                        case id.startsWith('ls-'):
+                            calculateLumpSum();
+                            break;
+                        case id.startsWith('ci-'):
+                            calculateCompound();
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            });
+        }
     });
 }
 
-/**
- * Calcula proyección DCA
- */
 async function calculateDCA() {
-    const monthlyAmount = parseFloat(document.getElementById('dca-monthly').value);
-    const years = parseInt(document.getElementById('dca-years').value);
+    const initialAmount = parseFloat(document.getElementById('dca-initial').value) || 0;
+    const monthlyAmount = parseFloat(document.getElementById('dca-monthly').value) || 0;
+    const years = parseInt(document.getElementById('dca-years').value, 10);
+    const inflationPct = parseFloat(document.getElementById('dca-inflation').value) || 0;
     const marketTiming = document.getElementById('dca-timing').value;
 
-    if (!monthlyAmount || monthlyAmount <= 0) {
-        alert('Por favor ingrese un monto mensual válido');
+    if (initialAmount < 0 || monthlyAmount < 0) {
+        alert('Los montos no pueden ser negativos.');
+        return;
+    }
+
+    if (initialAmount === 0 && monthlyAmount === 0) {
+        alert('Ingresa al menos un capital inicial o un aporte mensual.');
         return;
     }
 
     if (!years || years <= 0 || years > 50) {
-        alert('Por favor ingrese un período válido (1-50 años)');
+        alert('El periodo debe estar entre 1 y 50 anios.');
+        return;
+    }
+
+    if (inflationPct < 0 || inflationPct > 15) {
+        alert('La inflacion anual debe estar entre 0% y 15%.');
         return;
     }
 
@@ -121,22 +112,21 @@ async function calculateDCA() {
     try {
         const response = await fetch('/api/calcular-inversion', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 calculation_type: 'dca',
+                initial_amount: initialAmount,
                 monthly_amount: monthlyAmount,
-                years: years,
+                years,
                 scenario: selectedScenario,
-                market_timing: marketTiming
+                market_timing: marketTiming,
+                annual_inflation: inflationPct / 100
             })
         });
 
         const data = await response.json();
-
         if (!response.ok) {
-            throw new Error(data.error || 'Error en el cálculo');
+            throw new Error(data.error || 'No se pudo calcular la proyeccion DCA.');
         }
 
         renderDCAResults(data.result);
@@ -147,101 +137,142 @@ async function calculateDCA() {
     }
 }
 
-/**
- * Renderiza resultados DCA
- */
 function renderDCAResults(result) {
     const container = document.getElementById('dca-results');
-    const { input, results: res, breakdown, insights, monthly_simulation } = result;
+    const { input, results: res, breakdown, insights, monthly_simulation: timeline } = result;
+    const baseline = res.baseline_projection || {};
 
     let html = `
+        <h3>Resumen para el escenario ${capitalize(input.scenario)} (${input.expected_annual_return}% anual)</h3>
         <div class="results-grid">
-            <div class="result-card">
-                <div class="label">Total Invertido</div>
-                <div class="value">$${formatNumber(res.total_invested)}</div>
-                <div class="subvalue">${input.total_months} meses × $${formatNumber(input.monthly_amount)}</div>
-            </div>
             <div class="result-card success">
-                <div class="label">Valor Final</div>
+                <div class="label">Capital final</div>
                 <div class="value">$${formatNumber(res.final_value)}</div>
-                <div class="subvalue">Escenario: ${input.scenario}</div>
+                <div class="subvalue">${res.cap_reached ? 'Limite de 1,000,000 USD alcanzado' : input.market_timing_label}</div>
+            </div>
+            <div class="result-card">
+                <div class="label">Aportes totales (incluye capital inicial)</div>
+                <div class="value">$${formatNumber(res.total_invested)}</div>
+                <div class="subvalue">${input.effective_months} de ${input.total_months_planned} meses planificados</div>
             </div>
             <div class="result-card info">
-                <div class="label">Ganancia Total</div>
+                <div class="label">Ganancia generada</div>
                 <div class="value">$${formatNumber(res.total_gain)}</div>
-                <div class="subvalue">+${res.total_return_pct.toFixed(1)}%</div>
+                <div class="subvalue">${formatPercent(res.total_return_pct)} sobre lo aportado</div>
             </div>
         </div>
     `;
 
-    // Milestones
-    if (breakdown.years_5 || breakdown.years_10 || breakdown.years_15 || breakdown.years_20) {
+    html += `
+        <div class="chart-container">
+            <h3>Proyeccion base vs simulacion con timing</h3>
+            <p style="margin-bottom: 1rem;">
+                Proyeccion lineal sin volatilidad: $${formatNumber(res.simple_projection)}. 
+                Con ajuste por inflacion e interes compuesto: $${formatNumber(baseline.final_value || 0)} 
+                (${formatPercent(baseline.return_pct)} retorno). 
+                La simulacion con timing y precio variable termina en $${formatNumber(res.final_value)}.
+            </p>
+        </div>
+    `;
+
+    const milestones = Object.values(breakdown || {}).filter(Boolean);
+    if (milestones.length) {
         html += `
             <div class="chart-container">
-                <h3>📅 Hitos de tu inversión</h3>
+                <h3>Hitos alcanzados</h3>
                 <div class="milestone-timeline">
         `;
-
-        [breakdown.years_5, breakdown.years_10, breakdown.years_15, breakdown.years_20].forEach(milestone => {
-            if (milestone) {
-                const percentage = (milestone.value / res.final_value) * 100;
-                html += `
-                    <div class="milestone-item">
-                        <div class="milestone-year">${milestone.years} años</div>
-                        <div class="milestone-bar" style="background: linear-gradient(90deg, #667eea ${percentage}%, #e9ecef ${percentage}%);"></div>
-                        <div class="milestone-value">$${formatNumber(milestone.value)}</div>
-                    </div>
-                `;
-            }
+        milestones.forEach((milestone) => {
+            html += `
+                <div class="milestone-item">
+                    <div class="milestone-year">${milestone.years} anios</div>
+                    <div class="milestone-value">$${formatNumber(milestone.value)}</div>
+                    <div class="milestone-bar"></div>
+                </div>
+            `;
         });
+        html += `</div></div>`;
+    }
 
+    if (timeline && timeline.length) {
+        const snapshots = pickTimelineSnapshots(timeline);
         html += `
+            <div class="yearly-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mes</th>
+                            <th>Aporte del mes</th>
+                            <th>Aportes acumulados</th>
+                            <th>Valor del portafolio</th>
+                            <th>Rentabilidad acumulada</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        snapshots.forEach((row) => {
+            html += `
+                <tr>
+                    <td>${row.month}</td>
+                    <td>$${formatNumber(row.monthly_contribution)}</td>
+                    <td>$${formatNumber(row.invested_to_date)}</td>
+                    <td>$${formatNumber(row.portfolio_value)}</td>
+                    <td>${formatPercent(row.return_pct)}</td>
+                </tr>
+            `;
+        });
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    if (res.cap_reached) {
+        html += `
+            <div class="insights-section" style="margin-top: 2rem;">
+                <h3>Limite alcanzado</h3>
+                <div class="insight-item">
+                    <strong>Meta de 1,000,000 USD</strong>
+                    <p style="margin: 0;">
+                        Llegaste al limite en el mes ${res.cap_reached.month} (${res.cap_reached.years_elapsed} anios). 
+                        A partir de ahi dejamos de sumar aportes para evitar resultados irreales.
+                    </p>
                 </div>
             </div>
         `;
     }
 
-    // Insights
-    if (insights && insights.length > 0) {
-        html += `
-            <div class="insights-section">
-                <h3>💡 Insights clave</h3>
-        `;
-
-        insights.forEach(insight => {
+    if (insights && insights.length) {
+        html += `<div class="insights-section" style="margin-top: 2rem;"><h3>Ideas clave</h3>`;
+        insights.forEach((item) => {
             html += `
                 <div class="insight-item">
-                    <span style="font-size: 1.5rem;">📌</span>
-                    <span>${insight}</span>
+                    <strong>Dato</strong>
+                    <p style="margin: 0;">${item}</p>
                 </div>
             `;
         });
-
         html += `</div>`;
     }
 
     container.innerHTML = html;
     container.classList.remove('hidden');
-
-    // Scroll suave a resultados
     container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-/**
- * Calcula comparación Lump Sum vs DCA
- */
 async function calculateLumpSum() {
     const totalAmount = parseFloat(document.getElementById('ls-total').value);
-    const years = parseInt(document.getElementById('ls-years').value);
+    const years = parseInt(document.getElementById('ls-years').value, 10);
     const scenario = document.getElementById('ls-scenario').value;
 
     if (!totalAmount || totalAmount <= 0) {
-        alert('Por favor ingrese un monto total válido');
+        alert('Ingresa un monto total positivo.');
         return;
     }
 
     if (!years || years <= 0 || years > 50) {
-        alert('Por favor ingrese un período válido (1-50 años)');
+        alert('El periodo debe estar entre 1 y 50 anios.');
         return;
     }
 
@@ -254,21 +285,18 @@ async function calculateLumpSum() {
     try {
         const response = await fetch('/api/calcular-inversion', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 calculation_type: 'lump_sum_vs_dca',
                 total_amount: totalAmount,
-                years: years,
-                scenario: scenario
+                years,
+                scenario
             })
         });
 
         const data = await response.json();
-
         if (!response.ok) {
-            throw new Error(data.error || 'Error en el cálculo');
+            throw new Error(data.error || 'No se pudo realizar la comparacion.');
         }
 
         renderLumpSumResults(data.result);
@@ -279,101 +307,86 @@ async function calculateLumpSum() {
     }
 }
 
-/**
- * Renderiza resultados Lump Sum vs DCA
- */
 function renderLumpSumResults(result) {
     const container = document.getElementById('ls-results');
-    const { lump_sum, dca, comparison } = result;
+    const { lump_sum: lump, dca, comparison } = result;
 
     let html = `
-        <h3>📊 Comparación de Estrategias</h3>
-
+        <h3>Resultados para ${result.years} anios (${capitalize(result.scenario)})</h3>
         <div class="results-grid" style="margin-bottom: 2rem;">
             <div class="result-card ${comparison.winner === 'Lump Sum' ? 'success' : ''}">
-                <div class="label">${lump_sum.strategy} ${comparison.winner === 'Lump Sum' ? '🏆' : ''}</div>
-                <div class="value">$${formatNumber(lump_sum.final_value)}</div>
-                <div class="subvalue">Ganancia: $${formatNumber(lump_sum.total_gain)} (+${lump_sum.return_pct.toFixed(1)}%)</div>
+                <div class="label">${lump.strategy}</div>
+                <div class="value">$${formatNumber(lump.final_value)}</div>
+                <div class="subvalue">Ganancia: $${formatNumber(lump.total_gain)} (${formatPercent(lump.return_pct)})</div>
             </div>
             <div class="result-card ${comparison.winner === 'DCA' ? 'success' : ''}">
-                <div class="label">${dca.strategy} ${comparison.winner === 'DCA' ? '🏆' : ''}</div>
+                <div class="label">${dca.strategy}</div>
                 <div class="value">$${formatNumber(dca.final_value)}</div>
-                <div class="subvalue">Ganancia: $${formatNumber(dca.total_gain)} (+${dca.return_pct.toFixed(1)}%)</div>
+                <div class="subvalue">Ganancia: $${formatNumber(dca.total_gain)} (${formatPercent(dca.return_pct)})</div>
             </div>
         </div>
 
         <table class="comparison-table">
             <thead>
                 <tr>
-                    <th>Métrica</th>
+                    <th>Parametro</th>
                     <th>Lump Sum</th>
                     <th>DCA</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td><strong>Monto mensual</strong></td>
-                    <td>$${formatNumber(result.total_amount)} (mes 1)</td>
-                    <td>$${formatNumber(dca.monthly_amount)}/mes</td>
+                    <td>Capital inicial</td>
+                    <td>$${formatNumber(result.total_amount)}</td>
+                    <td>$${formatNumber(dca.monthly_amount)} mensual</td>
                 </tr>
                 <tr>
-                    <td><strong>Valor final</strong></td>
-                    <td>$${formatNumber(lump_sum.final_value)} ${comparison.winner === 'Lump Sum' ? '<span class="winner-badge">GANADOR</span>' : ''}</td>
-                    <td>$${formatNumber(dca.final_value)} ${comparison.winner === 'DCA' ? '<span class="winner-badge">GANADOR</span>' : ''}</td>
+                    <td>Valor final</td>
+                    <td>$${formatNumber(lump.final_value)} ${comparison.winner === 'Lump Sum' ? '<span class="winner-badge">Ganador</span>' : ''}</td>
+                    <td>$${formatNumber(dca.final_value)} ${comparison.winner === 'DCA' ? '<span class="winner-badge">Ganador</span>' : ''}</td>
                 </tr>
                 <tr>
-                    <td><strong>Ganancia total</strong></td>
-                    <td>$${formatNumber(lump_sum.total_gain)}</td>
+                    <td>Ganancia total</td>
+                    <td>$${formatNumber(lump.total_gain)}</td>
                     <td>$${formatNumber(dca.total_gain)}</td>
-                </tr>
-                <tr>
-                    <td><strong>Retorno %</strong></td>
-                    <td>+${lump_sum.return_pct.toFixed(1)}%</td>
-                    <td>+${dca.return_pct.toFixed(1)}%</td>
                 </tr>
             </tbody>
         </table>
 
         <div class="insights-section" style="margin-top: 2rem;">
-            <h3>💡 Recomendación</h3>
+            <h3>Recomendacion</h3>
             <div class="insight-item">
-                <span style="font-size: 1.5rem;">📌</span>
-                <span><strong>${comparison.winner}</strong> tiene ventaja de $${formatNumber(comparison.difference)} (${comparison.difference_pct.toFixed(1)}%)</span>
+                <strong>${comparison.winner} aventaja por $${formatNumber(comparison.difference)} (${formatPercent(comparison.difference_pct)})</strong>
             </div>
             <div class="insight-item">
-                <span style="font-size: 1.5rem;">💭</span>
-                <span>${comparison.recommendation}</span>
+                <p style="margin: 0;">${comparison.recommendation}</p>
             </div>
         </div>
     `;
 
     container.innerHTML = html;
     container.classList.remove('hidden');
-
     container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-/**
- * Calcula impacto del interés compuesto
- */
 async function calculateCompound() {
     const initialAmount = parseFloat(document.getElementById('ci-initial').value) || 0;
     const monthlyContribution = parseFloat(document.getElementById('ci-monthly').value) || 0;
-    const years = parseInt(document.getElementById('ci-years').value);
+    const years = parseInt(document.getElementById('ci-years').value, 10);
     const scenario = document.getElementById('ci-scenario').value;
 
     if (initialAmount < 0 || monthlyContribution < 0) {
-        alert('Los montos no pueden ser negativos');
+        alert('Los montos no pueden ser negativos.');
         return;
     }
 
     if (initialAmount === 0 && monthlyContribution === 0) {
-        alert('Debe ingresar al menos un monto inicial o una contribución mensual');
+        alert('Ingresa al menos un monto inicial o una contribucion mensual.');
         return;
     }
 
     if (!years || years <= 0 || years > 50) {
-        alert('Por favor ingrese un período válido (1-50 años)');
+        alert('El periodo debe estar entre 1 y 50 anios.');
         return;
     }
 
@@ -386,22 +399,19 @@ async function calculateCompound() {
     try {
         const response = await fetch('/api/calcular-inversion', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 calculation_type: 'compound_interest',
                 initial_amount: initialAmount,
                 monthly_amount: monthlyContribution,
-                years: years,
-                scenario: scenario
+                years,
+                scenario
             })
         });
 
         const data = await response.json();
-
         if (!response.ok) {
-            throw new Error(data.error || 'Error en el cálculo');
+            throw new Error(data.error || 'No se pudo calcular el interes compuesto.');
         }
 
         renderCompoundResults(data.result);
@@ -412,87 +422,333 @@ async function calculateCompound() {
     }
 }
 
-/**
- * Renderiza resultados del interés compuesto
- */
 function renderCompoundResults(result) {
     const container = document.getElementById('ci-results');
-
-    const interestPercentage = result.interest_contribution_pct;
-    const contributionPercentage = 100 - interestPercentage;
+    const interestPct = result.interest_contribution_pct;
+    const aportesPct = 100 - interestPct;
 
     let html = `
-        <h3>⚡ El Poder del Interés Compuesto</h3>
-
+        <h3>Resumen del interes compuesto (${result.annual_return_pct}% anual)</h3>
         <div class="results-grid">
             <div class="result-card">
-                <div class="label">Total Aportado</div>
+                <div class="label">Aportes totales</div>
                 <div class="value">$${formatNumber(result.total_contributed)}</div>
-                <div class="subvalue">Tu dinero</div>
+                <div class="subvalue">Capital propio acumulado</div>
             </div>
             <div class="result-card success">
-                <div class="label">Valor Final</div>
+                <div class="label">Valor final</div>
                 <div class="value">$${formatNumber(result.final_value)}</div>
-                <div class="subvalue">Después de ${result.years} años</div>
+                <div class="subvalue">Despues de ${result.years} anios</div>
             </div>
             <div class="result-card warning">
-                <div class="label">Intereses Ganados</div>
+                <div class="label">Intereses generados</div>
                 <div class="value">$${formatNumber(result.interest_earned)}</div>
-                <div class="subvalue">${interestPercentage.toFixed(1)}% del total</div>
+                <div class="subvalue">${formatPercent(interestPct)} del total</div>
             </div>
         </div>
 
         <div class="chart-container">
-            <h3>📊 Composición de tu riqueza final</h3>
+            <h3>Desglose de aportes vs intereses</h3>
             <div style="display: flex; gap: 1rem; margin-top: 1rem; height: 60px;">
-                <div style="flex: ${contributionPercentage}; background: linear-gradient(135deg, #17a2b8, #0056b3); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
-                    ${contributionPercentage.toFixed(1)}% Aportes
+                <div style="flex: ${aportesPct}; background: linear-gradient(135deg, #17a2b8, #0056b3); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
+                    ${formatPercent(aportesPct)} aportes
                 </div>
-                <div style="flex: ${interestPercentage}; background: linear-gradient(135deg, #28a745, #20c997); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
-                    ${interestPercentage.toFixed(1)}% Interés
+                <div style="flex: ${interestPct}; background: linear-gradient(135deg, #28a745, #20c997); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
+                    ${formatPercent(interestPct)} intereses
                 </div>
             </div>
         </div>
+    `;
 
-        <div class="insights-section">
-            <h3>💡 Insight clave</h3>
-            <div class="insight-item">
-                <span style="font-size: 2rem;">🎯</span>
-                <div>
-                    <strong>${result.message}</strong>
-                    <p style="margin: 0.5rem 0 0 0; color: #6c757d;">
-                        Aportaste $${formatNumber(result.total_contributed)}, pero el interés compuesto
-                        generó $${formatNumber(result.interest_earned)} adicionales. ¡Esto es magia financiera!
-                    </p>
+    if (result.cap_reached) {
+        html += `
+            <div class="insights-section" style="margin-top: 2rem;">
+                <h3>Limite alcanzado</h3>
+                <div class="insight-item">
+                    <p style="margin: 0;">El calculo se detuvo al llegar a 1,000,000 USD para mantener cifras realistas.</p>
                 </div>
             </div>
+        `;
+    }
+
+    html += `
+        <div class="insights-section" style="margin-top: 2rem;">
+            <h3>Lecturas sugeridas</h3>
             <div class="insight-item">
-                <span style="font-size: 2rem;">⏰</span>
-                <div>
-                    <strong>El tiempo es tu mejor aliado</strong>
-                    <p style="margin: 0.5rem 0 0 0; color: #6c757d;">
-                        A ${result.annual_return_pct.toFixed(0)}% anual durante ${result.years} años,
-                        tu dinero creció ${((result.final_value / result.total_contributed) - 1).toFixed(2)}x.
-                        Cuanto más tiempo inviertas, mayor es el impacto del interés compuesto.
-                    </p>
-                </div>
+                <strong>Mensaje clave</strong>
+                <p style="margin: 0;">${result.message}</p>
+            </div>
+            <div class="insight-item">
+                <strong>Multiplicador</strong>
+                <p style="margin: 0;">Tu capital final es ${(result.final_value / result.total_contributed).toFixed(2)} veces lo aportado.</p>
             </div>
         </div>
     `;
 
     container.innerHTML = html;
     container.classList.remove('hidden');
-
     container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-/**
- * Formatea números con separadores de miles
- */
-function formatNumber(num) {
-    if (num === null || num === undefined) return 'N/A';
-    return new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-    }).format(num);
+async function calculateRetirement() {
+    const currentAge = parseInt(document.getElementById('ret-current-age').value, 10);
+    const retirementAge = parseInt(document.getElementById('ret-retirement-age').value, 10);
+    const initialAmount = parseFloat(document.getElementById('ret-initial').value) || 0;
+    const monthlyAmount = parseFloat(document.getElementById('ret-monthly').value) || 0;
+    const annualReturnPct = parseFloat(document.getElementById('ret-return').value) || 0;
+    const annualInflationPct = parseFloat(document.getElementById('ret-inflation').value) || 0;
+
+    if (!currentAge || currentAge < 18 || currentAge > 75) {
+        alert('La edad actual debe estar entre 18 y 75 anios.');
+        return;
+    }
+
+    if (!retirementAge || retirementAge <= currentAge || retirementAge > 75) {
+        alert('La edad de retiro debe ser mayor a la actual y no superar 75 anios.');
+        return;
+    }
+
+    if (initialAmount < 0 || monthlyAmount < 0) {
+        alert('Los montos no pueden ser negativos.');
+        return;
+    }
+
+    if (annualReturnPct < -10 || annualReturnPct > 20) {
+        alert('El rendimiento anual debe estar entre -10% y 20%.');
+        return;
+    }
+
+    if (annualInflationPct < 0 || annualInflationPct > 15) {
+        alert('La inflacion debe estar entre 0% y 15%.');
+        return;
+    }
+
+    const loading = document.getElementById('ret-loading');
+    const results = document.getElementById('ret-results');
+
+    loading.classList.remove('hidden');
+    results.classList.add('hidden');
+
+    try {
+        const response = await fetch('/api/calcular-inversion', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                calculation_type: 'retirement_plan',
+                current_age: currentAge,
+                retirement_age: retirementAge,
+                initial_amount: initialAmount,
+                monthly_amount: monthlyAmount,
+                scenario: 'moderado',
+                annual_inflation: annualInflationPct / 100,
+                annual_return_override: annualReturnPct / 100
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'No se pudo calcular el plan.');
+        }
+
+        renderRetirementResults(data.result);
+    } catch (error) {
+        alert(`Error: ${error.message}`);
+    } finally {
+        loading.classList.add('hidden');
+    }
+}
+
+function renderRetirementResults(result) {
+    const container = document.getElementById('ret-results');
+    const { input, results: res, scenarios, yearly_projections: yearly, milestones, composition, limit } = result;
+
+    let html = `
+        <h3>Meta a los ${input.retirement_age} anios (horizonte ${input.years_to_retirement} anios)</h3>
+        <div class="results-grid">
+            <div class="result-card success">
+                <div class="label">Capital proyectado</div>
+                <div class="value">$${formatNumber(res.final_capital)}</div>
+                <div class="subvalue">${formatPercent(res.average_return_pct)} anual esperado</div>
+            </div>
+            <div class="result-card">
+                <div class="label">Capital inicial</div>
+                <div class="value">$${formatNumber(res.initial_capital)}</div>
+                <div class="subvalue">Punto de partida</div>
+            </div>
+            <div class="result-card info">
+                <div class="label">Aportes durante el plan</div>
+                <div class="value">$${formatNumber(res.total_contributions)}</div>
+                <div class="subvalue">${input.effective_years} anios efectivos de ahorro</div>
+            </div>
+            <div class="result-card warning">
+                <div class="label">Intereses generados</div>
+                <div class="value">$${formatNumber(res.total_interest)}</div>
+                <div class="subvalue">${formatPercent(composition.interest_pct)} del total</div>
+            </div>
+        </div>
+    `;
+
+    html += `
+        <div class="chart-container">
+            <h3>Escenarios de rendimiento</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Escenario</th>
+                        <th>Capital final</th>
+                        <th>Aportes</th>
+                        <th>Intereses</th>
+                        <th>Retorno %</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    ['conservador', 'realista', 'optimista'].forEach((key) => {
+        const scenario = scenarios[key];
+        if (!scenario) {
+            return;
+        }
+        html += `
+            <tr>
+                <td>${capitalize(key)}</td>
+                <td>$${formatNumber(scenario.final_value)}</td>
+                <td>$${formatNumber(scenario.total_contributions)}</td>
+                <td>$${formatNumber(scenario.total_interest)}</td>
+                <td>${formatPercent(scenario.return_pct)}</td>
+            </tr>
+        `;
+    });
+
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    if (limit && limit.reached && limit.details) {
+        html += `
+            <div class="insights-section">
+                <h3>Limite alcanzado</h3>
+                <div class="insight-item">
+                    <strong>Meta de 1,000,000 USD</strong>
+                    <p style="margin: 0;">
+                        El plan alcanza el limite a los ${limit.details.year} anios (edad ${limit.details.age}). 
+                        A partir de ese punto dejamos de sumar aportes para mantener proyecciones realistas.
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+
+    if (milestones && milestones.length) {
+        html += `
+            <div class="chart-container">
+                <h3>Hitos relevantes</h3>
+                <div class="milestone-timeline">
+        `;
+        milestones.forEach((row) => {
+            html += `
+                <div class="milestone-item">
+                    <div class="milestone-year">${row.amount >= 1000000 ? 'Meta final' : `$${formatNumber(row.amount)}`}</div>
+                    <div class="milestone-value">Se alcanza en el anio ${row.year} (edad ${row.age})</div>
+                    <div class="milestone-bar"></div>
+                </div>
+            `;
+        });
+        html += `</div></div>`;
+    }
+
+    if (yearly && yearly.length) {
+        const displayRows = yearly.length > 12
+            ? [...yearly.slice(0, 6), { ellipsis: true }, ...yearly.slice(-4)]
+            : yearly;
+
+        html += `
+            <div class="yearly-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Anio (edad)</th>
+                            <th>Aporte anual</th>
+                            <th>Aportes acumulados</th>
+                            <th>Interes del anio</th>
+                            <th>Interes acumulado</th>
+                            <th>Capital total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        displayRows.forEach((row) => {
+            if (row.ellipsis) {
+                html += `
+                    <tr>
+                        <td colspan="6" style="text-align: center; font-style: italic; color: #6c757d;">... ${yearly.length - 10} anios intermedios ...</td>
+                    </tr>
+                `;
+                return;
+            }
+            html += `
+                <tr>
+                    <td>${row.year} (${row.age})</td>
+                    <td>$${formatNumber(row.annual_contribution)}</td>
+                    <td>$${formatNumber(row.contributions_accumulated)}</td>
+                    <td>$${formatNumber(row.interest_this_year)}</td>
+                    <td>$${formatNumber(row.interest_accumulated)}</td>
+                    <td>$${formatNumber(row.portfolio_value)}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
+    container.classList.remove('hidden');
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function pickTimelineSnapshots(timeline) {
+    if (timeline.length <= 6) {
+        return timeline;
+    }
+    const last = timeline[timeline.length - 1];
+    const first = timeline[0];
+    const midIndex = Math.max(1, Math.floor(timeline.length / 2));
+    const twelfth = timeline[Math.min(11, timeline.length - 1)];
+
+    const unique = [first, timeline[midIndex], twelfth, last];
+    const seen = new Set();
+    return unique.filter((item) => {
+        if (!item) return false;
+        if (seen.has(item.month)) return false;
+        seen.add(item.month);
+        return true;
+    });
+}
+
+function formatNumber(value) {
+    if (value === undefined || value === null || Number.isNaN(value)) {
+        return '0';
+    }
+    return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
+}
+
+function formatPercent(value) {
+    if (value === undefined || value === null || Number.isNaN(value)) {
+        return '0%';
+    }
+    return `${value.toFixed(1)}%`;
+}
+
+function capitalize(text) {
+    if (!text) {
+        return '';
+    }
+    return text.charAt(0).toUpperCase() + text.slice(1);
 }

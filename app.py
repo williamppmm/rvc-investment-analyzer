@@ -222,7 +222,7 @@ def prepare_analysis_response(
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", active_page="home")
 
 
 @app.route("/analyze", methods=["POST"])
@@ -364,13 +364,13 @@ def clear_cache():
 @app.route("/comparador")
 def comparador():
     """Página del comparador de acciones."""
-    return render_template("comparador.html")
+    return render_template("comparador.html", active_page="compare")
 
 
 @app.route("/calculadora")
 def calculadora():
     """Página de la calculadora de inversión."""
-    return render_template("calculadora.html")
+    return render_template("calculadora.html", active_page="calculator")
 
 
 @app.route("/api/comparar", methods=["POST"])
@@ -557,13 +557,16 @@ def calcular_inversion():
 
     Payload:
         {
-            "calculation_type": "dca" | "lump_sum_vs_dca" | "compound_interest",
+            "calculation_type": "dca" | "lump_sum_vs_dca" | "compound_interest" | "retirement_plan",
             "monthly_amount": 500,
             "years": 10,
             "scenario": "conservador" | "moderado" | "optimista",
             "market_timing": "crisis" | "normal" | "burbuja",
-            "initial_amount": 10000,  // Solo para compound_interest
-            "total_amount": 50000     // Solo para lump_sum_vs_dca
+            "initial_amount": 10000,     // Para compound_interest y retirement_plan
+            "total_amount": 50000,       // Para lump_sum_vs_dca
+            "current_age": 35,           // Para retirement_plan
+            "retirement_age": 65,        // Para retirement_plan
+            "annual_inflation": 0.03     // Para retirement_plan (opcional, default 3%)
         }
 
     Returns:
@@ -578,19 +581,33 @@ def calcular_inversion():
             years = int(payload.get("years", 10))
             scenario = payload.get("scenario", "moderado")
             market_timing = payload.get("market_timing", "normal")
+            initial_amount = float(payload.get("initial_amount", 0))
+            annual_inflation = float(payload.get("annual_inflation", 0.0))
 
-            if monthly_amount <= 0:
-                return jsonify({"error": "El monto mensual debe ser mayor a 0"}), 400
+            if monthly_amount < 0:
+                return jsonify({"error": "El aporte mensual no puede ser negativo"}), 400
+
+            if initial_amount < 0:
+                return jsonify({"error": "El capital inicial no puede ser negativo"}), 400
+
+            if monthly_amount == 0 and initial_amount == 0:
+                return jsonify({"error": "Ingresa al menos un capital inicial o un aporte mensual"}), 400
 
             if years <= 0 or years > 50:
-                return jsonify({"error": "Los años deben estar entre 1 y 50"}), 400
+                return jsonify({"error": "Los anos deben estar entre 1 y 50"}), 400
+
+            if annual_inflation < 0 or annual_inflation > 0.15:
+                return jsonify({"error": "La inflacion anual debe estar entre 0% y 15%"}), 400
 
             result = investment_calculator.calculate_dca(
                 monthly_amount=monthly_amount,
                 years=years,
                 scenario=scenario,
                 market_timing=market_timing,
-                include_simulation=True
+                include_simulation=True,
+                initial_amount=initial_amount,
+                annual_inflation=annual_inflation,
+                max_portfolio_value=investment_calculator.MAX_PORTFOLIO_VALUE
             )
 
             return jsonify({
@@ -649,10 +666,52 @@ def calcular_inversion():
                 "timestamp": datetime.now().isoformat(timespec="seconds")
             })
 
+        elif calc_type == "retirement_plan":
+            current_age = int(payload.get("current_age", 0))
+            retirement_age = int(payload.get("retirement_age", 0))
+            initial_amount = float(payload.get("initial_amount", 0))
+            monthly_contribution = float(payload.get("monthly_amount", 0))
+            scenario = payload.get("scenario", "moderado")
+            annual_inflation = float(payload.get("annual_inflation", 0.03))
+            annual_return_override = payload.get("annual_return_override")
+
+            if current_age < 18 or current_age > 75:
+                return jsonify({"error": "La edad actual debe estar entre 18 y 75 años"}), 400
+
+            if retirement_age <= current_age or retirement_age > 75:
+                return jsonify({"error": "La edad de jubilación debe ser mayor a la edad actual y máximo 75 años"}), 400
+
+            if initial_amount < 0 or monthly_contribution < 0:
+                return jsonify({"error": "Los montos no pueden ser negativos"}), 400
+
+            if annual_return_override is not None:
+                annual_return = float(annual_return_override)
+                if annual_return < -0.10 or annual_return > 0.20:
+                    return jsonify({"error": "El rendimiento anual debe estar entre -10% y 20%"}), 400
+            else:
+                annual_return = investment_calculator.HISTORICAL_RETURNS.get(scenario, 0.10)
+
+            result = investment_calculator.calculate_retirement_plan(
+                current_age=current_age,
+                retirement_age=retirement_age,
+                initial_amount=initial_amount,
+                monthly_contribution=monthly_contribution,
+                annual_return=annual_return,
+                annual_inflation=annual_inflation,
+                include_yearly_detail=True,
+                max_portfolio_value=investment_calculator.MAX_PORTFOLIO_VALUE
+            )
+
+            return jsonify({
+                "calculation_type": "retirement_plan",
+                "result": result,
+                "timestamp": datetime.now().isoformat(timespec="seconds")
+            })
+
         else:
             return jsonify({
                 "error": f"Tipo de cálculo '{calc_type}' no soportado",
-                "supported_types": ["dca", "lump_sum_vs_dca", "compound_interest"]
+                "supported_types": ["dca", "lump_sum_vs_dca", "compound_interest", "retirement_plan"]
             }), 400
 
     except ValueError as e:

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}RVC Analyzer{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="site-shell">
+        <header class="site-header">
+            <div class="site-header__inner container">
+                <a href="/" class="site-brand">
+                    <span class="site-brand__logo">
+                        <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="RVC Analyzer">
+                    </span>
+                    <span class="site-brand__text">
+                        <span class="site-brand__title">RVC Analyzer</span>
+                        <span class="site-brand__subtitle">Radar de Valoracion y Calidad</span>
+                    </span>
+                </a>
+                <nav class="site-nav" aria-label="Principal">
+                    <a href="{{ url_for('index') }}" class="site-nav__link {% if active_page == 'home' %}is-active{% endif %}">Inicio</a>
+                    <a href="{{ url_for('comparador') }}" class="site-nav__link {% if active_page == 'compare' %}is-active{% endif %}">Comparador</a>
+                    <a href="{{ url_for('calculadora') }}" class="site-nav__link {% if active_page == 'calculator' %}is-active{% endif %}">Calculadora</a>
+                </nav>
+            </div>
+        </header>
+
+        <main class="site-main">
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="site-footer">
+            <div class="site-footer__inner container">
+                <p class="site-footer__title">RVC Analyzer &mdash; analisis fundamental para inversionistas de largo plazo.</p>
+                <p class="site-footer__disclaimer">La informacion tiene fines educativos y no constituye recomendacion de inversion.</p>
+            </div>
+        </footer>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
