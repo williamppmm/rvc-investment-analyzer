@@ -354,6 +354,7 @@ class InvestmentScorer:
             or metrics.get("earnings_growth_next_y")
             or metrics.get("earnings_growth_next_5y")
             or metrics.get("earnings_growth")
+            or metrics.get("earnings_growth_qoq")
         )
         if earnings_growth is not None:
             if earnings_growth > 30:

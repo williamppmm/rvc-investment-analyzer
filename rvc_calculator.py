@@ -183,7 +183,9 @@ class RVCCalculator:
         earnings_growth = (
             metrics.get("earnings_growth_this_y")
             or metrics.get("earnings_growth_next_y")
+            or metrics.get("earnings_growth_next_5y")
             or metrics.get("earnings_growth")
+            or metrics.get("earnings_growth_qoq")
             or 0
         )
         if result["score"] < 40 and revenue_growth >= 25 and earnings_growth >= 10:

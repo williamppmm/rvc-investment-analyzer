@@ -297,27 +297,31 @@ function populateMetrics(metrics) {
             { key: "earnings_growth", label: "Earn. Growth", format: "percent" },
         ];
     }
-    const fallbackMap = {
-        revenue_growth: ["revenue_growth_5y", "revenue_growth_qoq"],
+    const valuePriority = {
+        revenue_growth: [
+            "revenue_growth_5y",
+            "revenue_growth",
+            "revenue_growth_qoq",
+        ],
         earnings_growth: [
             "earnings_growth_this_y",
             "earnings_growth_next_y",
             "earnings_growth_next_5y",
             "earnings_growth_qoq",
+            "earnings_growth",
         ],
     };
 
     fields.forEach((field) => {
-        let value = metrics[field.key];
-        let sourceKey = field.key;
-        if (value === undefined) {
-            const fallbacks = fallbackMap[field.key] || [];
-            for (const alt of fallbacks) {
-                if (metrics[alt] !== undefined) {
-                    value = metrics[alt];
-                    sourceKey = alt;
-                    break;
-                }
+        const candidates = valuePriority[field.key] || [field.key];
+        let value;
+        let sourceKey = candidates[0] || field.key;
+        for (const candidate of candidates) {
+            const candidateValue = metrics[candidate];
+            if (candidateValue !== undefined && candidateValue !== null) {
+                value = candidateValue;
+                sourceKey = candidate;
+                break;
             }
         }
         const item = document.createElement("div");

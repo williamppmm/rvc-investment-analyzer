@@ -487,7 +487,9 @@ def comparar():
                     "earnings_growth": (
                         metrics.get("earnings_growth_this_y")
                         or metrics.get("earnings_growth_next_y")
+                        or metrics.get("earnings_growth_next_5y")
                         or metrics.get("earnings_growth")
+                        or metrics.get("earnings_growth_qoq")
                     ),
                 },
 
