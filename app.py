@@ -10,6 +10,7 @@ import logging
 import os
 import sqlite3
 from datetime import datetime, timedelta
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional
 
@@ -28,16 +29,66 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 DB_PATH = DATA_DIR / "cache.db"
+LOG_DIR = BASE_DIR / "logs"
+
+# Crear directorio de logs si no existe
+LOG_DIR.mkdir(exist_ok=True)
 
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("RVC_SECRET_KEY", "change-me")
 
+# ============================================
+# CONFIGURACIÓN DE LOGGING
+# ============================================
+
+# Nivel de logging desde variable de entorno (default: INFO)
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+
+# Formato detallado para logs
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
+DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+# Configurar logger raíz
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format=LOG_FORMAT,
+    datefmt=DATE_FORMAT,
+    handlers=[
+        # Handler 1: Console output (solo INFO y superiores)
+        logging.StreamHandler(),
+        # Handler 2: File output con rotación (10 MB max, 5 archivos)
+        RotatingFileHandler(
+            LOG_DIR / "rvc_app.log",
+            maxBytes=10 * 1024 * 1024,  # 10 MB
+            backupCount=5,
+            encoding="utf-8"
+        )
+    ]
 )
+
+# Logger principal de la aplicación
 logger = logging.getLogger("rvc_app")
+
+# Logger separado para errores críticos
+error_handler = RotatingFileHandler(
+    LOG_DIR / "errors.log",
+    maxBytes=10 * 1024 * 1024,
+    backupCount=3,
+    encoding="utf-8"
+)
+error_handler.setLevel(logging.ERROR)
+error_handler.setFormatter(logging.Formatter(LOG_FORMAT, DATE_FORMAT))
+logger.addHandler(error_handler)
+
+# Log de inicio de aplicación
+logger.info("=" * 60)
+logger.info("RVC Analyzer - Iniciando aplicación")
+logger.info(f"Directorio base: {BASE_DIR}")
+logger.info(f"Directorio de datos: {DATA_DIR}")
+logger.info(f"Base de datos: {DB_PATH}")
+logger.info(f"Nivel de logging: {LOG_LEVEL}")
+logger.info("=" * 60)
 
 data_agent = DataAgent()
 rvc_calculator = RVCCalculator()
@@ -227,38 +278,67 @@ def index():
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
+    """Endpoint principal para análisis de ticker individual."""
+    start_time = datetime.now()
+
     payload = request.get_json(silent=True) or {}
     ticker = (payload.get("ticker") or "").strip().upper()
+
     if not ticker:
+        logger.warning("Analyze request sin ticker - IP: %s", request.remote_addr)
         return jsonify({"error": "Por favor ingrese un ticker"}), 400
 
-    logger.info("Analyzing ticker %s", ticker)
-    cached = get_cached_data(ticker)
-    metrics: Optional[Dict[str, Any]] = None
-    if cached and not cache_expired(cached["last_updated"]):
-        logger.info("Using cached metrics for %s", ticker)
-        metrics = json.loads(cached["data"])
-        if metrics and not metrics.get("asset_type"):
-            logger.info("Cached metrics desactualizados para %s, recargando", ticker)
+    logger.info("=" * 50)
+    logger.info("ANALYZE REQUEST - Ticker: %s | IP: %s", ticker, request.remote_addr)
+
+    try:
+        cached = get_cached_data(ticker)
+        metrics: Optional[Dict[str, Any]] = None
+
+        if cached and not cache_expired(cached["last_updated"]):
+            logger.info("✓ Cache HIT - Ticker: %s | Age: %s",
+                       ticker,
+                       datetime.now() - datetime.fromisoformat(cached["last_updated"]))
+            metrics = json.loads(cached["data"])
+
+            # Verificar si necesita actualización
+            if metrics and not metrics.get("asset_type"):
+                logger.warning("Cache obsoleto (sin asset_type) - Refrescando: %s", ticker)
+                metrics = data_agent.fetch_financial_data(ticker)
+                if metrics:
+                    save_cache(ticker, metrics)
+            elif metrics and metrics.get("schema_version") != METRIC_SCHEMA_VERSION:
+                logger.warning("Cache obsoleto (schema v%s vs v%s) - Refrescando: %s",
+                             metrics.get("schema_version"), METRIC_SCHEMA_VERSION, ticker)
+                metrics = data_agent.fetch_financial_data(ticker)
+                if metrics:
+                    save_cache(ticker, metrics)
+        else:
+            cache_status = "EXPIRED" if cached else "MISS"
+            logger.info("✗ Cache %s - Fetching fresh data: %s", cache_status, ticker)
             metrics = data_agent.fetch_financial_data(ticker)
             if metrics:
                 save_cache(ticker, metrics)
-        elif metrics and metrics.get("schema_version") != METRIC_SCHEMA_VERSION:
-            logger.info("Actualizando métricas a esquema vigente para %s", ticker)
-            metrics = data_agent.fetch_financial_data(ticker)
-            if metrics:
-                save_cache(ticker, metrics)
-    else:
-        logger.info("Fetching fresh metrics for %s", ticker)
-        metrics = data_agent.fetch_financial_data(ticker)
-        if metrics:
-            save_cache(ticker, metrics)
+                logger.info("✓ Fresh data saved to cache: %s", ticker)
 
-    if not metrics:
-        return jsonify({"error": f"No se encontraron datos suficientes para {ticker}"}), 404
+        if not metrics:
+            logger.error("No se encontraron datos suficientes - Ticker: %s", ticker)
+            return jsonify({"error": f"No se encontraron datos suficientes para {ticker}"}), 404
 
-    response = prepare_analysis_response(ticker, metrics)
-    return jsonify(response)
+        response = prepare_analysis_response(ticker, metrics)
+
+        elapsed = (datetime.now() - start_time).total_seconds()
+        logger.info("✓ Analysis completado - Ticker: %s | Tiempo: %.2fs | Score: %.1f",
+                   ticker, elapsed, response.get("scores", {}).get("overall_score", 0))
+        logger.info("=" * 50)
+
+        return jsonify(response)
+
+    except Exception as e:
+        elapsed = (datetime.now() - start_time).total_seconds()
+        logger.error("ERROR en analyze() - Ticker: %s | Tiempo: %.2fs | Error: %s",
+                    ticker, elapsed, str(e), exc_info=True)
+        return jsonify({"error": f"Error interno al analizar {ticker}"}), 500
 
 
 @app.route("/api/manual-metrics", methods=["POST"])
@@ -390,10 +470,13 @@ def comparar():
             "timestamp": "..."
         }
     """
+    start_time = datetime.now()
+
     payload = request.get_json(silent=True) or {}
     tickers_input = payload.get("tickers", [])
 
     if not isinstance(tickers_input, list):
+        logger.warning("Comparar request con formato inválido - IP: %s", request.remote_addr)
         return jsonify({"error": "El campo 'tickers' debe ser una lista"}), 400
 
     # Filtrar y normalizar tickers
@@ -401,12 +484,16 @@ def comparar():
     tickers = list(dict.fromkeys(tickers))  # Eliminar duplicados
 
     if len(tickers) < 2:
+        logger.warning("Comparar request con < 2 tickers - IP: %s", request.remote_addr)
         return jsonify({"error": "Debe proporcionar al menos 2 tickers"}), 400
 
     if len(tickers) > 5:
+        logger.warning("Comparar request con > 5 tickers (%d) - IP: %s", len(tickers), request.remote_addr)
         return jsonify({"error": "Máximo 5 tickers permitidos"}), 400
 
-    logger.info("Comparing tickers: %s", tickers)
+    logger.info("=" * 50)
+    logger.info("COMPARE REQUEST - Tickers: %s | Count: %d | IP: %s",
+               ", ".join(tickers), len(tickers), request.remote_addr)
 
     companies_data = []
     errors = []
@@ -546,6 +633,13 @@ def comparar():
         "errors": errors if errors else None,
         "timestamp": datetime.now().isoformat(timespec="seconds"),
     }
+
+    elapsed = (datetime.now() - start_time).total_seconds()
+    logger.info("✓ Comparison completado - Tickers: %s | Success: %d/%d | Tiempo: %.2fs",
+               ", ".join(tickers), len(companies_data), len(tickers), elapsed)
+    if errors:
+        logger.warning("Comparison errors: %s", "; ".join(errors))
+    logger.info("=" * 50)
 
     return jsonify(response)
 

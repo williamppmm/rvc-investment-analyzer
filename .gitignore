@@ -1,23 +1,207 @@
-# Entornos virtuales
+# ============================================
+# PYTHON
+# ============================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# ============================================
+# ENTORNOS VIRTUALES
+# ============================================
+venv/
 .venv/
 env/
+.env/
+ENV/
+env.bak/
+venv.bak/
 
-# Variables de entorno y credenciales
+# ============================================
+# VARIABLES DE ENTORNO Y CREDENCIALES
+# ============================================
 .env
+.env.local
+.env.production
+.env.development
+credentials.json
+api_keys.json
+secrets.json
+config.local.json
 
-# Archivos generados
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-
-# Datos locales y cachés
+# ============================================
+# BASES DE DATOS Y CACHÉS
+# ============================================
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
 data/cache.db
+data/*.db
+
+# Cache files
+data/cache/
+.cache/
+*.cache
+
+# ============================================
+# LOGS
+# ============================================
+*.log
+logs/
+*.log.*
+log/
+
+# ============================================
+# IDE Y EDITORES
+# ============================================
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# ============================================
+# SISTEMA OPERATIVO
+# ============================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+.directory
+.Trash-*
+
+# ============================================
+# BACKUPS Y TEMPORALES
+# ============================================
+*.bak
+*.backup
+*.tmp
+*.temp
+.~*
+~$*
+
+# Backups de scripts
+backups/daily/*.tar.gz
+backups/weekly/*.tar.gz
+backups/monthly/*.tar.gz
+
+# ============================================
+# ARCHIVOS DEL PROYECTO
+# ============================================
+# Claude Code
+*.claude
+
+# Notas de desarrollo temporal
+NOTAS_TEMP.md
+TODO_PERSONAL.md
+SCRATCH.md
+
+# Archivos de datos temporales
+data/temp/
+data/test/
+temp/
+tmp/
+
+# Clasificaciones de assets descargadas localmente
 data/asset_classifications.json
 
-# Configuraciones de IDE / sistema
-.vscode/
-.idea/
-.DS_Store
+# ============================================
+# DESPLIEGUE
+# ============================================
+# Railway
+.railway/
 
+# Vercel
+.vercel
+
+# Heroku
+.heroku/
+
+# ============================================
+# DOCUMENTACIÓN IMPORTANTE (NO IGNORAR)
+# ============================================
+# Mantener toda la documentación del proyecto
+!README.md
+!DEVELOPMENT_ROADMAP.md
+!DEPLOYMENT_ANALYSIS.md
+!DESIGN_SYSTEM.md
+!API_DOCUMENTATION.md
