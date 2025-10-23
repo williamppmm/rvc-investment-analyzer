@@ -117,20 +117,22 @@ class DataAgent:
         self.metric_priority = {
             "current_price": [
                 "manual_override",
-                "yahoo",
+                # Prefer structured API sources over scraped HTML to avoid mis-parsing/scaling issues
                 "twelvedata",
                 "fmp",
                 "alpha_vantage",
+                "yahoo",
                 "finviz",
                 "marketwatch",
                 "fallback_example",
             ],
             "market_cap": [
                 "manual_override",
-                "yahoo",
+                # Prefer structured API sources over scraped HTML to avoid mis-parsing/scaling issues
                 "twelvedata",
                 "fmp",
                 "alpha_vantage",
+                "yahoo",
                 "finviz",
                 "marketwatch",
                 "fallback_example",

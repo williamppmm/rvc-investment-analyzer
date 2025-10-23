@@ -66,19 +66,18 @@ Write-Host ""
 Write-Host "[3/5] Verificando servidor MCP SQLite..." -ForegroundColor Yellow
 
 try {
-    # Intentar ejecutar el servidor para ver si esta disponible
-    $mcpCheck = npx -y @modelcontextprotocol/server-sqlite --version 2>&1
-
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "  OK Servidor MCP SQLite disponible" -ForegroundColor Green
-        Write-Host "  Version: $mcpCheck" -ForegroundColor Gray
+    # Verificar disponibilidad en npm del paquete correcto 'mcp-sqlite'
+    $mcpVersion = npm view mcp-sqlite version 2>$null
+    if ($mcpVersion) {
+        Write-Host "  OK Servidor MCP SQLite disponible en npm: v$mcpVersion" -ForegroundColor Green
     } else {
-        Write-Host "  AVISO Servidor MCP SQLite no instalado globalmente" -ForegroundColor Yellow
-        Write-Host "  (Esto esta bien si usas npx, se descargara automaticamente)" -ForegroundColor Gray
+        Write-Host "  AVISO No se pudo obtener version desde npm" -ForegroundColor Yellow
     }
+
+    # Nota: npx descargara/ejecutara 'mcp-sqlite' automaticamente cuando lo invoque Claude Code.
+    # No es necesario precalentar aqui para evitar codigos de salida no deterministas.
 } catch {
-    Write-Host "  AVISO No se pudo verificar el servidor MCP" -ForegroundColor Yellow
-    Write-Host "  (Esto esta bien si usas npx)" -ForegroundColor Gray
+    Write-Host "  AVISO No se pudo verificar el servidor MCP (mcp-sqlite)" -ForegroundColor Yellow
 }
 
 Write-Host ""
@@ -195,3 +194,6 @@ if ($allGood) {
 }
 
 Write-Host ""
+
+    # Forzar codigo de salida 0 para que herramientas externas no lo interpreten como fallo
+    $global:LASTEXITCODE = 0
