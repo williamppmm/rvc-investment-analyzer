@@ -201,7 +201,3 @@ data/asset_classifications.json
 # ============================================
 # Mantener toda la documentación del proyecto
 !README.md
-!DEVELOPMENT_ROADMAP.md
-!DEPLOYMENT_ANALYSIS.md
-!DESIGN_SYSTEM.md
-!API_DOCUMENTATION.md
