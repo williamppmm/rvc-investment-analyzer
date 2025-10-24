@@ -157,7 +157,8 @@ rcv_proyecto/
 │
 ├── README.md                       # Este archivo
 ├── DEVELOPMENT_ROADMAP.md         # Roadmap de desarrollo
-├── API_DOCUMENTATION.md           # Documentación de APIs
+├── API_ENDPOINTS_GUIDE.md         # Guía de endpoints de la API REST
+├── TECHNICAL_DOCUMENTATION.md    # Documentación técnica interna
 ├── LOGGING.md                     # Sistema de logging
 └── requirements.txt               # Dependencias Python
 ```
@@ -289,7 +290,7 @@ POST /cache/clear
 Body: {"ticker": "AAPL"}  # Opcional: específico o total
 ```
 
-Ver documentación completa en [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
+Ver documentación completa en [API_ENDPOINTS_GUIDE.md](API_ENDPOINTS_GUIDE.md)
 
 ### Variables de Entorno
 
@@ -325,7 +326,8 @@ self.quality_weights = {
 ## 📚 Recursos Adicionales
 
 - **[DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md)**: Plan de desarrollo detallado por fases
-- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)**: Documentación completa de endpoints
+- **[API_ENDPOINTS_GUIDE.md](API_ENDPOINTS_GUIDE.md)**: Guía práctica de endpoints de la API REST
+- **[TECHNICAL_DOCUMENTATION.md](TECHNICAL_DOCUMENTATION.md)**: Documentación técnica y arquitectura interna
 - **[LOGGING.md](LOGGING.md)**: Sistema de logs y debugging
 - **[Glosario Interactivo](static/glossary.js)**: 60+ términos financieros explicados
 
