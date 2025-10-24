@@ -297,6 +297,10 @@ def health():
                         "ALPHAVANTAGE_API_KEY" if os.getenv("ALPHAVANTAGE_API_KEY") else None
                     )
                 ),
+                "env_candidates": {
+                    "ALPHA_VANTAGE_KEY": bool(os.getenv("ALPHA_VANTAGE_KEY")),
+                    "ALPHAVANTAGE_API_KEY": bool(os.getenv("ALPHAVANTAGE_API_KEY")),
+                },
             },
             "twelve_data": {
                 "enabled": getattr(data_agent, "twelve_client", None).enabled if hasattr(data_agent, "twelve_client") else False,
@@ -305,10 +309,15 @@ def health():
                         "TWELVE_DATA_API_KEY" if os.getenv("TWELVE_DATA_API_KEY") else None
                     )
                 ),
+                "env_candidates": {
+                    "TWELVEDATA_API_KEY": bool(os.getenv("TWELVEDATA_API_KEY")),
+                    "TWELVE_DATA_API_KEY": bool(os.getenv("TWELVE_DATA_API_KEY")),
+                },
             },
             "fmp": {
                 "enabled": getattr(data_agent, "fmp_client", None).enabled if hasattr(data_agent, "fmp_client") else False,
                 "env": ("FMP_API_KEY" if os.getenv("FMP_API_KEY") else None),
+                "env_candidates": {"FMP_API_KEY": bool(os.getenv("FMP_API_KEY"))},
             },
         }
     except Exception:
