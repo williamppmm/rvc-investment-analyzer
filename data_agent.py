@@ -9,6 +9,7 @@ import logging
 import re
 import time
 from copy import deepcopy
+import os
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -166,6 +167,18 @@ class DataAgent:
         self.alpha_client = AlphaVantageClient()
         self.twelve_client = TwelveDataClient()
         self.fmp_client = FMPClient()
+        # Log de disponibilidad de proveedores (sin exponer secretos)
+        try:
+            av_env = "ALPHA_VANTAGE_KEY" if os.getenv("ALPHA_VANTAGE_KEY") else ("ALPHAVANTAGE_API_KEY" if os.getenv("ALPHAVANTAGE_API_KEY") else "none")
+            td_env = "TWELVEDATA_API_KEY" if os.getenv("TWELVEDATA_API_KEY") else ("TWELVE_DATA_API_KEY" if os.getenv("TWELVE_DATA_API_KEY") else "none")
+            fmp_env = "FMP_API_KEY" if os.getenv("FMP_API_KEY") else "none"
+            logger.info(
+                "Providers enabled -> AlphaVantage=%s (env=%s), TwelveData=%s (env=%s), FMP=%s (env=%s)",
+                self.alpha_client.enabled, av_env, self.twelve_client.enabled, td_env, self.fmp_client.enabled, fmp_env
+            )
+        except Exception:
+            # Evitar que un error de logging afecte la inicialización
+            pass
         self.classifier = AssetClassifier()
         self.classification_path = DATA_DIR / "asset_classifications.json"
         self.classification_cache = self._load_classification_cache()
@@ -343,6 +356,7 @@ class DataAgent:
 
     def _fetch_alpha_vantage(self, ticker: str) -> Optional[SourceResult]:
         if not self.alpha_client.enabled:
+            logger.info("Alpha Vantage deshabilitado (API key ausente)")
             return None
 
         overview = self.alpha_client.get_overview(ticker)
@@ -427,6 +441,7 @@ class DataAgent:
 
     def _fetch_twelve_data(self, ticker: str) -> Optional[SourceResult]:
         if not self.twelve_client.enabled:
+            logger.info("Twelve Data deshabilitado (API key ausente)")
             return None
 
         payload = self.twelve_client.get_quote(ticker)
@@ -480,6 +495,7 @@ class DataAgent:
 
     def _fetch_fmp(self, ticker: str) -> Optional[SourceResult]:
         if not self.fmp_client.enabled:
+            logger.info("FMP deshabilitado (API key ausente)")
             return None
 
         data: Dict[str, Optional[float]] = {}
