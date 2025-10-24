@@ -1,0 +1,97 @@
+{
+  "info": {
+    "name": "RVC Investment Analyzer",
+    "_postman_id": "b2a8a9d2-6b6a-4a5d-9f8a-2f7bd1d1c0a1",
+    "description": "Colección básica para probar los endpoints locales de RVC.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Analyze - Analizar ticker",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/analyze",
+          "host": ["{{baseUrl}}"],
+          "path": ["analyze"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ticker\": \"AAPL\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Comparar - Múltiples tickers",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/comparar",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "comparar"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tickers\": [\"AAPL\", \"MSFT\", \"GOOGL\"]\n}"
+        }
+      }
+    },
+    {
+      "name": "Calculadora - DCA",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/calcular-inversion",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "calcular-inversion"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"calculation_type\": \"dca\",\n  \"monthly_amount\": 500,\n  \"years\": 20,\n  \"scenario\": \"moderado\",\n  \"market_timing\": \"normal\"\n}"
+        }
+      }
+    },
+    {
+      "name": "History - Últimos scores por ticker",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/history/AAPL",
+          "host": ["{{baseUrl}}"],
+          "path": ["history", "AAPL"]
+        }
+      }
+    },
+    {
+      "name": "Cache - Limpiar total",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/cache/clear",
+          "host": ["{{baseUrl}}"],
+          "path": ["cache", "clear"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        }
+      }
+    }
+  ],
+  "event": [],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" }
+  ]
+}

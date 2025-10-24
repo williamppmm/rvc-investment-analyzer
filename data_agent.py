@@ -245,6 +245,16 @@ class DataAgent:
             time.sleep(0.6)
 
         metrics = self._finalize_metrics(metrics)
+        # Adjuntar trazabilidad de origen por métrica para depuración/auditoría.
+        # Esto permite verificar rápidamente qué fuente aportó cada valor
+        # (p. ej., alpha_vantage, fmp, twelvedata, scraping, override manual, etc.).
+        if self.provenance:
+            try:
+                # deepcopy por seguridad (no mutar el estado interno en cachés posteriores)
+                metrics["provenance"] = deepcopy(self.provenance)
+            except Exception:
+                # Falla silenciosa: la falta de provenance no debe impedir devolver métricas
+                pass
         return metrics if len(metrics) > 2 else None
 
     def _priority_rank(self, key: str, source: Optional[str]) -> int:
