@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Top Oportunidades - RVC Analyzer{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='top_opportunities.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="page-hero">
+        <h1 class="page-hero__title">🏆 Top Oportunidades de Inversión</h1>
+        <p class="page-hero__subtitle">Descubre las mejores acciones según nuestro análisis RVC. Filtra, ordena y encuentra tu próxima inversión.</p>
+    </section>
+
+    <!-- Panel de filtros -->
+    <section class="filters-section">
+        <div class="filters-card">
+            <h2 class="filters-title">🔍 Filtros y Ordenamiento</h2>
+            
+            <div class="filters-grid">
+                <!-- Filtro por score mínimo -->
+                <div class="filter-group">
+                    <label for="min-score-slider" class="filter-label">
+                        Score Mínimo RVC: <span id="min-score-value">50</span>
+                    </label>
+                    <input type="range" 
+                           id="min-score-slider" 
+                           class="filter-slider" 
+                           min="30" 
+                           max="100" 
+                           value="50" 
+                           step="5">
+                    <div class="slider-labels">
+                        <span>30</span>
+                        <span>100</span>
+                    </div>
+                </div>
+
+                <!-- Filtro por sector -->
+                <div class="filter-group">
+                    <label for="sector-select" class="filter-label">Sector</label>
+                    <select id="sector-select" class="filter-select">
+                        <option value="">Todos los sectores</option>
+                        <option value="technology">Technology</option>
+                        <option value="financial services">Financial Services</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="basic materials">Basic Materials</option>
+                        <option value="communication services">Communication Services</option>
+                        <option value="consumer defensive">Consumer Defensive</option>
+                    </select>
+                </div>
+
+                <!-- Ordenamiento -->
+                <div class="filter-group">
+                    <label for="sort-select" class="filter-label">Ordenar por</label>
+                    <select id="sort-select" class="filter-select">
+                        <option value="rvc_score">Score RVC ⬇</option>
+                        <option value="market_cap">Capitalización de Mercado ⬇</option>
+                        <option value="pe_ratio">Ratio P/E ⬆</option>
+                        <option value="ticker">Ticker (A-Z)</option>
+                    </select>
+                </div>
+
+                <!-- Límite de resultados -->
+                <div class="filter-group">
+                    <label for="limit-select" class="filter-label">Mostrar</label>
+                    <select id="limit-select" class="filter-select">
+                        <option value="10">Top 10</option>
+                        <option value="20">Top 20</option>
+                        <option value="50">Top 50</option>
+                        <option value="100">Todos</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filters-actions">
+                <button id="apply-filters" class="btn btn-primary">
+                    🔍 Aplicar Filtros
+                </button>
+                <button id="reset-filters" class="btn btn-secondary">
+                    🔄 Restablecer
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Estadísticas rápidas -->
+    <section class="stats-section" id="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="total-count">-</div>
+                    <div class="stat-label">Oportunidades</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="average-score">-</div>
+                    <div class="stat-label">Score Promedio</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🏢</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="sectors-count">-</div>
+                    <div class="stat-label">Sectores</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🥇</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="top-ticker">-</div>
+                    <div class="stat-label">Líder Actual</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loading spinner -->
+    <div class="loading-container" id="loading-container">
+        <div class="spinner"></div>
+        <p>Cargando oportunidades...</p>
+    </div>
+
+    <!-- Error state -->
+    <div class="error-container hidden" id="error-container">
+        <div class="error-card">
+            <div class="error-icon">⚠️</div>
+            <h3>Error al cargar datos</h3>
+            <p id="error-message">Hubo un problema al obtener las oportunidades. Por favor, intenta nuevamente.</p>
+            <button id="retry-button" class="btn btn-primary">Reintentar</button>
+        </div>
+    </div>
+
+    <!-- Tabla de resultados -->
+    <section class="results-section" id="results-section">
+        <div class="results-header">
+            <h2>📈 Resultados</h2>
+            <div class="results-info">
+                <span id="results-count">0 oportunidades encontradas</span>
+                <span class="separator">•</span>
+                <span id="last-updated">Actualizado: -</span>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="opportunities-table" id="opportunities-table">
+                <thead>
+                    <tr>
+                        <th class="rank-col">#</th>
+                        <th class="ticker-col">Ticker</th>
+                        <th class="company-col">Empresa</th>
+                        <th class="score-col">Score RVC</th>
+                        <th class="classification-col">Clasificación</th>
+                        <th class="sector-col">Sector</th>
+                        <th class="price-col">Precio</th>
+                        <th class="market-cap-col">Cap. Mercado</th>
+                        <th class="pe-col">P/E</th>
+                        <th class="actions-col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="opportunities-tbody">
+                    <!-- Contenido cargado dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Empty state -->
+        <div class="empty-state hidden" id="empty-state">
+            <div class="empty-icon">🔍</div>
+            <h3>No se encontraron oportunidades</h3>
+            <p>Prueba ajustando los filtros para ver más resultados.</p>
+        </div>
+    </section>
+
+    <!-- Quick actions -->
+    <section class="quick-actions" id="quick-actions">
+        <h3>🚀 Acciones Rápidas</h3>
+        <div class="quick-buttons">
+            <button class="quick-btn" onclick="applyQuickFilter('premium')">
+                ⭐ Solo Premium (Score ≥75)
+            </button>
+            <button class="quick-btn" onclick="applyQuickFilter('technology')">
+                💻 Solo Technology
+            </button>
+            <button class="quick-btn" onclick="applyQuickFilter('large-cap')">
+                🏢 Large Cap (>$100B)
+            </button>
+            <button class="quick-btn" onclick="applyQuickFilter('reset')">
+                🔄 Ver Todo
+            </button>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='top_opportunities.js') }}"></script>
+{% endblock %}

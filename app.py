@@ -604,6 +604,12 @@ def calculadora():
     return render_template("calculadora.html", active_page="calculator")
 
 
+@app.route("/top-opportunities")
+def top_opportunities_page():
+    """Página de Top Opportunities - mejores oportunidades de inversión."""
+    return render_template("top_opportunities.html", active_page="opportunities")
+
+
 @app.route("/api/comparar", methods=["POST"])
 def comparar():
     """
