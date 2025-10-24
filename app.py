@@ -287,7 +287,38 @@ def index():
 @app.route("/health")
 def health():
     """Endpoint de salud simple para verificaciones de plataforma."""
-    return jsonify({"status": "ok", "timestamp": datetime.now().isoformat(timespec="seconds")})
+    # Estado de proveedores externos (sin exponer secretos)
+    try:
+        providers = {
+            "alpha_vantage": {
+                "enabled": getattr(data_agent, "alpha_client", None).enabled if hasattr(data_agent, "alpha_client") else False,
+                "env": (
+                    "ALPHA_VANTAGE_KEY" if os.getenv("ALPHA_VANTAGE_KEY") else (
+                        "ALPHAVANTAGE_API_KEY" if os.getenv("ALPHAVANTAGE_API_KEY") else None
+                    )
+                ),
+            },
+            "twelve_data": {
+                "enabled": getattr(data_agent, "twelve_client", None).enabled if hasattr(data_agent, "twelve_client") else False,
+                "env": (
+                    "TWELVEDATA_API_KEY" if os.getenv("TWELVEDATA_API_KEY") else (
+                        "TWELVE_DATA_API_KEY" if os.getenv("TWELVE_DATA_API_KEY") else None
+                    )
+                ),
+            },
+            "fmp": {
+                "enabled": getattr(data_agent, "fmp_client", None).enabled if hasattr(data_agent, "fmp_client") else False,
+                "env": ("FMP_API_KEY" if os.getenv("FMP_API_KEY") else None),
+            },
+        }
+    except Exception:
+        providers = {"alpha_vantage": {"enabled": False}, "twelve_data": {"enabled": False}, "fmp": {"enabled": False}}
+
+    return jsonify({
+        "status": "ok",
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "providers": providers,
+    })
 
 
 @app.route("/analyze", methods=["POST"])
