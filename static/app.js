@@ -14,13 +14,13 @@ const manualFeedback = document.getElementById("manual-feedback");
 const applyManualBtn = document.getElementById("apply-manual-btn");
 const cancelManualBtn = document.getElementById("cancel-manual-btn");
 
-const MANUAL_TOGGLE_LABEL_DEFAULT = "Editar metricas manualmente";
-const MANUAL_TOGGLE_LABEL_PROMPT = "Completar metricas manualmente";
+const MANUAL_TOGGLE_LABEL_DEFAULT = "Editar métricas manualmente";
+const MANUAL_TOGGLE_LABEL_PROMPT = "Completar métricas manualmente";
 const MANUAL_TOGGLE_LABEL_CLOSE = "Ocultar formulario manual";
 const MANUAL_HINT_DEFAULT =
     "Si las APIs no devuelven datos recientes puedes capturar los valores de fuentes confiables e ingresarlos aqui.";
 const MANUAL_HINT_RECOMMENDED =
-    "No se pudieron obtener todas las metricas criticas. Completa los valores manualmente antes de recalcular.";
+    "No se pudieron obtener todas las métricas críticas. Completa los valores manualmente antes de recalcular.";
 
 const MANUAL_FIELDS = [
     { key: "current_price", label: "Precio actual", placeholder: "ej. 257.45", format: "number" },
@@ -85,7 +85,7 @@ async function analyzeStock() {
         });
         const data = await response.json();
         if (!response.ok) {
-            throw new Error(data.error || "No se pudo completar el analisis");
+            throw new Error(data.error || "No se pudo completar el análisis");
         }
         displayResults(data);
     } catch (error) {
@@ -123,7 +123,7 @@ function displayResults(data) {
         breakdownSection.classList.toggle("hidden", !analysisAllowed);
     }
     document.getElementById("company-name").textContent =
-        data.company_name || `Analisis de ${data.ticker}`;
+        data.company_name || `Análisis de ${data.ticker}`;
     document.getElementById("ticker-badge").textContent = data.ticker;
 
     const primarySource = formatSourceName(data.metrics.primary_source);
@@ -185,7 +185,7 @@ function displayResults(data) {
     }
 
     const breakdown = data.rvc_score.breakdown;
-    updateDimension("val", breakdown.valoracion, isEtf);
+    updateDimension("val", breakdown.valoración, isEtf);
     updateDimension("qual", breakdown.calidad, isEtf);
     updateDimension("health", breakdown.salud, isEtf);
     updateDimension("growth", breakdown.crecimiento, isEtf);
@@ -496,7 +496,7 @@ function updateManualControls(metrics, manualOverrides) {
 
 async function applyManualOverrides() {
     if (!currentTicker) {
-        showManualFeedback("Analiza un ticker antes de editar las metricas.", true);
+        showManualFeedback("Analiza un ticker antes de editar las métricas.", true);
         return;
     }
     const overrides = {};

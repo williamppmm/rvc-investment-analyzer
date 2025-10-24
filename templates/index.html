@@ -5,16 +5,16 @@
 {% block content %}
 <div class="container">
     <section class="page-hero">
-        <h1 class="page-hero__title">Radar de Valoracion y Calidad</h1>
+        <h1 class="page-hero__title">Radar de Valoración y Calidad</h1>
         <p class="page-hero__subtitle">RVC Analyzer es un sistema de
-            <span class="term-tooltip">analisis fundamental
+            <span class="term-tooltip">análisis fundamental
                 <span class="term-tooltip__content">Evaluación de empresas basada en métricas financieras, calidad de negocio y perspectivas de largo plazo</span>
             </span>
-            que te ayuda a detectar oportunidades reales de inversion apoyandose en cuatro pilares: calidad del negocio, valoracion justa, salud financiera y potencial de crecimiento.</p>
+            que te ayuda a detectar oportunidades reales de inversión apoyándose en cuatro pilares: calidad del negocio, valoración justa, salud financiera y potencial de crecimiento.</p>
     </section>
 
     <section class="search-section">
-        <h2>Analizar accion individual</h2>
+        <h2>Analizar acción individual</h2>
         <p class="search-hint">
             Para evaluar varias acciones a la vez visita el <a href="{{ url_for('comparador') }}" class="link-inline">Comparador</a>.
         </p>
@@ -29,13 +29,13 @@
         </div>
 
         <button id="toggle-manual-btn" type="button" class="btn btn--secondary hidden">
-            Editar metricas manualmente
+            Editar métricas manualmente
         </button>
         <div id="manual-input" class="manual-input hidden">
-            <h3>Ajustar metricas manualmente</h3>
+            <h3>Ajustar métricas manualmente</h3>
             <p id="manual-hint" class="manual-hint">
                 Si las APIs no devuelven datos recientes puedes capturar los valores de fuentes confiables,
-                ingresarlos aqui y volver a ejecutar el analisis.
+                ingresarlos aquí y volver a ejecutar el análisis.
             </p>
             <div id="manual-fields" class="manual-fields"></div>
             <div class="manual-actions">
@@ -71,10 +71,10 @@
         </div>
 
         <div class="breakdown">
-            <h3>Desglose del analisis</h3>
+            <h3>Desglose del análisis</h3>
             <div class="breakdown-grid">
                 <div class="dimension">
-                    <h4>Valoracion (40%)</h4>
+                    <h4>Valoración (40%)</h4>
                     <div class="progress-bar"><div id="val-progress" class="progress"></div></div>
                     <span id="val-score" class="dimension-score">-</span>
                     <div id="val-metrics" class="metrics-used">-</div>
@@ -101,7 +101,7 @@
         </div>
 
         <div class="metrics-found">
-            <h3>Metricas encontradas</h3>
+            <h3>Métricas encontradas</h3>
             <div id="metrics-grid" class="metrics-grid"></div>
             <div class="data-quality">
                 Completitud de datos: <span id="completeness">0</span>%

@@ -296,7 +296,7 @@ async function calculateLumpSum() {
 
         const data = await response.json();
         if (!response.ok) {
-            throw new Error(data.error || 'No se pudo realizar la comparacion.');
+            throw new Error(data.error || 'No se pudo realizar la comparación.');
         }
 
         renderLumpSumResults(data.result);

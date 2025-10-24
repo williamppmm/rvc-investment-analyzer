@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Calculadora de Inversion - RVC Analyzer{% endblock %}
+{% block title %}Calculadora de Inversión - RVC Analyzer{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='calculadora.css') }}">
@@ -9,13 +9,13 @@
 {% block content %}
 <div class="container">
     <section class="page-hero">
-        <h1 class="page-hero__title">Calculadora de Inversion</h1>
-        <p class="page-hero__subtitle">Proyecta tus aportes mensuales ajustados por inflacion, compara estrategias y entiende el impacto del interes compuesto bajo escenarios de mercado realistas. Cada modulo se detiene al alcanzar 1,000,000 USD para mantener proyecciones prudentes.</p>
+        <h1 class="page-hero__title">Calculadora de Inversión</h1>
+        <p class="page-hero__subtitle">Proyecta tus aportes mensuales ajustados por inflación, compara estrategias y entiende el impacto del interés compuesto bajo escenarios de mercado realistas. Cada módulo se detiene al alcanzar 1,000,000 USD para mantener proyecciones prudentes.</p>
     </section>
 
     <section class="calc-section">
         <div class="calc-tabs">
-        <button class="calc-tab active" data-tab="retirement">Plan de jubilacion</button>
+        <button class="calc-tab active" data-tab="retirement">Plan de jubilación</button>
         <button class="calc-tab" data-tab="dca">Dollar Cost Averaging</button>
         <button class="calc-tab" data-tab="lump-sum">Lump Sum vs DCA</button>
         <button class="calc-tab" data-tab="compound">Interes compuesto</button>
@@ -44,15 +44,15 @@
             <div class="form-group">
                 <label for="ret-monthly">Ahorro mensual inicial ($)</label>
                 <input type="number" id="ret-monthly" value="500" min="0" step="50">
-                <small class="field-hint">Se actualiza cada anio segun la inflacion estimada.</small>
+                <small class="field-hint">Se actualiza cada año según la inflación estimada.</small>
             </div>
             <div class="form-group">
                 <label for="ret-return">Rendimiento anual esperado (%)</label>
                 <input type="number" id="ret-return" value="10" min="-10" max="20" step="0.5">
-                <small class="field-hint">Usa 10% como referencia del S&P 500 historico.</small>
+                <small class="field-hint">Usa 10% como referencia del S&P 500 histórico.</small>
             </div>
             <div class="form-group">
-                <label for="ret-inflation">Inflacion anual esperada (%)</label>
+                <label for="ret-inflation">Inflación anual esperada (%)</label>
                 <input type="number" id="ret-inflation" value="3" min="0" max="15" step="0.5">
                 <small class="field-hint">Aumentamos tus aportes cada 12 meses con este ritmo.</small>
             </div>
@@ -74,7 +74,7 @@
     <div class="calc-content" id="dca-content">
         <h2>Simulador Dollar Cost Averaging (DCA)</h2>
         <p style="color: #6c757d; margin-bottom: 1.5rem;">
-            Estimamos la inversion mensual creciente, simulamos escenarios de mercado y destacamos cuando alcanzas el limite de 1,000,000 USD.
+            Estimamos la inversión mensual creciente, simulamos escenarios de mercado y destacamos cuando alcanzas el límite de 1,000,000 USD.
         </p>
 
         <div class="form-grid">
@@ -89,20 +89,20 @@
                 <small class="field-hint">Se incrementa cada anio con la inflacion indicada.</small>
             </div>
             <div class="form-group">
-                <label for="dca-years">Anios de inversion</label>
+                <label for="dca-years">Años de inversión</label>
                 <input type="number" id="dca-years" value="15" min="1" max="50" step="1">
-                <small class="field-hint">Largo plazo recomendado: 10, 20 o 30 anios.</small>
+                <small class="field-hint">Largo plazo recomendado: 10, 20 o 30 años.</small>
             </div>
             <div class="form-group">
-                <label for="dca-inflation">Inflacion anual esperada (%)</label>
+                <label for="dca-inflation">Inflación anual esperada (%)</label>
                 <input type="number" id="dca-inflation" value="3" min="0" max="15" step="0.5">
                 <small class="field-hint">Ajustamos tus aportes cada 12 meses con este porcentaje.</small>
             </div>
             <div class="form-group">
                 <label for="dca-timing">Momento del mercado</label>
                 <select id="dca-timing">
-                    <option value="normal" selected>Normal (promedio historico)</option>
-                    <option value="crisis">Crisis (caida inicial 40%)</option>
+                    <option value="normal" selected>Normal (promedio histórico)</option>
+                    <option value="crisis">Crisis (caída inicial 40%)</option>
                     <option value="burbuja">Burbuja (mercado sobrevaluado +40%)</option>
                 </select>
                 <small class="field-hint">Explora el impacto de iniciar con precios altos o bajos.</small>
@@ -120,7 +120,7 @@
             <div class="scenario-card selected" data-scenario="moderado">
                 <div class="scenario-title">Base S&P 500</div>
                 <div class="scenario-return">10% anual</div>
-                <div class="scenario-desc">Retorno historico de S&P 500 / ETF VOO.</div>
+                <div class="scenario-desc">Retorno histórico de S&P 500 / ETF VOO.</div>
             </div>
             <div class="scenario-card" data-scenario="optimista">
                 <div class="scenario-title">Optimista</div>
@@ -142,9 +142,9 @@
     </div>
 
     <div class="calc-content" id="lump-sum-content">
-        <h2>Comparacion: Lump Sum vs DCA</h2>
+        <h2>Comparación: Lump Sum vs DCA</h2>
         <p style="color: #6c757d; margin-bottom: 1.5rem;">
-            Compara invertir todo de una vez contra repartir el mismo capital en aportes mensuales. Este modulo usa aportes constantes (sin ajuste por inflacion) para mantener la comparacion justa.
+            Compara invertir todo de una vez contra repartir el mismo capital en aportes mensuales. Este módulo usa aportes constantes (sin ajuste por inflación) para mantener la comparación justa.
         </p>
 
         <div class="form-grid">
