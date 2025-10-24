@@ -1,0 +1,18 @@
+{
+	"servers": {
+		"sqlite-mcp": {
+			"type": "stdio",
+			"command": "C:/Program Files/nodejs/npx.cmd",
+			"args": [
+				"-y",
+				"mcp-server-sqlite",
+				"--db",
+				"C:/rcv_proyecto/data/cache.db"
+			],
+			"env": {
+				"SQLITE_DB_PATH": "C:/rcv_proyecto/data/cache.db"
+			}
+		}
+	},
+	"inputs": []
+}

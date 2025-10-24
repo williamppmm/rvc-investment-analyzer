@@ -81,6 +81,9 @@ config.local.json
 *.sqlite3
 data/cache.db
 data/*.db
+# SQLite WAL and shared memory files
+*.db-wal
+*.db-shm
 
 # Cache files
 data/cache/
@@ -101,6 +104,9 @@ log/
 # VSCode
 .vscode/
 *.code-workspace
+
+# Pero incluir configuraciones MCP del proyecto
+!.vscode/mcp.json
 
 # PyCharm
 .idea/
@@ -169,6 +175,10 @@ backups/monthly/*.tar.gz
 # ============================================
 # Claude Code
 *.claude
+
+# Configuraciones MCP personales
+claude_desktop_config*.json
+*_config_personal.json
 
 # Notas de desarrollo temporal
 NOTAS_TEMP.md
