@@ -328,15 +328,8 @@ def analyze():
         response = prepare_analysis_response(ticker, metrics)
 
         elapsed = (datetime.now() - start_time).total_seconds()
-        # Log de score con la nueva estructura (rvc_score.total_score)
-        try:
-            logged_score = response.get("rvc_score", {}).get("total_score")
-            if logged_score is None:
-                logged_score = 0.0
-        except Exception:
-            logged_score = 0.0
         logger.info("✓ Analysis completado - Ticker: %s | Tiempo: %.2fs | Score: %.1f",
-                   ticker, elapsed, logged_score)
+                   ticker, elapsed, response.get("scores", {}).get("overall_score", 0))
         logger.info("=" * 50)
 
         return jsonify(response)
@@ -615,12 +608,6 @@ def calculadora():
 def top_opportunities_page():
     """Página de Top Opportunities - mejores oportunidades de inversión."""
     return render_template("top_opportunities.html", active_page="opportunities")
-
-
-@app.route("/about")
-def about():
-    """Página Acerca de - misión, filosofía y creador del proyecto."""
-    return render_template("about.html", active_page="about")
 
 
 @app.route("/api/comparar", methods=["POST"])

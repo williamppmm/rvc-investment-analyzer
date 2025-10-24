@@ -184,8 +184,9 @@ function displayResults(data) {
         scoreCircle.style.background = "linear-gradient(135deg, #4b5563, #6b7280)";
     }
 
-    const breakdown = data.rvc_score.breakdown;
-    updateDimension("val", breakdown.valoración, isEtf);
+    const breakdown = data.rvc_score.breakdown || {};
+    // Claves del backend: valoracion, calidad, salud, crecimiento
+    updateDimension("val", breakdown.valoracion || {}, isEtf);
     updateDimension("qual", breakdown.calidad, isEtf);
     updateDimension("health", breakdown.salud, isEtf);
     updateDimension("growth", breakdown.crecimiento, isEtf);

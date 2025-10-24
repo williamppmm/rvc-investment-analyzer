@@ -69,6 +69,7 @@
     outline: none;
     margin-bottom: var(--spacing-xs);
     -webkit-appearance: none;
+    appearance: none;
 }
 
 .filter-slider::-webkit-slider-thumb {
@@ -148,6 +149,53 @@
 .btn-secondary:hover {
     background: var(--card-hover);
     border-color: var(--primary);
+}
+
+/* Botón destructivo para limpiar caché */
+.btn-danger {
+    background: var(--danger);
+    color: #fff;
+    border: none;
+}
+
+.btn-danger:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.35);
+}
+
+.btn-danger:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Avisos inline (notificaciones) */
+.notice {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.notice--success {
+    border-color: rgba(40, 167, 69, 0.35);
+    background: #ecf9f1;
+    color: #155724;
+}
+.notice--error {
+    border-color: rgba(220, 53, 69, 0.35);
+    background: #fdecea;
+    color: #842029;
+}
+.notice--info {
+    border-color: rgba(102, 126, 234, 0.35);
+    background: #eef2ff;
+    color: #1e3a8a;
 }
 
 /* ==========================================================================

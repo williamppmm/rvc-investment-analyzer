@@ -367,7 +367,7 @@ Este proyecto es de código abierto bajo licencia MIT. Ver [LICENSE](LICENSE) pa
 
 ## 👤 Autor
 
-**William Pardo**
+**William Pérez**
 - GitHub: [@williamppmm](https://github.com/williamppmm)
 - Proyecto: [rvc-investment-analyzer](https://github.com/williamppmm/rvc-investment-analyzer)
 

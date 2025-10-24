@@ -18,6 +18,8 @@ class TopOpportunities {
             limitSelect: document.getElementById('limit-select'),
             applyFiltersBtn: document.getElementById('apply-filters'),
             resetFiltersBtn: document.getElementById('reset-filters'),
+            clearCacheBtn: document.getElementById('clear-cache'),
+            statusBanner: document.getElementById('status-banner'),
             loadingContainer: document.getElementById('loading-container'),
             errorContainer: document.getElementById('error-container'),
             resultsSection: document.getElementById('results-section'),
@@ -40,6 +42,20 @@ class TopOpportunities {
         this.loadInitialData();
     }
     
+    showNotice(message, type = 'info', timeout = 4000) {
+        const banner = this.elements.statusBanner;
+        if (!banner) return;
+        banner.className = `notice notice--${type}`;
+        banner.textContent = message;
+        banner.classList.remove('hidden');
+        if (timeout > 0) {
+            clearTimeout(this._noticeTimer);
+            this._noticeTimer = setTimeout(() => {
+                banner.classList.add('hidden');
+            }, timeout);
+        }
+    }
+    
     initializeEventListeners() {
         // Slider de score mínimo
         this.elements.minScoreSlider.addEventListener('input', (e) => {
@@ -53,6 +69,41 @@ class TopOpportunities {
         
         this.elements.resetFiltersBtn.addEventListener('click', () => {
             this.resetFilters();
+        });
+
+        // Borrar caché global
+        this.elements.clearCacheBtn.addEventListener('click', async () => {
+            const confirmed = window.confirm(
+                'Esta acción borrará TODOS los datos en caché (análisis anteriores) y no se puede deshacer.\n\n¿Deseas continuar?'
+            );
+            if (!confirmed) return;
+
+            try {
+                // Deshabilitar botones durante la operación
+                this.elements.clearCacheBtn.disabled = true;
+                this.elements.clearCacheBtn.textContent = '🧹 Borrando...';
+
+                const resp = await fetch('/cache/clear', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.error || `HTTP ${resp.status}`);
+                }
+
+                // Feedback estilizado y recargar datos
+                this.showNotice('Caché borrada correctamente. Recargando datos…', 'success');
+                await this.loadData();
+            } catch (e) {
+                console.error('Error limpiando caché:', e);
+                this.showNotice('No se pudo borrar la caché: ' + (e.message || 'Error desconocido'), 'error', 6000);
+            } finally {
+                this.elements.clearCacheBtn.disabled = false;
+                this.elements.clearCacheBtn.textContent = '🗑️ Borrar caché';
+            }
         });
         
         // Retry button
