@@ -417,6 +417,157 @@ def history(ticker: str):
     return jsonify({"ticker": ticker, "history": history_payload})
 
 
+@app.route("/api/top-opportunities")
+def top_opportunities():
+    """
+    Endpoint que retorna ranking de mejores oportunidades de inversión
+    basado en RVC scores y métricas financieras.
+    
+    Query parameters:
+    - min_score: Score mínimo RVC (default: 50.0)
+    - sector: Filtrar por sector específico
+    - sort_by: Campo de ordenamiento (rvc_score, market_cap, pe_ratio)
+    - limit: Máximo número de resultados (default: 50)
+    """
+    try:
+        # Obtener parámetros de consulta
+        min_score = float(request.args.get('min_score', 50.0))
+        sector_filter = request.args.get('sector', '').strip()
+        sort_by = request.args.get('sort_by', 'rvc_score').lower()
+        limit = min(int(request.args.get('limit', 50)), 100)  # Max 100 resultados
+        
+        # Validar parámetros
+        valid_sort_fields = ['rvc_score', 'market_cap', 'pe_ratio', 'ticker']
+        if sort_by not in valid_sort_fields:
+            sort_by = 'rvc_score'
+        
+        # Consulta base para obtener tickers con RVC scores
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            
+            # Query para obtener tickers con scores y sus datos financieros
+            cursor.execute("""
+                SELECT 
+                    r.ticker,
+                    r.score as rvc_score,
+                    r.classification,
+                    r.breakdown,
+                    r.last_calculated,
+                    f.data as financial_data
+                FROM rvc_scores r
+                LEFT JOIN financial_cache f ON r.ticker = f.ticker
+                WHERE r.score >= ?
+                ORDER BY r.score DESC
+            """, (min_score,))
+            
+            rows = cursor.fetchall()
+        
+        # Procesar resultados
+        opportunities = []
+        sectors_found = set()
+        
+        for row in rows:
+            ticker, rvc_score, classification, breakdown_json, last_calc, financial_data = row
+            
+            # Parse financial data si existe
+            financial_metrics = {}
+            if financial_data:
+                try:
+                    financial_metrics = json.loads(financial_data)
+                except (json.JSONDecodeError, TypeError):
+                    financial_metrics = {}
+            
+            # Parse breakdown
+            try:
+                breakdown = json.loads(breakdown_json) if breakdown_json else {}
+            except (json.JSONDecodeError, TypeError):
+                breakdown = {}
+            
+            # Extraer métricas relevantes
+            market_cap = financial_metrics.get('market_cap') or financial_metrics.get('Market_Cap')
+            pe_ratio = financial_metrics.get('pe_ratio') or financial_metrics.get('P/E_Ratio')
+            sector = financial_metrics.get('sector') or financial_metrics.get('Sector', 'Unknown')
+            company_name = financial_metrics.get('company_name') or financial_metrics.get('Name', ticker)
+            current_price = financial_metrics.get('current_price') or financial_metrics.get('Price')
+            
+            # Aplicar filtro de sector si se especificó
+            if sector_filter and sector.lower() != sector_filter.lower():
+                continue
+            
+            sectors_found.add(sector)
+            
+            opportunity = {
+                'ticker': ticker,
+                'company_name': company_name,
+                'rvc_score': round(rvc_score, 2),
+                'classification': classification,
+                'sector': sector,
+                'market_cap': market_cap,
+                'pe_ratio': pe_ratio,
+                'current_price': current_price,
+                'last_updated': last_calc,
+                'breakdown': breakdown
+            }
+            
+            opportunities.append(opportunity)
+        
+        # Aplicar ordenamiento personalizado
+        if sort_by == 'rvc_score':
+            opportunities.sort(key=lambda x: x['rvc_score'] or 0, reverse=True)
+        elif sort_by == 'market_cap':
+            opportunities.sort(key=lambda x: x['market_cap'] or 0, reverse=True)
+        elif sort_by == 'pe_ratio':
+            opportunities.sort(key=lambda x: x['pe_ratio'] or float('inf'))
+        elif sort_by == 'ticker':
+            opportunities.sort(key=lambda x: x['ticker'])
+        
+        # Aplicar límite
+        opportunities = opportunities[:limit]
+        
+        # Calcular estadísticas
+        total_count = len(opportunities)
+        avg_score = sum(op['rvc_score'] for op in opportunities) / total_count if total_count > 0 else 0
+        
+        # Preparar respuesta
+        response = {
+            'status': 'success',
+            'data': {
+                'opportunities': opportunities,
+                'metadata': {
+                    'total_count': total_count,
+                    'average_score': round(avg_score, 2),
+                    'sectors_available': sorted(list(sectors_found)),
+                    'filters_applied': {
+                        'min_score': min_score,
+                        'sector': sector_filter or None,
+                        'sort_by': sort_by,
+                        'limit': limit
+                    },
+                    'generated_at': datetime.now().isoformat(timespec='seconds')
+                }
+            }
+        }
+        
+        logger.info("Top opportunities request processed: %d results, avg_score=%.2f", 
+                   total_count, avg_score)
+        
+        return jsonify(response)
+        
+    except ValueError as e:
+        return jsonify({
+            'status': 'error',
+            'error': 'Invalid parameter format',
+            'message': str(e)
+        }), 400
+    except Exception as e:
+        logger.error("Error in top_opportunities endpoint: %s", str(e))
+        return jsonify({
+            'status': 'error',
+            'error': 'Internal server error',
+            'message': 'An error occurred while fetching opportunities'
+        }), 500
+
+
 @app.route("/cache/clear", methods=["POST"])
 def clear_cache():
     payload = request.get_json(silent=True) or {}

@@ -43,6 +43,51 @@
       }
     },
     {
+      "name": "🏆 Top Opportunities - Ranking de Inversiones",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has opportunities', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql('success');",
+              "    pm.expect(jsonData.data.opportunities).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Top opportunity is SCHW', function () {",
+              "    const jsonData = pm.response.json();",
+              "    if (jsonData.data.opportunities.length > 0) {",
+              "        pm.expect(jsonData.data.opportunities[0].ticker).to.eql('SCHW');",
+              "    }",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/top-opportunities?limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "top-opportunities"],
+          "query": [
+            { "key": "limit", "value": "10", "description": "Máximo 10 resultados" },
+            { "key": "min_score", "value": "60", "disabled": true, "description": "Score mínimo" }
+          ]
+        },
+        "description": "🏆 Endpoint que retorna las mejores oportunidades de inversión basado en RVC scores.\n\n📊 Datos actuales: 16 tickers con scores, líder SCHW (77.32)\n\n🔍 Parámetros: min_score, sector, sort_by, limit"
+      }
+    },
+    {
       "name": "Calculadora - DCA",
       "request": {
         "method": "POST",

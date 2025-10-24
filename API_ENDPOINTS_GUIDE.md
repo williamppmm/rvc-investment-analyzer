@@ -5,16 +5,111 @@
 **RVC Investment Analyzer** es una API REST que proporciona análisis financiero automatizado de acciones y ETFs, calculando puntuaciones RVC (Riesgo, Valor, Crecimiento) basadas en métricas fundamentales.
 
 ### 📈 Datos actuales en la base de datos
-- **21 tickers** con datos financieros en caché
-- **16 tickers** con puntuaciones RVC calculadas
-- **Última actualización**: 24/10/2025 01:06:22
+- **23 tickers** con datos financieros en caché
+- **18 tickers** con puntuaciones RVC calculadas  
+- **Última actualización**: 24/10/2025 11:48:26
 - **Mejor puntuación**: SCHW (77.32) 🟢
+- **🆕 NUEVO**: Endpoint `/api/top-opportunities` para rankings
 
 ---
 
 ## 🛠️ Endpoints Disponibles
 
-### 1. 📊 **POST /analyze** - Análisis Individual de Ticker
+### 1. 🏆 **GET /api/top-opportunities** - Ranking de Mejores Oportunidades (NUEVO)
+
+**Descripción**: Retorna un ranking de las mejores oportunidades de inversión basado en RVC scores y métricas financieras actuales.
+
+**URL**: `http://127.0.0.1:5000/api/top-opportunities`
+
+**Método**: `GET`
+
+**Parámetros de consulta**:
+- `min_score` (opcional): Score mínimo RVC para filtrar (default: 50.0)
+- `sector` (opcional): Filtro por sector específico
+- `sort_by` (opcional): Campo de ordenamiento - rvc_score, market_cap, pe_ratio, ticker (default: rvc_score)
+- `limit` (opcional): Máximo número de resultados (default: 50, max: 100)
+
+**Ejemplo de URL**:
+```
+GET /api/top-opportunities?min_score=70&limit=10&sort_by=rvc_score
+```
+
+**Respuesta exitosa (200)**:
+```json
+{
+  "status": "success",
+  "data": {
+    "opportunities": [
+      {
+        "ticker": "SCHW",
+        "company_name": "Charles Schwab Corp",
+        "rvc_score": 77.32,
+        "classification": "🟢 Razonable o mejor",
+        "sector": "FINANCIAL SERVICES",
+        "market_cap": 171193336000.0,
+        "pe_ratio": 33.3,
+        "current_price": 94.6,
+        "last_updated": "2025-10-24T01:06:22",
+        "breakdown": {
+          "growth_score": 100.0,
+          "quality_score": 78.9,
+          "value_score": 53.0
+        }
+      },
+      {
+        "ticker": "NVO",
+        "company_name": "Novo Nordisk A/S",
+        "rvc_score": 75.9,
+        "classification": "🟢 Razonable o mejor",
+        "sector": "HEALTHCARE",
+        "market_cap": 462774462726.0,
+        "pe_ratio": 32.1,
+        "current_price": 99.12,
+        "last_updated": "2025-10-24T00:57:33",
+        "breakdown": {
+          "growth_score": 95.2,
+          "quality_score": 85.1,
+          "value_score": 47.4
+        }
+      }
+    ],
+    "metadata": {
+      "total_count": 16,
+      "average_score": 63.45,
+      "sectors_available": [
+        "FINANCIAL SERVICES",
+        "HEALTHCARE", 
+        "TECHNOLOGY",
+        "BASIC MATERIALS",
+        "COMMUNICATION SERVICES",
+        "CONSUMER DEFENSIVE"
+      ],
+      "filters_applied": {
+        "min_score": 70.0,
+        "sector": null,
+        "sort_by": "rvc_score",
+        "limit": 10
+      },
+      "generated_at": "2025-10-24T11:48:26"
+    }
+  }
+}
+```
+
+**Casos de uso**:
+- 🔍 Ver ranking completo de mejores acciones
+- 📊 Filtrar por score mínimo deseado  
+- 🏢 Buscar oportunidades por sectores específicos
+- 📈 Ordenar por diferentes métricas (cap. mercado, P/E, etc.)
+- 🎯 Identificar rápidamente las mejores inversiones disponibles
+
+**Errores posibles**:
+- `400 Bad Request`: Parámetros inválidos
+- `500 Internal Server Error`: Error interno del servidor
+
+---
+
+### 2. 📊 **POST /analyze** - Análisis Individual de Ticker
 
 **Descripción**: Analiza un ticker específico y devuelve métricas financieras completas con puntuación RVC.
 
@@ -113,7 +208,7 @@ Content-Type: application/json
 
 ---
 
-### 2. 📈 **GET /history/{ticker}** - Historial de Análisis
+### 4. 📈 **GET /history/{ticker}** - Historial de Análisis
 
 **Descripción**: Obtiene el historial de análisis previos para un ticker específico.
 
@@ -142,7 +237,7 @@ Content-Type: application/json
 
 ---
 
-### 3. 🔄 **POST /api/comparar** - Comparación Múltiple
+### 3. � **POST /api/comparar** - Comparación de Múltiples Tickers
 
 **Descripción**: Compara múltiples tickers y devuelve análisis comparativo.
 
@@ -200,7 +295,7 @@ Content-Type: application/json
 
 ---
 
-### 4. 🧮 **POST /api/calcular-inversion** - Calculadora DCA
+### 5. 🧮 **POST /api/calcular-inversion** - Calculadora de Inversión DCA
 
 **Descripción**: Calcula proyecciones de inversión usando Dollar Cost Averaging (DCA).
 
@@ -263,7 +358,7 @@ Content-Type: application/json
 
 ---
 
-### 5. 🗑️ **POST /cache/clear** - Limpiar Cache
+### 6. 🗑️ **POST /cache/clear** - Limpiar Caché
 
 **Descripción**: Elimina todos los datos de caché de la base de datos.
 
