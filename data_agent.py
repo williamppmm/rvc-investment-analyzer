@@ -206,6 +206,28 @@ class DataAgent:
         return None
 
     def fetch_financial_data(self, ticker: str) -> Optional[Dict]:
+        # Asegurar que, si el agente fue construido antes de que la plataforma
+        # inyectara variables, volvamos a resolver claves desde el entorno.
+        # Esto es idempotente y barato.
+        if not (self.alpha_client.enabled and self.twelve_client.enabled and self.fmp_client.enabled):
+            prev = (self.alpha_client.enabled, self.twelve_client.enabled, self.fmp_client.enabled)
+            # Reconstruir clientes desde el entorno actual
+            self.alpha_client = AlphaVantageClient()
+            self.twelve_client = TwelveDataClient()
+            self.fmp_client = FMPClient()
+            curr = (self.alpha_client.enabled, self.twelve_client.enabled, self.fmp_client.enabled)
+            if prev != curr:
+                try:
+                    av_env = "ALPHA_VANTAGE_KEY" if os.getenv("ALPHA_VANTAGE_KEY") else ("ALPHAVANTAGE_API_KEY" if os.getenv("ALPHAVANTAGE_API_KEY") else "none")
+                    td_env = "TWELVEDATA_API_KEY" if os.getenv("TWELVEDATA_API_KEY") else ("TWELVE_DATA_API_KEY" if os.getenv("TWELVE_DATA_API_KEY") else "none")
+                    fmp_env = "FMP_API_KEY" if os.getenv("FMP_API_KEY") else "none"
+                    logger.info(
+                        "Providers refreshed -> AlphaVantage=%s (env=%s), TwelveData=%s (env=%s), FMP=%s (env=%s)",
+                        self.alpha_client.enabled, av_env, self.twelve_client.enabled, td_env, self.fmp_client.enabled, fmp_env
+                    )
+                except Exception:
+                    pass
+
         ticker = ticker.upper()
         self.provenance = {}
         metrics: Dict[str, Optional[float]] = {
