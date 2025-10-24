@@ -25,7 +25,8 @@
                     <a href="{{ url_for('index') }}" class="site-nav__link {% if active_page == 'home' %}is-active{% endif %}">Inicio</a>
                     <a href="{{ url_for('comparador') }}" class="site-nav__link {% if active_page == 'compare' %}is-active{% endif %}">Comparador</a>
                     <a href="{{ url_for('calculadora') }}" class="site-nav__link {% if active_page == 'calculator' %}is-active{% endif %}">Calculadora</a>
-                    <a href="{{ url_for('top_opportunities') }}" class="site-nav__link {% if active_page == 'opportunities' %}is-active{% endif %}">Top Oportunidades</a>
+                    <a href="{{ url_for('top_opportunities_page') }}" class="site-nav__link {% if active_page == 'opportunities' %}is-active{% endif %}">Top Oportunidades</a>
+                    <a href="{{ url_for('about') }}" class="site-nav__link {% if active_page == 'about' %}is-active{% endif %}">Acerca de</a>
                 </nav>
             </div>
         </header>
@@ -36,11 +37,13 @@
 
         <footer class="site-footer">
             <div class="site-footer__inner container">
-                <p class="site-footer__title">RVC Analyzer &mdash; analisis fundamental para inversionistas de largo plazo.</p>
-                <p class="site-footer__disclaimer">La informacion tiene fines educativos y no constituye recomendacion de inversion.</p>
-                <p class="site-footer__help">
-                    <a href="#" id="footer-glossary-link" class="footer-link">¿Dudas sobre los términos? Consulta el glosario</a>
-                </p>
+                <p class="site-footer__title">RVC Analyzer &mdash; análisis fundamental para inversionistas de largo plazo.</p>
+                <p class="site-footer__disclaimer">La información tiene fines educativos y no constituye recomendación de inversión.</p>
+                <div class="site-footer__links">
+                    <a href="{{ url_for('about') }}" class="footer-link">Acerca de</a>
+                    <a href="#" id="footer-glossary-link" class="footer-link">Glosario de Términos</a>
+                    <a href="https://github.com/williamppmm" class="footer-link" target="_blank" rel="noopener">GitHub</a>
+                </div>
             </div>
         </footer>
     </div>

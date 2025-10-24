@@ -837,9 +837,12 @@ footer {
     color: rgba(243, 244, 246, 0.75);
 }
 
-.site-footer__help {
+.site-footer__links {
     margin-top: var(--spacing-sm);
     font-size: 0.9rem;
+    display: flex;
+    gap: var(--spacing-lg);
+    flex-wrap: wrap;
 }
 
 .footer-link {

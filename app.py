@@ -610,6 +610,12 @@ def top_opportunities_page():
     return render_template("top_opportunities.html", active_page="opportunities")
 
 
+@app.route("/about")
+def about():
+    """Página Acerca de - misión, filosofía y creador del proyecto."""
+    return render_template("about.html", active_page="about")
+
+
 @app.route("/api/comparar", methods=["POST"])
 def comparar():
     """
