@@ -7,174 +7,163 @@
 {% endblock %}
 
 {% block content %}
-<main>
-    <!-- Hero Section -->
-    <section class="hero-section" aria-labelledby="hero-title">
-        <div class="container">
-            <div class="hero-content">
-                <h1 id="hero-title">Inversiones Inteligentes para Todos</h1>
-                <p class="hero-subtitle">Democratizando el análisis financiero con herramientas claras y accesibles</p>
-            </div>
-        </div>
+<div class="container">
+    <!-- Hero: igual patrón que calculadora/comparador -->
+    <section class="page-hero">
+        <h1 class="page-hero__title">Inversiones Inteligentes para Todos</h1>
+        <p class="page-hero__subtitle">Democratizando el análisis financiero con herramientas claras y accesibles</p>
     </section>
 
-    <!-- Mission Section -->
-    <section class="mission-section" aria-labelledby="mission-title">
-        <div class="container">
-            <h2 id="mission-title"><span aria-hidden="true">🎯</span> Misión</h2>
-            <p>
-                Acercar la educación financiera a las personas interesadas en construir su futuro, 
-                facilitando el análisis de inversiones de forma clara y útil. Priorizamos la rentabilidad sostenible y el largo plazo, sobre la especulación y la euforia del mercado.
-            </p>
-            <ul class="principles">
-                <li><span class="principle-icon" aria-hidden="true">📊</span> Con criterio: inversión informada, no impulsiva</li>
-                <li><span class="principle-icon" aria-hidden="true">📈</span> Con estadísticas: decisiones basadas en datos reales</li>
-                <li><span class="principle-icon" aria-hidden="true">⏳</span> A largo plazo: pensando siempre en el futuro</li>
-            </ul>
-        </div>
-    </section>
-
-    <!-- Problem & Solution Section -->
-    <section class="problem-solution-section" aria-labelledby="problem-title">
-        <div class="container">
-            <div class="grid-content">
-                <div class="problem-card">
-                    <h3 id="problem-title">El Desafío</h3>
-                    <p>
-                        El acceso a buenas herramientas de análisis es, muchas veces, complicado y técnico. Grandes bases de datos y métricas complejas alejan a quienes desean invertir con confianza.
-                    </p>
-                    <ul class="problem-list">
-                        <li>Herramientas excesivamente técnicas</li>
-                        <li>Información dispersa o confusa</li>
-                        <li>Análisis que toma demasiado tiempo</li>
-                        <li>Dificultad para comparar opciones</li>
-                    </ul>
+    <!-- Un solo contenedor tipo tarjeta -->
+    <section class="calc-section">
+        <!-- Misión -->
+        <h2><span aria-hidden="true">🎯</span> Misión</h2>
+        <p class="section-description">
+            Acercar la educación financiera a las personas interesadas en construir su futuro, facilitando el análisis de inversiones de forma clara y útil. Priorizamos la rentabilidad sostenible y el largo plazo, sobre la especulación y la euforia del mercado.
+        </p>
+        <div class="principles">
+            <div class="principle">
+                <span class="principle-icon" aria-hidden="true">📊</span>
+                <div>
+                    <strong>Con criterio</strong>
+                    Inversión informada, no impulsiva
                 </div>
-                <div class="solution-card">
-                    <h3>Nuestra Solución</h3>
-                    <p>
-                        RVC Analyzer simplifica este proceso: usamos criterios claros y análisis robusto para ayudar a todos a invertir de forma inteligente y comprensible desde hoy.
-                    </p>
-                    <ul class="solution-list">
-                        <li>Análisis simplificado y robusto</li>
-                        <li>Scores e interpretaciones fáciles de entender</li>
-                        <li>Comparaciones directas y transparentes</li>
-                        <li>Rankings objetivos de oportunidades</li>
-                    </ul>
+            </div>
+            <div class="principle">
+                <span class="principle-icon" aria-hidden="true">📈</span>
+                <div>
+                    <strong>Con estadísticas</strong>
+                    Decisiones basadas en datos reales
+                </div>
+            </div>
+            <div class="principle">
+                <span class="principle-icon" aria-hidden="true">⏳</span>
+                <div>
+                    <strong>A largo plazo</strong>
+                    Pensando siempre en el futuro
                 </div>
             </div>
         </div>
-    </section>
 
-    <!-- Philosophy Section -->
-    <section class="philosophy-section" aria-labelledby="philosophy-title">
-        <div class="container">
-            <h2 id="philosophy-title"><span aria-hidden="true">💡</span> Filosofía de Inversión</h2>
-            <div class="philosophy-grid">
-                <div class="philosophy-card">
-                    <div class="philosophy-icon" aria-hidden="true">🎯</div>
-                    <h4>Inversión a Largo Plazo</h4>
-                    <p>Nos centramos en construir patrimonio sólido, dejando de lado la especulación de corto plazo.</p>
-                </div>
-                <div class="philosophy-card">
-                    <div class="philosophy-icon" aria-hidden="true">🧠</div>
-                    <h4>Educación ante todo</h4>
-                    <p>Queremos que cada usuario comprenda sus decisiones y evolucione como inversor, no solo obtenga resultados.</p>
-                </div>
-                <div class="philosophy-card">
-                    <div class="philosophy-icon" aria-hidden="true">🚀</div>
-                    <h4>Futuro financiero</h4>
-                    <p>Apostamos por la independencia económica y una visión de pensión realista y sólida.</p>
-                </div>
-                <div class="philosophy-card">
-                    <div class="philosophy-icon" aria-hidden="true">⚖️</div>
-                    <h4>Acceso para todos</h4>
-                    <p>El análisis profesional debe estar al alcance de quienes quieran aprender y mejorar su futuro.</p>
+        <!-- Desafío y Solución -->
+        <h2 style="margin-top: var(--spacing-2xl);">El Desafío y Nuestra Solución</h2>
+        <p class="section-description">Simplificamos el análisis financiero para hacer la inversión inteligente accesible a todos.</p>
+        <div class="grid-content">
+            <div class="problem-card">
+                <h3>El Desafío</h3>
+                <p>El acceso a herramientas de análisis financiero suele ser complicado y técnico. Las métricas complejas y datos dispersos alejan a quienes buscan invertir con confianza.</p>
+                <ul class="problem-list">
+                    <li>Herramientas excesivamente técnicas</li>
+                    <li>Información dispersa o confusa</li>
+                    <li>Análisis que toma demasiado tiempo</li>
+                    <li>Dificultad para comparar opciones</li>
+                    <li>Falta de criterios claros para decidir</li>
+                </ul>
+            </div>
+            <div class="solution-card">
+                <h3>Nuestra Solución</h3>
+                <p>RVC Analyzer democratiza el análisis financiero con herramientas claras y criterios objetivos. Transformamos datos complejos en información útil y comprensible.</p>
+                <ul class="solution-list">
+                    <li>Análisis simplificado y robusto</li>
+                    <li>Scores e interpretaciones claras</li>
+                    <li>Comparaciones directas y transparentes</li>
+                    <li>Rankings objetivos de oportunidades</li>
+                    <li>Criterios fundamentados y accesibles</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Filosofía -->
+        <h2 id="philosophy-title" style="margin-top: var(--spacing-2xl);"><span aria-hidden="true">💡</span> Filosofía de Inversión</h2>
+        <p class="section-description">Nuestros principios guían cada herramienta: inversión a largo plazo, educación financiera y acceso democrático al análisis profesional.</p>
+        <div class="philosophy-grid">
+            <div class="philosophy-card">
+                <div class="philosophy-icon" aria-hidden="true">🎯</div>
+                <h4>Inversión a Largo Plazo</h4>
+                <p>Nos centramos en construir patrimonio sólido, dejando de lado la especulación de corto plazo.</p>
+            </div>
+            <div class="philosophy-card">
+                <div class="philosophy-icon" aria-hidden="true">🧠</div>
+                <h4>Educación ante todo</h4>
+                <p>Queremos que cada usuario comprenda sus decisiones y evolucione como inversor, no solo obtenga resultados.</p>
+            </div>
+            <div class="philosophy-card">
+                <div class="philosophy-icon" aria-hidden="true">🚀</div>
+                <h4>Futuro financiero</h4>
+                <p>Apostamos por la independencia económica y una visión de pensión realista y sólida.</p>
+            </div>
+            <div class="philosophy-card">
+                <div class="philosophy-icon" aria-hidden="true">⚖️</div>
+                <h4>Acceso para todos</h4>
+                <p>El análisis profesional debe estar al alcance de quienes quieran aprender y mejorar su futuro.</p>
+            </div>
+        </div>
+
+        <!-- Creador -->
+        <h2 style="margin-top: var(--spacing-2xl);">Sobre el creador</h2>
+        <div class="creator-content">
+            <div class="creator-avatar" aria-label="Avatar">
+                <img class="avatar-img" src="{{ url_for('static', filename='img/perfil.png') }}" alt="Foto de William Pérez Muñoz" onerror="this.classList.add('is-hidden')">
+                <div class="avatar-placeholder" aria-hidden="true">WPM</div>
+            </div>
+            <div class="creator-details">
+                <h3>William Pérez Muñoz</h3>
+                <p class="creator-role">Tecnólogo ADSO – Desarrollador Full-Stack</p>
+                <div class="social-links" aria-label="Enlaces y contacto">
+                    <a class="social-link" href="https://williamppmm.link/" target="_blank" rel="noopener noreferrer" aria-label="Sitio web de William Pérez Muñoz">
+                        <span aria-hidden="true">🌐</span> Sitio
+                    </a>
+                    <a class="social-link" href="https://github.com/williamppmm" target="_blank" rel="noopener noreferrer" aria-label="GitHub de William Pérez Muñoz">
+                        <span aria-hidden="true">🐙</span> GitHub
+                    </a>
                 </div>
             </div>
         </div>
-    </section>
 
-    <!-- Creator Section -->
-    <section class="creator-section" aria-labelledby="creator-title">
-        <div class="container">
-            <h2 id="creator-title">Sobre el creador</h2>
-            <div class="creator-content">
-                <div class="creator-avatar" aria-label="Avatar">
-                    <div class="avatar-placeholder">WPM</div>
-                </div>
-                <div class="creator-details">
-                    <h3>William Pérez Muñoz</h3>
-                    <p>Tecnólogo ADSO – Desarrollador Full-Stack</p>
-                    <p>
-                        Apasionado por transformar el aprendizaje en código que resuelve problemas reales. Siempre explorando nuevas tecnologías y combinando desarrollo y finanzas para acercar el análisis al usuario.
-                    </p>
-                    <div class="creator-values">
-                        <span class="value-tag">Educación Financiera</span>
-                        <span class="value-tag">Largo Plazo</span>
-                        <span class="value-tag">Tecnología Accesible</span>
-                        <span class="value-tag">Análisis Claro</span>
-                    </div>
-                </div>
+        <!-- Herramientas -->
+        <h2 id="tools-title" style="margin-top: var(--spacing-2xl);">Herramientas</h2>
+        <p class="section-description">Descubre nuestro conjunto de herramientas diseñadas para hacer el análisis financiero simple y efectivo.</p>
+        <div class="tools-grid">
+            <div class="tool-card">
+                <div class="tool-icon" aria-hidden="true">📊</div>
+                <h4>Análisis Individual</h4>
+                <p>Análisis de acciones con métricas clave simplificadas</p>
+                <a href="{{ url_for('analyze') }}" class="tool-link">Probar análisis <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="tool-card">
+                <div class="tool-icon" aria-hidden="true">⚖️</div>
+                <h4>Comparador</h4>
+                <p>Compara varias acciones con métricas claras</p>
+                <a href="{{ url_for('comparador') }}" class="tool-link">Comparar acciones <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="tool-card">
+                <div class="tool-icon" aria-hidden="true">🧮</div>
+                <h4>Calculadora RVC</h4>
+                <p>Calcula tu score de inversión personalizado</p>
+                <a href="{{ url_for('calculadora') }}" class="tool-link">Calcular score <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="tool-card">
+                <div class="tool-icon" aria-hidden="true">🏆</div>
+                <h4>Top Oportunidades</h4>
+                <p>Consulta el ranking de oportunidades del mercado</p>
+                <a href="{{ url_for('top_opportunities_page') }}" class="tool-link">Ver ranking <span aria-hidden="true">→</span></a>
             </div>
         </div>
-    </section>
 
-    <!-- Tools Section -->
-    <section class="tools-section" aria-labelledby="tools-title">
-        <div class="container">
-            <h2 id="tools-title">Herramientas</h2>
-            <div class="tools-grid">
-                <div class="tool-card">
-                    <div class="tool-icon" aria-hidden="true">📊</div>
-                    <h4>Análisis Individual</h4>
-                    <p>Análisis de acciones con métricas clave simplificadas</p>
-                    <a href="{{ url_for('analyze') }}" class="tool-link">Probar análisis</a>
-                </div>
-                <div class="tool-card">
-                    <div class="tool-icon" aria-hidden="true">⚖️</div>
-                    <h4>Comparador</h4>
-                    <p>Compara varias acciones con métricas claras</p>
-                    <a href="{{ url_for('comparador') }}" class="tool-link">Comparar acciones</a>
-                </div>
-                <div class="tool-card">
-                    <div class="tool-icon" aria-hidden="true">🧮</div>
-                    <h4>Calculadora RVC</h4>
-                    <p>Calcula tu score de inversión personalizado</p>
-                    <a href="{{ url_for('calculadora') }}" class="tool-link">Calcular score</a>
-                </div>
-                <div class="tool-card">
-                    <div class="tool-icon" aria-hidden="true">🏆</div>
-                    <h4>Top Oportunidades</h4>
-                    <p>Consulta el ranking de oportunidades del mercado</p>
-                    <a href="{{ url_for('top_opportunities_page') }}" class="tool-link">Ver ranking</a>
-                </div>
-            </div>
+        <!-- CTA -->
+        <h2 id="cta-title" style="margin-top: var(--spacing-2xl);">Comienza tu camino inversor informado</h2>
+        <p class="section-description">No esperes más para tomar control de tu futuro financiero. Prueba nuestras herramientas y forma parte de una nueva generación de inversionistas responsables.</p>
+        <div class="cta-buttons">
+            <a href="{{ url_for('top_opportunities_page') }}" class="btn btn--primary">Ver oportunidades <span aria-hidden="true">🚀</span></a>
+            <a href="{{ url_for('analyze') }}" class="btn btn--secondary">Analizar acción <span aria-hidden="true">📊</span></a>
         </div>
     </section>
-
-    <!-- Call to Action Section -->
-    <section class="cta-section" aria-labelledby="cta-title">
-        <div class="container">
-            <h2 id="cta-title">Comienza tu camino inversor informado</h2>
-            <p>No esperes más para tomar control de tu futuro financiero. Prueba nuestras herramientas y forma parte de una nueva generación de inversionistas responsables.</p>
-            <div class="cta-buttons">
-                <a href="{{ url_for('top_opportunities_page') }}" class="btn btn-primary">Ver oportunidades</a>
-                <a href="{{ url_for('analyze') }}" class="btn btn-secondary">Analizar acción</a>
-            </div>
-        </div>
-    </section>
-</main>
-
-<footer class="disclaimer">
-    <p>La información proporcionada es exclusivamente educativa y no constituye asesoramiento de inversión o recomendación financiera.</p>
-</footer>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Accesibilidad para animaciones según preferencias del usuario
     if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
         const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
         const observer = new IntersectionObserver((entries) => {
@@ -185,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }, observerOptions);
-        document.querySelectorAll('.value-tag, .tool-card, .philosophy-card').forEach(el => {
+        document.querySelectorAll('.value-tag, .tool-card, .philosophy-card, .social-link').forEach(el => {
             observer.observe(el);
         });
     }
