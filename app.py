@@ -135,6 +135,14 @@ def init_database() -> None:
         conn.commit()
 
 
+# Asegurar el esquema de la base de datos al importar el módulo (modo WSGI)
+try:
+    init_database()
+    logger.info("✓ Base de datos inicializada (tablas aseguradas)")
+except Exception as e:
+    logger.error("✗ Error inicializando base de datos al importar: %s", e, exc_info=True)
+
+
 def get_cached_data(ticker: str) -> Optional[Dict[str, Any]]:
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
@@ -274,6 +282,12 @@ def prepare_analysis_response(
 @app.route("/")
 def index():
     return render_template("index.html", active_page="home")
+
+
+@app.route("/health")
+def health():
+    """Endpoint de salud simple para verificaciones de plataforma."""
+    return jsonify({"status": "ok", "timestamp": datetime.now().isoformat(timespec="seconds")})
 
 
 @app.route("/analyze", methods=["POST"])
