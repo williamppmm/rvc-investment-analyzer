@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Calculadora de Inversión - RVC Analyzer{% endblock %}
 
@@ -63,7 +64,7 @@
 
 
         <button id="calculate-retirement" type="button" class="btn btn--primary btn--block">
-            Calcular plan de jubilación
+            {{ icon('calculator', size=18, class_name='me-1') }} Calcular plan de jubilación
         </button>
 
         <div id="ret-loading" class="loading hidden" style="margin-top: 2rem;">
@@ -133,7 +134,7 @@
         </div>
 
         <button id="calculate-dca" type="button" class="btn btn--primary btn--block">
-            Calcular proyección DCA
+            {{ icon('calculator', size=18, class_name='me-1') }} Calcular proyección DCA
         </button>
 
         <div id="dca-loading" class="loading hidden" style="margin-top: 2rem;">
@@ -170,7 +171,7 @@
         </div>
 
         <button id="calculate-lump-sum" type="button" class="btn btn--primary btn--block">
-            Comparar estrategias
+            {{ icon('scale', size=18, class_name='me-1') }} Comparar estrategias
         </button>
 
         <div id="ls-loading" class="loading hidden" style="margin-top: 2rem;">
@@ -211,7 +212,7 @@
         </div>
 
         <button id="calculate-compound" type="button" class="btn btn--primary btn--block">
-            Calcular impacto
+            {{ icon('trending-up', size=18, class_name='me-1') }} Calcular impacto
         </button>
 
         <div id="ci-loading" class="loading hidden" style="margin-top: 2rem;">

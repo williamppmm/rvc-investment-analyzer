@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}RVC Analyzer - Radar de Valoracion y Calidad{% endblock %}
 
@@ -20,8 +21,12 @@
         </p>
         <div class="search-form">
             <input id="ticker-input" type="text" placeholder="Ticker (ej: MSFT)" maxlength="10">
-            <button id="analyze-btn" type="button" class="btn btn--primary">Analizar</button>
-            <button id="clear-cache-btn" type="button" class="btn btn--secondary">Limpiar cache</button>
+            <button id="analyze-btn" type="button" class="btn btn--primary">
+                {{ icon('search', size=18, class_name='me-1') }} Analizar
+            </button>
+            <button id="clear-cache-btn" type="button" class="btn btn--secondary">
+                {{ icon('trash', size=18, class_name='me-1') }} Limpiar cache
+            </button>
         </div>
         <div id="loading" class="loading hidden">
             <span class="spinner"></span>

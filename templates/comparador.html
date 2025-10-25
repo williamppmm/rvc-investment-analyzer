@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Comparador de Acciones - RVC Analyzer{% endblock %}
 
@@ -44,8 +45,12 @@
         </div>
 
         <div class="action-buttons">
-            <button id="compare-btn" type="button" class="btn btn--primary">Comparar</button>
-            <button id="clear-btn" type="button" class="btn btn--secondary">Limpiar</button>
+            <button id="compare-btn" type="button" class="btn btn--primary">
+                {{ icon('scale', size=18, class_name='me-1') }} Comparar
+            </button>
+            <button id="clear-btn" type="button" class="btn btn--secondary">
+                {{ icon('trash', size=18, class_name='me-1') }} Limpiar
+            </button>
         </div>
 
         <div id="loading" class="loading hidden">

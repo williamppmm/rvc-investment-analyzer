@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "_icons.html" import icon %}
 
-{% block title %}Top Oportunidades - RVC Analyzer{% endblock %}
+{% block title %}Ranking RVC - RVC Analyzer{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='top_opportunities.css') }}">
@@ -10,8 +10,8 @@
 {% block content %}
 <div class="container">
     <section class="page-hero">
-        <h1 class="page-hero__title">{{ icon('trophy', size=22, class_name='icon--md', aria_label='Top Oportunidades') }} Top Oportunidades de Inversión</h1>
-        <p class="page-hero__subtitle">Descubre las mejores acciones según nuestro análisis RVC. Filtra, ordena y encuentra tu próxima inversión.</p>
+        <h1 class="page-hero__title">Ranking de Acciones Consultadas</h1>
+        <p class="page-hero__subtitle">Aquí encuentras clasificadas las acciones que has consultado según nuestro análisis RVC. Este ranking es un punto de partida para identificar tus mejores opciones de inversión, pero no sustituye tu propia investigación. Filtra, ordena y profundiza en las que más te interesen.</p>
     </section>
 
     <!-- Panel de filtros -->
@@ -77,15 +77,15 @@
 
             <div class="filters-actions">
                 <button id="apply-filters" class="btn btn-primary">
-                    {{ icon('search', size=18, class_name='btn__icon', aria_label='Buscar') }}
+                    {{ icon('filter', size=18, class_name='me-1', aria_label='Aplicar filtros') }}
                     Aplicar Filtros
                 </button>
                 <button id="reset-filters" class="btn btn-secondary">
-                    {{ icon('refresh', size=18, class_name='btn__icon') }}
+                    {{ icon('refresh', size=18, class_name='me-1') }}
                     Restablecer
                 </button>
                 <button id="clear-cache" class="btn btn-danger" title="Borra todos los datos almacenados en caché (análisis previos)">
-                    {{ icon('trash', size=18, class_name='btn__icon') }}
+                    {{ icon('trash', size=18, class_name='me-1') }}
                     Borrar caché
                 </button>
             </div>
@@ -102,7 +102,7 @@
                 <div class="stat-icon">{{ icon('trending-up', size=28, class_name='text-primary') }}</div>
                 <div class="stat-content">
                     <div class="stat-value" id="total-count">-</div>
-                    <div class="stat-label">Oportunidades</div>
+                    <div class="stat-label">Acciones analizadas</div>
                 </div>
             </div>
             <div class="stat-card">
@@ -132,7 +132,7 @@
     <!-- Loading spinner -->
     <div class="loading-container" id="loading-container">
         <div class="spinner"></div>
-        <p>Cargando oportunidades...</p>
+        <p>Cargando ranking...</p>
     </div>
 
     <!-- Error state -->
@@ -140,7 +140,7 @@
         <div class="error-card">
             <div class="error-icon">{{ icon('alert-triangle', size=48, class_name='text-danger') }}</div>
             <h3>Error al cargar datos</h3>
-            <p id="error-message">Hubo un problema al obtener las oportunidades. Por favor, intenta nuevamente.</p>
+            <p id="error-message">Hubo un problema al obtener el ranking. Por favor, intenta nuevamente.</p>
             <button id="retry-button" class="btn btn-primary">Reintentar</button>
         </div>
     </div>
@@ -150,7 +150,7 @@
         <div class="results-header">
             <h2>{{ icon('line-chart', size=22, class_name='me-1') }} Resultados</h2>
             <div class="results-info">
-                <span id="results-count">0 oportunidades encontradas</span>
+                <span id="results-count">0 acciones encontradas</span>
                 <span class="separator">•</span>
                 <span id="last-updated">Actualizado: -</span>
             </div>
@@ -181,8 +181,8 @@
         <!-- Empty state -->
         <div class="empty-state hidden" id="empty-state">
             <div class="empty-icon">{{ icon('filter', size=48, class_name='text-muted') }}</div>
-            <h3>No se encontraron oportunidades</h3>
-            <p>Prueba ajustando los filtros para ver más resultados.</p>
+            <h3>No se encontraron resultados</h3>
+            <p>Prueba ajustando los filtros o consulta algunas acciones primero para ver tu ranking.</p>
         </div>
     </section>
 
@@ -208,5 +208,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='top_opportunities.js', v='6') }}"></script>
+<script src="{{ url_for('static', filename='top_opportunities.js', v='9') }}"></script>
 {% endblock %}

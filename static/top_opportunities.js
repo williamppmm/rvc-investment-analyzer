@@ -3,6 +3,11 @@
  * Gestiona la funcionalidad de filtrado, ordenamiento y visualización
  */
 
+// Helper para generar HTML de iconos SVG consistentemente
+function iconHTML(name, size = 16, className = '') {
+    return `<svg class="icon ${className}" width="${size}" height="${size}" aria-hidden="true"><use href="/static/icons.svg#${name}"></use></svg>`;
+}
+
 class TopOpportunities {
     constructor() {
         this.baseUrl = '/api/top-opportunities';
@@ -81,7 +86,7 @@ class TopOpportunities {
             try {
                 // Deshabilitar botones durante la operación
                 this.elements.clearCacheBtn.disabled = true;
-                this.elements.clearCacheBtn.textContent = '🧹 Borrando...';
+                this.elements.clearCacheBtn.innerHTML = `${iconHTML('trash', 18)} Borrando...`;
 
                 const resp = await fetch('/cache/clear', {
                     method: 'POST',
@@ -102,7 +107,7 @@ class TopOpportunities {
                 this.showNotice('No se pudo borrar la caché: ' + (e.message || 'Error desconocido'), 'error', 6000);
             } finally {
                 this.elements.clearCacheBtn.disabled = false;
-                this.elements.clearCacheBtn.textContent = '🗑️ Borrar caché';
+                this.elements.clearCacheBtn.innerHTML = `${iconHTML('trash', 18)} Borrar caché`;
             }
         });
         
@@ -168,14 +173,14 @@ class TopOpportunities {
         this.elements.errorContainer.classList.add('hidden');
         this.elements.resultsSection.style.display = 'none';
         this.elements.applyFiltersBtn.disabled = true;
-        this.elements.applyFiltersBtn.textContent = '⏳ Cargando...';
+        this.elements.applyFiltersBtn.innerHTML = `${iconHTML('filter', 18)} Cargando...`;
     }
     
     hideLoading() {
         this.isLoading = false;
         this.elements.loadingContainer.style.display = 'none';
         this.elements.applyFiltersBtn.disabled = false;
-        this.elements.applyFiltersBtn.textContent = '🔍 Aplicar Filtros';
+        this.elements.applyFiltersBtn.innerHTML = `${iconHTML('filter', 18)} Aplicar Filtros`;
     }
     
     showError(message = 'Error desconocido') {
@@ -255,7 +260,7 @@ class TopOpportunities {
     
     updateResultsInfo(metadata) {
         const count = metadata.total_count;
-        const countText = count === 1 ? 'oportunidad encontrada' : 'oportunidades encontradas';
+        const countText = count === 1 ? 'acción encontrada' : 'acciones encontradas';
         this.elements.resultsCount.textContent = `${count} ${countText}`;
         
         // Formatear fecha
@@ -339,7 +344,7 @@ class TopOpportunities {
                 </td>
                 <td class="actions-cell">
                     <button class="btn-analyze" onclick="analyzeStock('${ticker}')">
-                        🔍 Analizar
+                        ${iconHTML('search', 16)} Analizar
                     </button>
                 </td>
             </tr>
