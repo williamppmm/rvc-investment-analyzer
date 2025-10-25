@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const layout = {
             title: {
-                text: 'Mapa de Inversión: Calidad vs Valoración',
+                text: '🎯 Mapa de Inversión: Calidad vs Valoración',
                 font: { size: 20, family: 'Arial, sans-serif' }
             },
             xaxis: {
@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
             annotations: [
                 {
                     x: 80, y: 85,
-                    text: 'ZONA IDEAL',
+                    text: '🏆 ZONA IDEAL',
                     showarrow: false,
                     font: { size: 14, color: '#28a745', family: 'Arial, sans-serif' }
                 }
@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const layout = {
             title: {
-                text: 'Ranking por Score de Inversión',
+                text: '📊 Ranking por Score de Inversión',
                 font: { size: 20, family: 'Arial, sans-serif' }
             },
             xaxis: {
@@ -422,7 +422,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const layout = {
             title: {
-                text: 'Perfil Comparativo Multidimensional',
+                text: '🎯 Perfil Comparativo Multidimensional',
                 font: { size: 20, family: 'Arial, sans-serif' }
             },
             polar: {
