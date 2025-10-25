@@ -27,7 +27,7 @@
                     <a href="{{ url_for('calculadora') }}" class="site-nav__link {% if active_page == 'calculator' %}is-active{% endif %}">Calculadora</a>
                     <a href="{{ url_for('top_opportunities_page') }}" class="site-nav__link {% if active_page == 'opportunities' %}is-active{% endif %}">Ranking</a>
                     <a href="{{ url_for('about') }}" class="site-nav__link {% if active_page == 'about' %}is-active{% endif %}">Acerca de</a>
-                    {% if active_page != 'opportunities' and active_page != 'calculator' %}
+                    {% if active_page != 'opportunities' and active_page != 'calculator' and active_page != 'about' %}
                     <div style="display:inline-block; margin-left:1rem;">
                         <label for="currency-select" style="font-size:0.85rem; color:#6c757d; margin-right:0.25rem;">Moneda</label>
                         <select id="currency-select" style="padding:4px 6px; border-radius:6px; border:1px solid #e0e0e0;">
