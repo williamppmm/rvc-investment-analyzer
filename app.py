@@ -844,6 +844,23 @@ def comparar():
 
             # 2. Calcular scores con el nuevo motor
             scores = investment_scorer.calculate_all_scores(metrics)
+            
+            # 2.1 Guardar scores en BD para que aparezcan en el Ranking
+            try:
+                score_data = {
+                    "total_score": scores["investment_score"],
+                    "classification": scores["category"]["name"],
+                    "breakdown": {
+                        "quality": scores["quality_score"],
+                        "valuation": scores["valuation_score"],
+                        "health": scores["financial_health_score"],
+                        "growth": scores["growth_score"]
+                    }
+                }
+                save_score(ticker, score_data)
+                logger.info("✓ Scores guardados en BD para %s (desde comparador)", ticker)
+            except Exception as save_err:
+                logger.warning("No se pudieron guardar scores para %s: %s", ticker, save_err)
 
             # 3. Compilar datos
             company_data = {

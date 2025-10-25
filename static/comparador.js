@@ -2,6 +2,29 @@
 // COMPARADOR DE ACCIONES - JAVASCRIPT
 // ============================================
 
+// Helper function para generar iconos SVG consistentes
+function iconHTML(name, size = 16, className = '') {
+    return `<svg class="icon ${className}" width="${size}" height="${size}" aria-hidden="true">
+        <use href="/static/icons.svg#${name}"></use>
+    </svg>`;
+}
+
+// Mapeo de emojis de categoría a iconos SVG
+const categoryIconMap = {
+    '🏆': 'trophy',      // SWEET SPOT
+    '⭐': 'star',        // PREMIUM
+    '💎': 'gem',         // VALOR
+    '⚠️': 'alert-triangle',  // CARA
+    '🪤': 'alert-circle',    // TRAMPA
+    '🔴': 'x-circle'     // EVITAR
+};
+
+// Helper para obtener icono de categoría
+function getCategoryIcon(emoji, size = 16) {
+    const iconName = categoryIconMap[emoji] || 'alert-circle';
+    return iconHTML(iconName, size);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Elementos del DOM
     const compareBtn = document.getElementById('compare-btn');
@@ -30,10 +53,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     const breakdownOrder = [
-        { key: 'quality', label: 'Calidad', icon: '🏆' },
-        { key: 'valuation', label: 'Valoración', icon: '💰' },
-        { key: 'health', label: 'Salud financiera', icon: '🛡️' },
-        { key: 'growth', label: 'Crecimiento', icon: '🌱' },
+        { key: 'quality', label: 'Calidad', icon: 'trophy' },
+        { key: 'valuation', label: 'Valoración', icon: 'dollar-sign' },
+        { key: 'health', label: 'Salud financiera', icon: 'shield' },
+        { key: 'growth', label: 'Crecimiento', icon: 'trending-up' },
     ];
 
     // ========================================
@@ -185,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="rank-company">${companyName}</div>
                 <div class="${sourceClass}">Fuente: ${primarySource}</div>
                 <div class="rank-category ${categoryClass}">
-                    ${company.category.emoji} ${company.category.name}
+                    ${getCategoryIcon(company.category.emoji, 16)} ${company.category.name}
                 </div>
                 <div class="rank-confidence">Confianza: ${company.confidence_level || 'N/A'}</div>
             </div>
@@ -449,7 +472,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formatScore(c.investment_score)
         ));
         tbody.appendChild(createMetricRow('Categoría', companies, c =>
-            `${c.category.emoji} ${c.category.name}`
+            `${getCategoryIcon(c.category.emoji, 16)} ${c.category.name}`
         ));
         tbody.appendChild(createMetricRow('Recomendación', companies, c =>
             c.recommendation
@@ -459,7 +482,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ));
 
         // Sección: PRECIO
-        tbody.appendChild(createSectionRow('💰 PRECIO', companies.length));
+        tbody.appendChild(createSectionRow(`${iconHTML('dollar-sign', 16)} PRECIO`, companies.length));
         tbody.appendChild(createMetricRow('Precio Actual', companies, c =>
             formatPriceCell(c)
         ));
@@ -571,7 +594,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return `
                     <div class="dimension-card">
                         <div class="dimension-header">
-                            <span class="dimension-label">${dim.icon} ${dim.label}</span>
+                            <span class="dimension-label">${iconHTML(dim.icon, 18)} ${dim.label}</span>
                             <span class="dimension-score">${scoreValue}</span>
                         </div>
                         <ul class="dimension-metrics">
@@ -620,7 +643,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 ${best.investment_score.toFixed(0)}/100
             </div>
             <div class="category-badge ${bestCategoryClass}">
-                ${best.category.emoji} ${best.category.name}
+                ${getCategoryIcon(best.category.emoji, 16)} ${best.category.name}
             </div>
             <div class="reason">
                 <strong>Razón:</strong> ${best.category.desc}
@@ -642,7 +665,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 ${worst.investment_score.toFixed(0)}/100
             </div>
             <div class="category-badge ${worstCategoryClass}">
-                ${worst.category.emoji} ${worst.category.name}
+                ${getCategoryIcon(worst.category.emoji, 16)} ${worst.category.name}
             </div>
             <div class="reason">
                 <strong>Razón:</strong> ${worst.category.desc}
