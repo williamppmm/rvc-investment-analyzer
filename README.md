@@ -19,56 +19,103 @@ RVC es una aplicación web completa que te ayuda a identificar las mejores oport
 
 ---
 
+## ✨ **Características Destacadas (v2.0)**
+
+### 🎨 **Diseño Profesional Modernizado**
+- **Iconografía SVG** - 30+ iconos Lucide en sprite centralizado
+- **Gráficos Plotly 2.0** - Efecto lollipop, paleta Tailwind moderna
+- **Tipografía Inter** - Sistema profesional sans-serif
+- **Paleta actualizada** - Verde esmeralda, ámbar, naranja, rojo
+- **Responsive total** - Optimizado para móvil, tablet y desktop
+
+---
+
 ## 🚀 Características Principales
 
 ### 1️⃣ Analizador Individual
-Evalúa cualquier acción con un sistema de **3 scores complementarios**:
+Evalúa cualquier acción con un sistema de **4 scores complementarios**:
 
 - **Quality Score** (0-100): ¿Qué tan buena es la empresa?
 - **Valuation Score** (0-100): ¿Qué tan caro está el precio?
+- **Financial Health Score** (0-100): ¿Qué tan sólida es financieramente?
+- **Growth Score** (0-100): ¿Qué tanto está creciendo?
 - **Investment Score** (0-100): ¿Vale la pena comprar AHORA?
 
-Clasificación automática en 9 categorías:
-- 💎 **Gemas Ocultas** — Alta calidad, bajo precio
-- 🏆 **Clase Mundial** — Excelente calidad, precio razonable
-- ⚠️ **Trampa de Valor** — Baja calidad, precio bajo
-- 🚫 **Evitar** — Baja calidad, sobrevalorada
+Clasificación automática en 6 categorías:
+- 🏆 **SWEET SPOT** — Alta calidad, precio razonable (el ideal)
+- ⭐ **PREMIUM** — Excelente calidad, precio alto justificado
+- 💎 **VALOR** — Calidad decente, precio bajo (oportunidad)
+- ⚠️ **CARA** — Calidad aceptable, precio muy alto
+- 🪤 **TRAMPA** — Baja calidad, precio bajo (peligro)
+- � **EVITAR** — Baja calidad, sobrevalorada
 
-### 2️⃣ Comparador de Acciones
-Compara hasta **5 acciones simultáneamente** lado a lado:
-- Visualización en tabla comparativa
-- Scores sincronizados con código de colores
-- Identificación rápida de mejores oportunidades
-- Exportación de comparaciones
+**Nuevas características v2.0**:
+- ✅ Iconos SVG profesionales en toda la interfaz
+- ✅ Glosario interactivo con 60+ términos
+- ✅ Tooltips educativos inline
+- ✅ Breakdown detallado por pilar
+
+### 2️⃣ Comparador de Acciones **[MODERNIZADO v2.0]**
+Compara hasta **5 acciones simultáneamente** lado a lado con gráficos profesionales:
+
+**Gráficos Plotly Modernizados**:
+- 📊 **Scatter Plot** - Mapa Calidad vs Valoración con zona ideal
+- 📈 **Bar Chart Lollipop** - Ranking visual con efecto stems + heads
+- 🎯 **Radar Chart** - Perfil multidimensional (top 3 empresas)
+
+**Características**:
+- ✅ Tabla comparativa completa con iconos SVG
+- ✅ Ranking automático con medallas coloreadas
+- ✅ Paleta Tailwind moderna (verde esmeralda, ámbar, naranja, rojo)
+- ✅ Configuración centralizada para consistencia
+- ✅ Validación robusta de datos (safeNum, clamp01)
+- ✅ Responsive automático en gráficos
+- ✅ Breakdown por pilares detallado
+- ✅ Conclusiones automáticas (mejor/peor opción)
+- ✅ **Guarda scores en BD** para el ranking
 
 ### 3️⃣ Calculadora de Inversiones
 Simulador DCA (Dollar Cost Averaging) con **4 módulos interactivos**:
 
-**Módulo 1: Proyección Básica**
-- 3 escenarios (conservador 7%, moderado 10%, optimista 12%)
-- Ajuste automático por inflación
-- Límite de capital configurable
-- Cálculo del poder del interés compuesto
+**Módulo 1: Plan de Jubilación**
+- Proyección con ajuste por inflación
+- Aportes mensuales crecientes
+- Límite configurable ($1,000,000)
+- Tabla anual completa
 
-**Módulo 2: Timing del Mercado**
-- Simulación de inicio en **crisis** (-40% caída)
-- Simulación de inicio en **burbuja** (+40% sobrevaloración)
-- Mercado normal como baseline
-- Comparación de resultados a largo plazo
+**Módulo 2: Dollar Cost Averaging**
+- 3 escenarios (conservador 7%, moderado 10%, optimista 12%)
+- Timing del mercado (normal, crisis -40%, burbuja +40%)
+- Visualización del impacto de volatilidad
+- Formateo con separadores de miles
 
 **Módulo 3: Lump Sum vs DCA**
-- Inversión única vs inversión mensual
-- Análisis de ventajas/desventajas
-- Impacto de la volatilidad
-- Recomendaciones personalizadas
+- Inversión única vs mensual
+- Comparación directa
+- Análisis de ventajas
+- Gráfico comparativo
 
-**Módulo 4: Ajuste por Inflación**
-- Proyecciones en términos reales
-- Poder adquisitivo futuro
-- Incremento anual de aportes
-- Visualización del impacto inflacionario
+**Módulo 4: Interés Compuesto**
+- Visualización del poder del interés
+- Separación: aportes vs intereses
+- Proyección a largo plazo
+- Disclaimer educativo visible
 
-### 4️⃣ Sistema de Datos Inteligente
+### 4️⃣ Ranking RVC (Top Opportunities)
+Sistema completo de clasificación de mejores oportunidades:
+
+**Funcionalidades**:
+- ✅ Ranking dinámico de tickers analizados
+- ✅ **6 filtros interactivos**: Score mín, sector, ordenamiento, límite, búsqueda, fechas
+- ✅ Estadísticas en tiempo real (total, promedio, sectores)
+- ✅ Medallas SVG coloreadas (oro, plata, bronce)
+- ✅ Iconos de categoría profesionales
+- ✅ Badge de nivel de confianza
+- ✅ Enlace directo al análisis individual
+- ✅ Estados UX completos (loading, error, vacío)
+- ✅ Conversión automática de monedas
+
+### 5️⃣ Sistema de Datos Inteligente
 - **7 fuentes de datos** con fallbacks automáticos:
   - Yahoo Finance, Finviz, MarketWatch
   - Alpha Vantage, Twelve Data, FMP
@@ -77,13 +124,17 @@ Simulador DCA (Dollar Cost Averaging) con **4 módulos interactivos**:
 - **Clasificación automática** de activos (EQUITY, ETF, REIT, CRYPTO)
 - **Soporte multi-moneda** (USD, EUR, GBP, CAD, MXN, etc.)
 - **Análisis especializado de ETFs**
+- **Health check endpoint** (`/health`) con estado de proveedores
 
-### 5️⃣ UX Educativa
+### 6️⃣ UX Educativa y Accesible **[MEJORADO v2.0]**
 - **Glosario interactivo** con 60+ términos financieros
 - **Tooltips inline** para conceptos técnicos
-- **Botón flotante de ayuda** contextual
-- **Responsive design** móvil/tablet/desktop
+- **Iconografía SVG** - 30+ iconos Lucide profesionales
+- **Disclaimers destacados** - Clase dedicada con fondo de advertencia
+- **Texto justificado** - Mejor legibilidad en párrafos
+- **Responsive design** optimizado para todos los dispositivos
 - **Variables CSS centralizadas** para temas consistentes
+- **Tipografía moderna** - Inter system font
 
 ---
 
