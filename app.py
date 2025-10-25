@@ -16,6 +16,7 @@ from typing import Any, Dict, Iterable, Optional
 
 from flask import Flask, jsonify, render_template, request
 from dotenv import load_dotenv
+import requests
 
 from data_agent import DataAgent, METRIC_SCHEMA_VERSION
 from etf_analyzer import ETFAnalyzer
@@ -330,6 +331,53 @@ def health():
     })
 
 
+# ============================================
+# API: Exchange Rate (USD -> EUR), con cache simple
+# ============================================
+
+_EXCHANGE_CACHE: Dict[str, Dict[str, Any]] = {}
+
+
+def _get_cached_rate_key(base: str, target: str) -> str:
+    return f"{base}->{target}".upper()
+
+
+def get_exchange_rate(base: str = "USD", target: str = "EUR") -> Dict[str, Any]:
+    base = (base or "USD").upper()
+    target = (target or "EUR").upper()
+    key = _get_cached_rate_key(base, target)
+
+    # 12 horas de cache
+    cached = _EXCHANGE_CACHE.get(key)
+    if cached and cached.get("expires_at") and cached["expires_at"] > datetime.utcnow():
+        return {"base": base, "target": target, "rate": cached.get("rate"), "cached": True}
+
+    rate = 1.0
+    try:
+        # Usar exchangerate.host (sin API key)
+        url = f"https://api.exchangerate.host/latest?base={base}&symbols={target}"
+        resp = requests.get(url, timeout=5)
+        if resp.ok:
+            data = resp.json()
+            rate = float(data.get("rates", {}).get(target, 1.0))
+    except Exception as ex:
+        logger.warning("Fallo obteniendo tasa de cambio %s->%s: %s", base, target, ex)
+
+    _EXCHANGE_CACHE[key] = {
+        "rate": rate,
+        "expires_at": datetime.utcnow() + timedelta(hours=12),
+    }
+    return {"base": base, "target": target, "rate": rate, "cached": False}
+
+
+@app.get("/api/exchange-rate")
+def exchange_rate():
+    base = request.args.get("base", "USD")
+    target = request.args.get("target", "EUR")
+    data = get_exchange_rate(base, target)
+    return jsonify(data)
+
+
 @app.route("/analyze", methods=["POST"])
 def analyze():
     """Endpoint principal para análisis de ticker individual."""
@@ -495,6 +543,7 @@ def top_opportunities():
         min_score = float(request.args.get('min_score', 50.0))
         sector_filter = request.args.get('sector', '').strip()
         sort_by = request.args.get('sort_by', 'rvc_score').lower()
+        target_currency = (request.args.get('currency', 'USD') or 'USD').upper()
         limit = min(int(request.args.get('limit', 50)), 100)  # Max 100 resultados
         
         # Validar parámetros
@@ -523,6 +572,15 @@ def top_opportunities():
             
             rows = cursor.fetchall()
         
+        # Preparar tipo de cambio si se solicitó otra moneda
+        fx_rate = None
+        if target_currency and target_currency != 'USD':
+            try:
+                rate_info = get_exchange_rate('USD', target_currency)
+                fx_rate = float(rate_info.get('rate', 1.0)) if isinstance(rate_info, dict) else float(rate_info)
+            except Exception:
+                fx_rate = None
+
         # Procesar resultados
         opportunities = []
         sectors_found = set()
@@ -557,6 +615,27 @@ def top_opportunities():
             
             sectors_found.add(sector)
             
+            # Conversiones a moneda objetivo (si hay tasa)
+            price_converted = None
+            market_cap_converted = None
+            if fx_rate is not None and fx_rate > 0:
+                try:
+                    if isinstance(current_price, (int, float)):
+                        price_converted = {target_currency: round(float(current_price) * fx_rate, 6)}
+                    else:
+                        cp = float(current_price)
+                        price_converted = {target_currency: round(cp * fx_rate, 6)}
+                except (TypeError, ValueError):
+                    price_converted = None
+                try:
+                    if isinstance(market_cap, (int, float)):
+                        market_cap_converted = {target_currency: round(float(market_cap) * fx_rate, 2)}
+                    else:
+                        mc = float(market_cap)
+                        market_cap_converted = {target_currency: round(mc * fx_rate, 2)}
+                except (TypeError, ValueError):
+                    market_cap_converted = None
+
             opportunity = {
                 'ticker': ticker,
                 'company_name': company_name,
@@ -567,7 +646,10 @@ def top_opportunities():
                 'pe_ratio': pe_ratio,
                 'current_price': current_price,
                 'last_updated': last_calc,
-                'breakdown': breakdown
+                'breakdown': breakdown,
+                'price_currency': 'USD',
+                'price_converted': price_converted,
+                'market_cap_converted': market_cap_converted
             }
             
             opportunities.append(opportunity)
@@ -604,7 +686,9 @@ def top_opportunities():
                         'sort_by': sort_by,
                         'limit': limit
                     },
-                    'generated_at': datetime.now().isoformat(timespec='seconds')
+                    'generated_at': datetime.now().isoformat(timespec='seconds'),
+                    'currency': target_currency,
+                    'fx_rate': (float(fx_rate) if isinstance(fx_rate, (int, float)) else None)
                 }
             }
         }

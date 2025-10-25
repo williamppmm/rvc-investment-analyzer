@@ -10,7 +10,10 @@
 <div class="container">
     <section class="page-hero">
         <h1 class="page-hero__title">Calculadora de Inversión</h1>
-        <p class="page-hero__subtitle">Proyecta tus aportes mensuales ajustados por inflación, compara estrategias y entiende el impacto del interés compuesto bajo escenarios de mercado realistas. Cada módulo se detiene al alcanzar 1,000,000 USD para mantener proyecciones prudentes.</p>
+        <p class="page-hero__subtitle">Proyecta tus aportes mensuales ajustados por inflación, compara estrategias y entiende el impacto del interés compuesto bajo escenarios de mercado realistas. Cada módulo se detiene al alcanzar $1.000.000 para mantener proyecciones prudentes.</p>
+        <div style="background:#fff3cd;border:1px solid #ffeeba;color:#856404;border-radius:8px;padding:0.75rem 1rem;margin-top:1rem;">
+            Nota: Esta herramienta es educativa. Si introduces datos manuales o usamos fuentes públicas, podrían existir errores o desactualizaciones. Para decisiones reales, valida la información o considera activar fuentes de datos de pago.
+        </div>
     </section>
 
     <section class="calc-section">
@@ -18,13 +21,13 @@
         <button class="calc-tab active" data-tab="retirement">Plan de jubilación</button>
         <button class="calc-tab" data-tab="dca">Dollar Cost Averaging</button>
         <button class="calc-tab" data-tab="lump-sum">Lump Sum vs DCA</button>
-        <button class="calc-tab" data-tab="compound">Interes compuesto</button>
+    <button class="calc-tab" data-tab="compound">Interés compuesto</button>
     </div>
 
     <div class="calc-content active" id="retirement-content">
-        <h2>Plan de jubilacion con inflacion</h2>
+    <h2>Plan de jubilación con inflación</h2>
         <p style="color: #6c757d; margin-bottom: 1.5rem;">
-            Calculamos mes a mes tus aportes crecientes, sumamos el interes compuesto esperado y generamos escenarios conservador, realista y optimista.
+            Calculamos mes a mes tus aportes crecientes, sumamos el interés compuesto esperado y generamos escenarios conservador, realista y optimista.
         </p>
 
         <div class="form-grid">
@@ -37,13 +40,13 @@
                 <input type="number" id="ret-retirement-age" value="65" min="18" max="75" step="1">
             </div>
             <div class="form-group">
-                <label for="ret-initial">Capital inicial ($)</label>
-                <input type="number" id="ret-initial" value="10000" min="0" step="500">
+                <label for="ret-initial">Capital inicial</label>
+                <input type="text" id="ret-initial" value="10.000" inputmode="numeric" pattern="[0-9\.]*">
                 <small class="field-hint">Ahorros o inversiones ya acumuladas.</small>
             </div>
             <div class="form-group">
-                <label for="ret-monthly">Ahorro mensual inicial ($)</label>
-                <input type="number" id="ret-monthly" value="500" min="0" step="50">
+                <label for="ret-monthly">Ahorro mensual inicial</label>
+                <input type="text" id="ret-monthly" value="500" inputmode="numeric" pattern="[0-9\.]*">
                 <small class="field-hint">Se actualiza cada año según la inflación estimada.</small>
             </div>
             <div class="form-group">
@@ -60,33 +63,33 @@
 
 
         <button id="calculate-retirement" type="button" class="btn btn--primary btn--block">
-            Calcular plan de jubilacion
+            Calcular plan de jubilación
         </button>
 
         <div id="ret-loading" class="loading hidden" style="margin-top: 2rem;">
             <span class="spinner"></span>
-            Calculando proyeccion...
+            Calculando proyección...
         </div>
 
         <div id="ret-results" class="hidden" style="margin-top: 2rem;"></div>
     </div>
 
     <div class="calc-content" id="dca-content">
-        <h2>Simulador Dollar Cost Averaging (DCA)</h2>
+    <h2>Simulador Dollar Cost Averaging (DCA)</h2>
         <p style="color: #6c757d; margin-bottom: 1.5rem;">
-            Estimamos la inversión mensual creciente, simulamos escenarios de mercado y destacamos cuando alcanzas el límite de 1,000,000 USD.
+            Estimamos la inversión mensual creciente, simulamos escenarios de mercado y destacamos cuando alcanzas el límite de 1.000.000 USD.
         </p>
 
         <div class="form-grid">
             <div class="form-group">
-                <label for="dca-initial">Capital inicial ($)</label>
-                <input type="number" id="dca-initial" value="0" min="0" step="100">
+                <label for="dca-initial">Capital inicial</label>
+                <input type="text" id="dca-initial" value="0" inputmode="numeric" pattern="[0-9\.]*">
                 <small class="field-hint">Se invierte en el primer mes al precio simulado.</small>
             </div>
             <div class="form-group">
-                <label for="dca-monthly">Aporte mensual inicial ($)</label>
-                <input type="number" id="dca-monthly" value="500" min="0" step="10">
-                <small class="field-hint">Se incrementa cada anio con la inflacion indicada.</small>
+                <label for="dca-monthly">Aporte mensual inicial</label>
+                <input type="text" id="dca-monthly" value="500" inputmode="numeric" pattern="[0-9\.]*">
+                <small class="field-hint">Se incrementa cada año con la inflación indicada.</small>
             </div>
             <div class="form-group">
                 <label for="dca-years">Años de inversión</label>
@@ -109,7 +112,7 @@
             </div>
         </div>
 
-        <h3>Escenarios de rendimiento</h3>
+    <h3>Escenarios de rendimiento</h3>
         <p style="color: #6c757d; margin-top: -0.5rem;">Basados en retornos nominales promedio de referencia.</p>
         <div class="scenario-cards">
             <div class="scenario-card" data-scenario="conservador">
@@ -130,30 +133,30 @@
         </div>
 
         <button id="calculate-dca" type="button" class="btn btn--primary btn--block">
-            Calcular proyeccion DCA
+            Calcular proyección DCA
         </button>
 
         <div id="dca-loading" class="loading hidden" style="margin-top: 2rem;">
             <span class="spinner"></span>
-            Calculando proyeccion...
+            Calculando proyección...
         </div>
 
         <div id="dca-results" class="hidden" style="margin-top: 2rem;"></div>
     </div>
 
     <div class="calc-content" id="lump-sum-content">
-        <h2>Comparación: Lump Sum vs DCA</h2>
+    <h2>Comparación: Lump Sum vs DCA</h2>
         <p style="color: #6c757d; margin-bottom: 1.5rem;">
             Compara invertir todo de una vez contra repartir el mismo capital en aportes mensuales. Este módulo usa aportes constantes (sin ajuste por inflación) para mantener la comparación justa.
         </p>
 
         <div class="form-grid">
             <div class="form-group">
-                <label for="ls-total">Monto total disponible ($)</label>
-                <input type="number" id="ls-total" value="10000" min="100" step="100">
+                <label for="ls-total">Monto total disponible</label>
+                <input type="text" id="ls-total" value="10.000" inputmode="numeric" pattern="[0-9\.]*">
             </div>
             <div class="form-group">
-                <label for="ls-years">Periodo de comparacion (anios)</label>
+                <label for="ls-years">Periodo de comparación (años)</label>
                 <input type="number" id="ls-years" value="10" min="1" max="50" step="1">
             </div>
             <div class="form-group">
@@ -179,22 +182,22 @@
     </div>
 
     <div class="calc-content" id="compound-content">
-        <h2>Impacto del interes compuesto</h2>
+    <h2>Impacto del interés compuesto</h2>
         <p style="color: #6c757d; margin-bottom: 1.5rem;">
-            Visualiza cuanto proviene de tus aportes versus los intereses generados en distintos horizontes. La proyeccion se detiene si alcanzas 1,000,000 USD.
+            Visualiza cuánto proviene de tus aportes versus los intereses generados en distintos horizontes. La proyección se detiene si alcanzas $1.000.000.
         </p>
 
         <div class="form-grid">
             <div class="form-group">
-                <label for="ci-initial">Inversion inicial ($)</label>
-                <input type="number" id="ci-initial" value="5000" min="0" step="100">
+                <label for="ci-initial">Inversión inicial</label>
+                <input type="text" id="ci-initial" value="5.000" inputmode="numeric" pattern="[0-9\.]*">
             </div>
             <div class="form-group">
-                <label for="ci-monthly">Aporte mensual ($)</label>
-                <input type="number" id="ci-monthly" value="300" min="0" step="10">
+                <label for="ci-monthly">Aporte mensual</label>
+                <input type="text" id="ci-monthly" value="300" inputmode="numeric" pattern="[0-9\.]*">
             </div>
             <div class="form-group">
-                <label for="ci-years">Anios de inversion</label>
+                <label for="ci-years">Años de inversión</label>
                 <input type="number" id="ci-years" value="20" min="1" max="50" step="1">
             </div>
             <div class="form-group">

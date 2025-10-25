@@ -254,12 +254,12 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             xaxis: {
                 title: 'Score de Valoración (0=Caro, 100=Barato)',
-                range: [0, 105],
+                autorange: true,
                 gridcolor: '#e0e0e0'
             },
             yaxis: {
                 title: 'Score de Calidad (0=Mala, 100=Excelente)',
-                range: [0, 105],
+                autorange: true,
                 gridcolor: '#e0e0e0'
             },
             shapes: [sweetSpotZone],
@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             xaxis: {
                 title: 'Score de Inversión',
-                range: [0, 105],
+                autorange: true,
                 gridcolor: '#e0e0e0'
             },
             yaxis: {
@@ -786,55 +786,51 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function formatPriceDisplay(value, currency, conversions) {
         if (typeof value !== 'number') return 'N/A';
-        const parts = [`${formatCurrencyAmount(value, currency)}`];
-        const extras = [];
-        if (conversions) {
-            Object.entries(conversions).forEach(([code, amount]) => {
-                if (code === currency) return;
-                if (typeof amount !== 'number') return;
-                extras.push(formatCurrencyAmount(amount, code));
-            });
+        const target = window.CurrencyManager?.getCurrency?.() || 'USD';
+        let amount = value;
+        let converted = false;
+        const base = (currency || 'USD').toUpperCase();
+        if (base !== target) {
+            if (conversions && typeof conversions[target] === 'number') {
+                amount = conversions[target];
+                converted = true;
+            } else if (base === 'USD' && typeof window.CurrencyManager?.convertFromUSD === 'function') {
+                amount = window.CurrencyManager.convertFromUSD(value);
+                converted = true;
+            }
         }
-        if (extras.length) {
-            parts.push(`(${extras.join(' | ')})`);
-        }
-        return parts.join(' ');
+        const symbol = converted || base === target
+            ? (window.CurrencyManager?.getSymbol?.() || (target === 'EUR' ? '€' : 'US$'))
+            : (base === 'EUR' ? '€' : 'US$');
+        const formatter = new Intl.NumberFormat('es-CO', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        return `${symbol} ${formatter.format(amount)}`;
     }
 
     function formatMarketCapDisplay(value, currency, conversions) {
         if (typeof value !== 'number') return 'N/A';
-        const parts = [formatMarketCapValue(value, currency)];
-        const extras = [];
-        if (conversions) {
-            Object.entries(conversions).forEach(([code, amount]) => {
-                if (code === currency) return;
-                if (typeof amount !== 'number') return;
-                extras.push(formatMarketCapValue(amount, code));
-            });
+        const target = window.CurrencyManager?.getCurrency?.() || 'USD';
+        let amount = value;
+        let converted = false;
+        const base = (currency || 'USD').toUpperCase();
+        if (base !== target) {
+            if (conversions && typeof conversions[target] === 'number') {
+                amount = conversions[target];
+                converted = true;
+            } else if (base === 'USD' && typeof window.CurrencyManager?.convertFromUSD === 'function') {
+                amount = window.CurrencyManager.convertFromUSD(value);
+                converted = true;
+            }
         }
-        if (extras.length) {
-            parts.push(`(${extras.join(' | ')})`);
-        }
-        return parts.join(' ');
-    }
-
-    function formatCurrencyAmount(amount, currency) {
-        const symbols = { USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
-        const symbol = symbols[currency] || '';
-        const formatter = new Intl.NumberFormat('en-US', {
+        const symbol = converted || base === target
+            ? (window.CurrencyManager?.getSymbol?.() || (target === 'EUR' ? '€' : 'US$'))
+            : (base === 'EUR' ? '€' : 'US$');
+        const formatter = new Intl.NumberFormat('es-CO', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
-        return `${symbol}${formatter.format(amount)} ${currency}`;
-    }
-
-    function formatMarketCapValue(amount, currency) {
-        const formatter = new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-        const symbols = { USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
-        const symbol = symbols[currency] || '';
         const thresholds = [
             { value: 1e12, suffix: 'T' },
             { value: 1e9, suffix: 'B' },
@@ -843,10 +839,10 @@ document.addEventListener('DOMContentLoaded', function() {
         for (const threshold of thresholds) {
             if (amount >= threshold.value) {
                 const scaled = amount / threshold.value;
-                return `${symbol}${formatter.format(scaled)}${threshold.suffix} ${currency}`;
+                return `${symbol} ${formatter.format(scaled)}${threshold.suffix}`;
             }
         }
-        return `${symbol}${formatter.format(amount)} ${currency}`;
+        return `${symbol} ${formatter.format(amount)}`;
     }
 
     function showError(message) {

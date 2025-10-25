@@ -76,13 +76,16 @@
 
             <div class="filters-actions">
                 <button id="apply-filters" class="btn btn-primary">
-                    🔍 Aplicar Filtros
+                    <svg class="icon" aria-hidden="true"><use href="{{ url_for('static', filename='icons.svg') }}#search"></use></svg>
+                    Aplicar Filtros
                 </button>
                 <button id="reset-filters" class="btn btn-secondary">
-                    🔄 Restablecer
+                    <svg class="icon" aria-hidden="true"><use href="{{ url_for('static', filename='icons.svg') }}#refresh"></use></svg>
+                    Restablecer
                 </button>
                 <button id="clear-cache" class="btn btn-danger" title="Borra todos los datos almacenados en caché (análisis previos)">
-                    🗑️ Borrar caché
+                    <svg class="icon" aria-hidden="true"><use href="{{ url_for('static', filename='icons.svg') }}#trash"></use></svg>
+                    Borrar caché
                 </button>
             </div>
 
@@ -204,5 +207,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='top_opportunities.js') }}"></script>
+<script src="{{ url_for('static', filename='top_opportunities.js', v='5') }}"></script>
 {% endblock %}

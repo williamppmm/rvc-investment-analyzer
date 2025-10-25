@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTabs();
     initScenarioCards();
     initCalculators();
+    initMoneyInputs();
 });
 
 function initTabs() {
@@ -76,9 +77,50 @@ function initCalculators() {
     });
 }
 
+function initMoneyInputs() {
+    const moneyIds = [
+        'ret-initial', 'ret-monthly',
+        'dca-initial', 'dca-monthly',
+        'ls-total',
+        'ci-initial', 'ci-monthly'
+    ];
+    moneyIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        // Normalizar valor inicial a formato con miles (sin símbolos)
+        const n = parseLocaleInt(el.value);
+        el.value = formatPlain(n);
+        // Formatear al salir del campo
+        el.addEventListener('blur', () => {
+            const val = parseLocaleInt(el.value);
+            el.value = formatPlain(val);
+        });
+        // Limpiar caracteres no válidos durante la edición
+        el.addEventListener('input', () => {
+            const cleaned = el.value.replace(/[^0-9\.]/g, '');
+            el.value = cleaned;
+        });
+    });
+}
+
+function parseLocaleInt(text) {
+    if (text === undefined || text === null) return 0;
+    const s = String(text).trim();
+    if (!s) return 0;
+    // es-CO: separador de miles '.'
+    const normalized = s.replace(/\./g, '');
+    const n = parseInt(normalized, 10);
+    return Number.isFinite(n) ? n : 0;
+}
+
+function formatPlain(value) {
+    const n = Number(value) || 0;
+    return new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(n);
+}
+
 async function calculateDCA() {
-    const initialAmount = parseFloat(document.getElementById('dca-initial').value) || 0;
-    const monthlyAmount = parseFloat(document.getElementById('dca-monthly').value) || 0;
+    const initialAmount = parseLocaleInt(document.getElementById('dca-initial').value);
+    const monthlyAmount = parseLocaleInt(document.getElementById('dca-monthly').value);
     const years = parseInt(document.getElementById('dca-years').value, 10);
     const inflationPct = parseFloat(document.getElementById('dca-inflation').value) || 0;
     const marketTiming = document.getElementById('dca-timing').value;
@@ -94,7 +136,7 @@ async function calculateDCA() {
     }
 
     if (!years || years <= 0 || years > 50) {
-        alert('El periodo debe estar entre 1 y 50 anios.');
+        alert('El periodo debe estar entre 1 y 50 años.');
         return;
     }
 
@@ -126,7 +168,7 @@ async function calculateDCA() {
 
         const data = await response.json();
         if (!response.ok) {
-            throw new Error(data.error || 'No se pudo calcular la proyeccion DCA.');
+            throw new Error(data.error || 'No se pudo calcular la proyección DCA.');
         }
 
         renderDCAResults(data.result);
@@ -147,17 +189,17 @@ function renderDCAResults(result) {
         <div class="results-grid">
             <div class="result-card success">
                 <div class="label">Capital final</div>
-                <div class="value">$${formatNumber(res.final_value)}</div>
-                <div class="subvalue">${res.cap_reached ? 'Limite de 1,000,000 USD alcanzado' : input.market_timing_label}</div>
+                <div class="value">${formatMoney(res.final_value)}</div>
+                <div class="subvalue">${res.cap_reached ? `Límite de ${formatMoney(1000000)} alcanzado` : input.market_timing_label}</div>
             </div>
             <div class="result-card">
                 <div class="label">Aportes totales (incluye capital inicial)</div>
-                <div class="value">$${formatNumber(res.total_invested)}</div>
+                <div class="value">${formatMoney(res.total_invested)}</div>
                 <div class="subvalue">${input.effective_months} de ${input.total_months_planned} meses planificados</div>
             </div>
             <div class="result-card info">
                 <div class="label">Ganancia generada</div>
-                <div class="value">$${formatNumber(res.total_gain)}</div>
+                <div class="value">${formatMoney(res.total_gain)}</div>
                 <div class="subvalue">${formatPercent(res.total_return_pct)} sobre lo aportado</div>
             </div>
         </div>
@@ -165,17 +207,17 @@ function renderDCAResults(result) {
 
     html += `
         <div class="chart-container">
-            <h3>Proyeccion base vs simulacion con timing</h3>
+            <h3>Proyección base vs simulación con timing</h3>
             <p style="margin-bottom: 1rem;">
-                Proyeccion lineal sin volatilidad: $${formatNumber(res.simple_projection)}. 
-                Con ajuste por inflacion e interes compuesto: $${formatNumber(baseline.final_value || 0)} 
+                Proyección lineal sin volatilidad: ${formatMoney(res.simple_projection)}. 
+                Con ajuste por inflación e interés compuesto: ${formatMoney(baseline.final_value || 0)} 
                 (${formatPercent(baseline.return_pct)} retorno). 
-                La simulacion con timing y precio variable termina en $${formatNumber(res.final_value)}.
+                La simulación con timing y precio variable termina en ${formatMoney(res.final_value)}.
             </p>
         </div>
     `;
 
-    const milestones = Object.values(breakdown || {}).filter(Boolean);
+    const milestones = Object.values(breakdown || {}).filter(Boolean).sort((a, b) => (a.years || 0) - (b.years || 0));
     if (milestones.length) {
         html += `
             <div class="chart-container">
@@ -185,8 +227,8 @@ function renderDCAResults(result) {
         milestones.forEach((milestone) => {
             html += `
                 <div class="milestone-item">
-                    <div class="milestone-year">${milestone.years} anios</div>
-                    <div class="milestone-value">$${formatNumber(milestone.value)}</div>
+                    <div class="milestone-year">${milestone.years} años</div>
+                    <div class="milestone-value">${formatMoney(milestone.value)}</div>
                     <div class="milestone-bar"></div>
                 </div>
             `;
@@ -210,13 +252,14 @@ function renderDCAResults(result) {
                     </thead>
                     <tbody>
         `;
-        snapshots.forEach((row) => {
+        // Asegurar orden ascendente por mes
+        snapshots.sort((a, b) => (a.month || 0) - (b.month || 0)).forEach((row) => {
             html += `
                 <tr>
                     <td>${row.month}</td>
-                    <td>$${formatNumber(row.monthly_contribution)}</td>
-                    <td>$${formatNumber(row.invested_to_date)}</td>
-                    <td>$${formatNumber(row.portfolio_value)}</td>
+                    <td>${formatMoney(row.monthly_contribution)}</td>
+                    <td>${formatMoney(row.invested_to_date)}</td>
+                    <td>${formatMoney(row.portfolio_value)}</td>
                     <td>${formatPercent(row.return_pct)}</td>
                 </tr>
             `;
@@ -231,12 +274,12 @@ function renderDCAResults(result) {
     if (res.cap_reached) {
         html += `
             <div class="insights-section" style="margin-top: 2rem;">
-                <h3>Limite alcanzado</h3>
+                <h3>Límite alcanzado</h3>
                 <div class="insight-item">
-                    <strong>Meta de 1,000,000 USD</strong>
+                    <strong>Meta de ${formatMoney(1000000)}</strong>
                     <p style="margin: 0;">
-                        Llegaste al limite en el mes ${res.cap_reached.month} (${res.cap_reached.years_elapsed} anios). 
-                        A partir de ahi dejamos de sumar aportes para evitar resultados irreales.
+                        Llegaste al límite en el mes ${res.cap_reached.month} (${res.cap_reached.years_elapsed} años). 
+                        A partir de ahí dejamos de sumar aportes para evitar resultados irreales.
                     </p>
                 </div>
             </div>
@@ -262,7 +305,7 @@ function renderDCAResults(result) {
 }
 
 async function calculateLumpSum() {
-    const totalAmount = parseFloat(document.getElementById('ls-total').value);
+    const totalAmount = parseLocaleInt(document.getElementById('ls-total').value);
     const years = parseInt(document.getElementById('ls-years').value, 10);
     const scenario = document.getElementById('ls-scenario').value;
 
@@ -272,7 +315,7 @@ async function calculateLumpSum() {
     }
 
     if (!years || years <= 0 || years > 50) {
-        alert('El periodo debe estar entre 1 y 50 anios.');
+        alert('El periodo debe estar entre 1 y 50 años.');
         return;
     }
 
@@ -312,17 +355,17 @@ function renderLumpSumResults(result) {
     const { lump_sum: lump, dca, comparison } = result;
 
     let html = `
-        <h3>Resultados para ${result.years} anios (${capitalize(result.scenario)})</h3>
+    <h3>Resultados para ${result.years} años (${capitalize(result.scenario)})</h3>
         <div class="results-grid" style="margin-bottom: 2rem;">
             <div class="result-card ${comparison.winner === 'Lump Sum' ? 'success' : ''}">
                 <div class="label">${lump.strategy}</div>
-                <div class="value">$${formatNumber(lump.final_value)}</div>
-                <div class="subvalue">Ganancia: $${formatNumber(lump.total_gain)} (${formatPercent(lump.return_pct)})</div>
+                <div class="value">${formatMoney(lump.final_value)}</div>
+                <div class="subvalue">Ganancia: ${formatMoney(lump.total_gain)} (${formatPercent(lump.return_pct)})</div>
             </div>
             <div class="result-card ${comparison.winner === 'DCA' ? 'success' : ''}">
                 <div class="label">${dca.strategy}</div>
-                <div class="value">$${formatNumber(dca.final_value)}</div>
-                <div class="subvalue">Ganancia: $${formatNumber(dca.total_gain)} (${formatPercent(dca.return_pct)})</div>
+                <div class="value">${formatMoney(dca.final_value)}</div>
+                <div class="subvalue">Ganancia: ${formatMoney(dca.total_gain)} (${formatPercent(dca.return_pct)})</div>
             </div>
         </div>
 
@@ -337,26 +380,26 @@ function renderLumpSumResults(result) {
             <tbody>
                 <tr>
                     <td>Capital inicial</td>
-                    <td>$${formatNumber(result.total_amount)}</td>
-                    <td>$${formatNumber(dca.monthly_amount)} mensual</td>
+                    <td>${formatMoney(result.total_amount)}</td>
+                    <td>${formatMoney(dca.monthly_amount)} mensual</td>
                 </tr>
                 <tr>
                     <td>Valor final</td>
-                    <td>$${formatNumber(lump.final_value)} ${comparison.winner === 'Lump Sum' ? '<span class="winner-badge">Ganador</span>' : ''}</td>
-                    <td>$${formatNumber(dca.final_value)} ${comparison.winner === 'DCA' ? '<span class="winner-badge">Ganador</span>' : ''}</td>
+                    <td>${formatMoney(lump.final_value)} ${comparison.winner === 'Lump Sum' ? '<span class="winner-badge">Ganador</span>' : ''}</td>
+                    <td>${formatMoney(dca.final_value)} ${comparison.winner === 'DCA' ? '<span class="winner-badge">Ganador</span>' : ''}</td>
                 </tr>
                 <tr>
                     <td>Ganancia total</td>
-                    <td>$${formatNumber(lump.total_gain)}</td>
-                    <td>$${formatNumber(dca.total_gain)}</td>
+                    <td>${formatMoney(lump.total_gain)}</td>
+                    <td>${formatMoney(dca.total_gain)}</td>
                 </tr>
             </tbody>
         </table>
 
         <div class="insights-section" style="margin-top: 2rem;">
-            <h3>Recomendacion</h3>
+            <h3>Recomendación</h3>
             <div class="insight-item">
-                <strong>${comparison.winner} aventaja por $${formatNumber(comparison.difference)} (${formatPercent(comparison.difference_pct)})</strong>
+                <strong>${comparison.winner} aventaja por ${formatMoney(comparison.difference)} (${formatPercent(comparison.difference_pct)})</strong>
             </div>
             <div class="insight-item">
                 <p style="margin: 0;">${comparison.recommendation}</p>
@@ -370,8 +413,8 @@ function renderLumpSumResults(result) {
 }
 
 async function calculateCompound() {
-    const initialAmount = parseFloat(document.getElementById('ci-initial').value) || 0;
-    const monthlyContribution = parseFloat(document.getElementById('ci-monthly').value) || 0;
+    const initialAmount = parseLocaleInt(document.getElementById('ci-initial').value);
+    const monthlyContribution = parseLocaleInt(document.getElementById('ci-monthly').value);
     const years = parseInt(document.getElementById('ci-years').value, 10);
     const scenario = document.getElementById('ci-scenario').value;
 
@@ -381,12 +424,12 @@ async function calculateCompound() {
     }
 
     if (initialAmount === 0 && monthlyContribution === 0) {
-        alert('Ingresa al menos un monto inicial o una contribucion mensual.');
+        alert('Ingresa al menos un monto inicial o una contribución mensual.');
         return;
     }
 
     if (!years || years <= 0 || years > 50) {
-        alert('El periodo debe estar entre 1 y 50 anios.');
+        alert('El periodo debe estar entre 1 y 50 años.');
         return;
     }
 
@@ -411,7 +454,7 @@ async function calculateCompound() {
 
         const data = await response.json();
         if (!response.ok) {
-            throw new Error(data.error || 'No se pudo calcular el interes compuesto.');
+            throw new Error(data.error || 'No se pudo calcular el interés compuesto.');
         }
 
         renderCompoundResults(data.result);
@@ -428,21 +471,21 @@ function renderCompoundResults(result) {
     const aportesPct = 100 - interestPct;
 
     let html = `
-        <h3>Resumen del interes compuesto (${result.annual_return_pct}% anual)</h3>
+    <h3>Resumen del interés compuesto (${result.annual_return_pct}% anual)</h3>
         <div class="results-grid">
             <div class="result-card">
                 <div class="label">Aportes totales</div>
-                <div class="value">$${formatNumber(result.total_contributed)}</div>
+                <div class="value">${formatMoney(result.total_contributed)}</div>
                 <div class="subvalue">Capital propio acumulado</div>
             </div>
             <div class="result-card success">
                 <div class="label">Valor final</div>
-                <div class="value">$${formatNumber(result.final_value)}</div>
-                <div class="subvalue">Despues de ${result.years} anios</div>
+                <div class="value">${formatMoney(result.final_value)}</div>
+                <div class="subvalue">Después de ${result.years} años</div>
             </div>
             <div class="result-card warning">
                 <div class="label">Intereses generados</div>
-                <div class="value">$${formatNumber(result.interest_earned)}</div>
+                <div class="value">${formatMoney(result.interest_earned)}</div>
                 <div class="subvalue">${formatPercent(interestPct)} del total</div>
             </div>
         </div>
@@ -463,9 +506,9 @@ function renderCompoundResults(result) {
     if (result.cap_reached) {
         html += `
             <div class="insights-section" style="margin-top: 2rem;">
-                <h3>Limite alcanzado</h3>
+                <h3>Límite alcanzado</h3>
                 <div class="insight-item">
-                    <p style="margin: 0;">El calculo se detuvo al llegar a 1,000,000 USD para mantener cifras realistas.</p>
+                    <p style="margin: 0;">El cálculo se detuvo al llegar a ${formatMoney(1000000)} para mantener cifras realistas.</p>
                 </div>
             </div>
         `;
@@ -493,18 +536,18 @@ function renderCompoundResults(result) {
 async function calculateRetirement() {
     const currentAge = parseInt(document.getElementById('ret-current-age').value, 10);
     const retirementAge = parseInt(document.getElementById('ret-retirement-age').value, 10);
-    const initialAmount = parseFloat(document.getElementById('ret-initial').value) || 0;
-    const monthlyAmount = parseFloat(document.getElementById('ret-monthly').value) || 0;
+    const initialAmount = parseLocaleInt(document.getElementById('ret-initial').value);
+    const monthlyAmount = parseLocaleInt(document.getElementById('ret-monthly').value);
     const annualReturnPct = parseFloat(document.getElementById('ret-return').value) || 0;
     const annualInflationPct = parseFloat(document.getElementById('ret-inflation').value) || 0;
 
     if (!currentAge || currentAge < 18 || currentAge > 75) {
-        alert('La edad actual debe estar entre 18 y 75 anios.');
+        alert('La edad actual debe estar entre 18 y 75 años.');
         return;
     }
 
     if (!retirementAge || retirementAge <= currentAge || retirementAge > 75) {
-        alert('La edad de retiro debe ser mayor a la actual y no superar 75 anios.');
+        alert('La edad de retiro debe ser mayor a la actual y no superar 75 años.');
         return;
     }
 
@@ -519,7 +562,7 @@ async function calculateRetirement() {
     }
 
     if (annualInflationPct < 0 || annualInflationPct > 15) {
-        alert('La inflacion debe estar entre 0% y 15%.');
+        alert('La inflación debe estar entre 0% y 15%.');
         return;
     }
 
@@ -563,26 +606,26 @@ function renderRetirementResults(result) {
     const { input, results: res, scenarios, yearly_projections: yearly, milestones, composition, limit } = result;
 
     let html = `
-        <h3>Meta a los ${input.retirement_age} anios (horizonte ${input.years_to_retirement} anios)</h3>
+    <h3>Meta a los ${input.retirement_age} años (horizonte ${input.years_to_retirement} años)</h3>
         <div class="results-grid">
             <div class="result-card success">
                 <div class="label">Capital proyectado</div>
-                <div class="value">$${formatNumber(res.final_capital)}</div>
+                <div class="value">${formatMoney(res.final_capital)}</div>
                 <div class="subvalue">${formatPercent(res.average_return_pct)} anual esperado</div>
             </div>
             <div class="result-card">
                 <div class="label">Capital inicial</div>
-                <div class="value">$${formatNumber(res.initial_capital)}</div>
+                <div class="value">${formatMoney(res.initial_capital)}</div>
                 <div class="subvalue">Punto de partida</div>
             </div>
             <div class="result-card info">
                 <div class="label">Aportes durante el plan</div>
-                <div class="value">$${formatNumber(res.total_contributions)}</div>
-                <div class="subvalue">${input.effective_years} anios efectivos de ahorro</div>
+                <div class="value">${formatMoney(res.total_contributions)}</div>
+                <div class="subvalue">${input.effective_years} años efectivos de ahorro</div>
             </div>
             <div class="result-card warning">
                 <div class="label">Intereses generados</div>
-                <div class="value">$${formatNumber(res.total_interest)}</div>
+                <div class="value">${formatMoney(res.total_interest)}</div>
                 <div class="subvalue">${formatPercent(composition.interest_pct)} del total</div>
             </div>
         </div>
@@ -612,9 +655,9 @@ function renderRetirementResults(result) {
         html += `
             <tr>
                 <td>${capitalize(key)}</td>
-                <td>$${formatNumber(scenario.final_value)}</td>
-                <td>$${formatNumber(scenario.total_contributions)}</td>
-                <td>$${formatNumber(scenario.total_interest)}</td>
+                <td>${formatMoney(scenario.final_value)}</td>
+                <td>${formatMoney(scenario.total_contributions)}</td>
+                <td>${formatMoney(scenario.total_interest)}</td>
                 <td>${formatPercent(scenario.return_pct)}</td>
             </tr>
         `;
@@ -629,11 +672,11 @@ function renderRetirementResults(result) {
     if (limit && limit.reached && limit.details) {
         html += `
             <div class="insights-section">
-                <h3>Limite alcanzado</h3>
+                <h3>Límite alcanzado</h3>
                 <div class="insight-item">
-                    <strong>Meta de 1,000,000 USD</strong>
+                    <strong>Meta de ${formatMoney(1000000)}</strong>
                     <p style="margin: 0;">
-                        El plan alcanza el limite a los ${limit.details.year} anios (edad ${limit.details.age}). 
+                        El plan alcanza el límite a los ${limit.details.year} años (edad ${limit.details.age}). 
                         A partir de ese punto dejamos de sumar aportes para mantener proyecciones realistas.
                     </p>
                 </div>
@@ -650,8 +693,8 @@ function renderRetirementResults(result) {
         milestones.forEach((row) => {
             html += `
                 <div class="milestone-item">
-                    <div class="milestone-year">${row.amount >= 1000000 ? 'Meta final' : `$${formatNumber(row.amount)}`}</div>
-                    <div class="milestone-value">Se alcanza en el anio ${row.year} (edad ${row.age})</div>
+                    <div class="milestone-year">${row.amount >= 1000000 ? 'Meta final' : `${formatMoney(row.amount)}`}</div>
+                    <div class="milestone-value">Se alcanza en el año ${row.year} (edad ${row.age})</div>
                     <div class="milestone-bar"></div>
                 </div>
             `;
@@ -660,19 +703,15 @@ function renderRetirementResults(result) {
     }
 
     if (yearly && yearly.length) {
-        const displayRows = yearly.length > 12
-            ? [...yearly.slice(0, 6), { ellipsis: true }, ...yearly.slice(-4)]
-            : yearly;
-
         html += `
             <div class="yearly-table">
                 <table>
                     <thead>
                         <tr>
-                            <th>Anio (edad)</th>
+                            <th>Año (edad)</th>
                             <th>Aporte anual</th>
                             <th>Aportes acumulados</th>
-                            <th>Interes del anio</th>
+                            <th>Interés del año</th>
                             <th>Interes acumulado</th>
                             <th>Capital total</th>
                         </tr>
@@ -680,23 +719,15 @@ function renderRetirementResults(result) {
                     <tbody>
         `;
 
-        displayRows.forEach((row) => {
-            if (row.ellipsis) {
-                html += `
-                    <tr>
-                        <td colspan="6" style="text-align: center; font-style: italic; color: #6c757d;">... ${yearly.length - 10} anios intermedios ...</td>
-                    </tr>
-                `;
-                return;
-            }
+        yearly.forEach((row) => {
             html += `
                 <tr>
                     <td>${row.year} (${row.age})</td>
-                    <td>$${formatNumber(row.annual_contribution)}</td>
-                    <td>$${formatNumber(row.contributions_accumulated)}</td>
-                    <td>$${formatNumber(row.interest_this_year)}</td>
-                    <td>$${formatNumber(row.interest_accumulated)}</td>
-                    <td>$${formatNumber(row.portfolio_value)}</td>
+                    <td>${formatMoney(row.annual_contribution)}</td>
+                    <td>${formatMoney(row.contributions_accumulated)}</td>
+                    <td>${formatMoney(row.interest_this_year)}</td>
+                    <td>${formatMoney(row.interest_accumulated)}</td>
+                    <td>${formatMoney(row.portfolio_value)}</td>
                 </tr>
             `;
         });
@@ -724,26 +755,28 @@ function pickTimelineSnapshots(timeline) {
 
     const unique = [first, timeline[midIndex], twelfth, last];
     const seen = new Set();
-    return unique.filter((item) => {
+    const filtered = unique.filter((item) => {
         if (!item) return false;
         if (seen.has(item.month)) return false;
         seen.add(item.month);
         return true;
     });
+    // Orden ascendente por mes para presentación
+    return filtered.sort((a, b) => (a.month || 0) - (b.month || 0));
 }
 
 function formatNumber(value) {
     if (value === undefined || value === null || Number.isNaN(value)) {
         return '0';
     }
-    return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
+    return new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(value);
 }
 
 function formatPercent(value) {
     if (value === undefined || value === null || Number.isNaN(value)) {
         return '0%';
     }
-    return `${value.toFixed(1)}%`;
+    return `${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 1 }).format(value)}%`;
 }
 
 function capitalize(text) {
@@ -751,4 +784,10 @@ function capitalize(text) {
         return '';
     }
     return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function formatMoney(value) {
+    // Calculadora: sin símbolos monetarios, solo separadores de miles
+    const amount = Number(value) || 0;
+    return new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(amount);
 }

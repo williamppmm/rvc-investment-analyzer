@@ -27,6 +27,15 @@
                     <a href="{{ url_for('calculadora') }}" class="site-nav__link {% if active_page == 'calculator' %}is-active{% endif %}">Calculadora</a>
                     <a href="{{ url_for('top_opportunities_page') }}" class="site-nav__link {% if active_page == 'opportunities' %}is-active{% endif %}">Top Oportunidades</a>
                     <a href="{{ url_for('about') }}" class="site-nav__link {% if active_page == 'about' %}is-active{% endif %}">Acerca de</a>
+                    {% if active_page != 'opportunities' and active_page != 'calculator' %}
+                    <div style="display:inline-block; margin-left:1rem;">
+                        <label for="currency-select" style="font-size:0.85rem; color:#6c757d; margin-right:0.25rem;">Moneda</label>
+                        <select id="currency-select" style="padding:4px 6px; border-radius:6px; border:1px solid #e0e0e0;">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                        </select>
+                    </div>
+                    {% endif %}
                 </nav>
             </div>
         </header>
@@ -73,6 +82,28 @@
         </div>
     </div>
 
+    <script src="{{ url_for('static', filename='currency.js') }}"></script>
+    {% if active_page != 'opportunities' and active_page != 'calculator' %}
+    <script>
+        (async function(){
+            const sel = document.getElementById('currency-select');
+            if(sel && window.CurrencyManager){
+                sel.value = window.CurrencyManager.getCurrency();
+                if(sel.value === 'EUR'){
+                    await window.CurrencyManager.ensureRate('EUR');
+                }
+                sel.addEventListener('change', async () => {
+                    window.CurrencyManager.setCurrency(sel.value);
+                    if(sel.value === 'EUR'){
+                        await window.CurrencyManager.ensureRate('EUR');
+                    }
+                    // Recargar para que cada página aplique el formato
+                    location.reload();
+                });
+            }
+        })();
+    </script>
+    {% endif %}
     <script src="{{ url_for('static', filename='glossary.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>

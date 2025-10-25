@@ -23,7 +23,7 @@ const MANUAL_HINT_RECOMMENDED =
     "No se pudieron obtener todas las métricas críticas. Completa los valores manualmente antes de recalcular.";
 
 const MANUAL_FIELDS = [
-    { key: "current_price", label: "Precio actual", placeholder: "ej. 257.45", format: "number" },
+    { key: "current_price", label: "Precio actual (USD)", placeholder: "ej. 257.45", format: "number" },
     { key: "market_cap", label: "Market cap (USD)", placeholder: "ej. 1.2T", format: "number" },
     { key: "pe_ratio", label: "P/E", placeholder: "ej. 32.4", format: "number" },
     { key: "peg_ratio", label: "PEG", placeholder: "ej. 1.8", format: "number" },
@@ -269,8 +269,8 @@ function populateMetrics(metrics) {
     let fields;
     if (isEtf) {
         fields = [
-            { key: "current_price", label: `Precio Mercado (${currency})`, format: "currency" },
-            { key: "nav", label: `NAV (${metrics.nav_currency || currency})`, format: "currency_simple" },
+            { key: "current_price", label: "Precio Mercado", format: "currency" },
+            { key: "nav", label: "NAV", format: "currency_simple" },
             { key: "expense_ratio", label: "Expense Ratio", format: "percent" },
             { key: "ytd_return", label: "YTD Return", format: "percent" },
             { key: "premium_discount", label: "Premium/Discount", format: "percent" },
@@ -282,8 +282,8 @@ function populateMetrics(metrics) {
         ];
     } else {
         fields = [
-            { key: "current_price", label: `Precio Actual (${currency})`, format: "currency" },
-            { key: "market_cap", label: `Market Cap (${currency})`, format: "marketcap" },
+            { key: "current_price", label: "Precio Actual", format: "currency" },
+            { key: "market_cap", label: "Market Cap", format: "marketcap" },
             { key: "pe_ratio", label: "P/E Ratio", format: "number" },
             { key: "peg_ratio", label: "PEG Ratio", format: "number" },
             { key: "price_to_book", label: "P/B Ratio", format: "number" },
@@ -332,12 +332,12 @@ function populateMetrics(metrics) {
             displayValue = formatPriceDisplay(value, currency, priceConversions);
         } else if (field.format === "currency_simple") {
             displayValue = typeof value === "number"
-                ? formatCurrencyAmount(value, metrics.nav_currency || currency)
+                ? formatPriceDisplay(value, metrics.nav_currency || currency, null)
                 : "N/A";
         } else if (field.format === "marketcap") {
             displayValue = formatMarketCapDisplay(value, currency, marketCapConversions);
         } else if (field.format === "marketcap_simple") {
-            displayValue = formatMarketCapValue(value, currency);
+            displayValue = formatMarketCapDisplay(value, currency, null);
         } else if (field.format === "percent") {
             displayValue = formatPercentageValue(value);
         } else if (field.format === "number_compact") {
@@ -654,84 +654,66 @@ function formatPriceDisplay(value, currency, conversions) {
     if (typeof value !== "number") {
         return "N/A";
     }
-    const parts = [`${formatCurrencyAmount(value, currency)}`];
-    const extras = [];
-    if (conversions) {
-        Object.entries(conversions).forEach(([code, amount]) => {
-            if (code === currency) {
-                return;
-            }
-            if (typeof amount !== "number") {
-                return;
-            }
-            extras.push(`${formatCurrencyAmount(amount, code)}`);
-        });
+    const target = window.CurrencyManager?.getCurrency?.() || "USD";
+    let amount = value;
+    let converted = false;
+    const base = (currency || "USD").toUpperCase();
+    if (base !== target) {
+        if (conversions && typeof conversions[target] === "number") {
+            amount = conversions[target];
+            converted = true;
+        } else if (base === "USD" && typeof window.CurrencyManager?.convertFromUSD === "function") {
+            amount = window.CurrencyManager.convertFromUSD(value);
+            converted = true;
+        }
     }
-    if (extras.length) {
-        parts.push(`(${extras.join(" | ")})`);
-    }
-    return parts.join(" ");
+    const symbol = converted || base === target
+        ? (window.CurrencyManager?.getSymbol?.() || (target === "EUR" ? "€" : "US$"))
+        : (base === "EUR" ? "€" : "US$");
+    const formatter = new Intl.NumberFormat("es-CO", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+    return `${symbol} ${formatter.format(amount)}`;
 }
 
 function formatMarketCapDisplay(value, currency, conversions) {
     if (typeof value !== "number") {
         return "N/A";
     }
-    const parts = [`${formatMarketCapValue(value, currency)}`];
-    const extras = [];
-    if (conversions) {
-        Object.entries(conversions).forEach(([code, amount]) => {
-            if (code === currency) {
-                return;
-            }
-            if (typeof amount !== "number") {
-                return;
-            }
-            extras.push(`${formatMarketCapValue(amount, code)}`);
-        });
-    }
-    if (extras.length) {
-        parts.push(`(${extras.join(" | ")})`);
-    }
-    return parts.join(" ");
-}
-
-function formatCurrencyAmount(amount, currency) {
-    const symbols = { USD: "$", EUR: "€", GBP: "£", JPY: "¥" };
-    const symbol = symbols[currency] || "";
-    const formatter = new Intl.NumberFormat("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
-    return `${symbol}${formatter.format(amount)} ${currency}`;
-}
-
-function formatMarketCapValue(amount, currency) {
-    if (typeof amount !== "number") {
-        const parsed = Number(amount);
-        if (!Number.isFinite(parsed)) {
-            return "N/A";
+    const target = window.CurrencyManager?.getCurrency?.() || "USD";
+    let amount = value;
+    let converted = false;
+    const base = (currency || "USD").toUpperCase();
+    if (base !== target) {
+        if (conversions && typeof conversions[target] === "number") {
+            amount = conversions[target];
+            converted = true;
+        } else if (base === "USD" && typeof window.CurrencyManager?.convertFromUSD === "function") {
+            amount = window.CurrencyManager.convertFromUSD(value);
+            converted = true;
         }
-        amount = parsed;
     }
-    const formatter = new Intl.NumberFormat("en-US", {
+    const symbol = converted || base === target
+        ? (window.CurrencyManager?.getSymbol?.() || (target === "EUR" ? "€" : "US$"))
+        : (base === "EUR" ? "€" : "US$");
+    // Escala a T/B/M manteniendo símbolo y sin sufijo de moneda
+    const formatter = new Intl.NumberFormat("es-CO", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     });
-    const symbols = { USD: "$", EUR: "€", GBP: "£", JPY: "¥" };
-    const symbol = symbols[currency] || "";
     const thresholds = [
         { value: 1e12, suffix: "T" },
         { value: 1e9, suffix: "B" },
         { value: 1e6, suffix: "M" },
     ];
-    for (const threshold of thresholds) {
-        if (amount >= threshold.value) {
-            const scaled = amount / threshold.value;
-            return `${symbol}${formatter.format(scaled)}${threshold.suffix} ${currency}`;
+    for (const t of thresholds) {
+        if (amount >= t.value) {
+            const scaled = amount / t.value;
+            return `${symbol} ${formatter.format(scaled)}${t.suffix}`;
         }
     }
-    return `${symbol}${formatter.format(amount)} ${currency}`;
+    return `${symbol} ${formatter.format(amount)}`;
 }
 
 function formatCompactNumber(value) {

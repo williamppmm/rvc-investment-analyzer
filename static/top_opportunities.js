@@ -157,6 +157,7 @@ class TopOpportunities {
         if (limit && limit !== '50') {
             params.append('limit', limit);
         }
+        // No enviar moneda: Top se muestra siempre en USD
         
         return `${this.baseUrl}?${params.toString()}`;
     }
@@ -191,7 +192,7 @@ class TopOpportunities {
     }
     
     async loadInitialData() {
-        // Cargar con filtros por defecto
+        // Cargar con filtros por defecto (sin conversión de moneda)
         await this.loadData();
     }
     
@@ -264,6 +265,8 @@ class TopOpportunities {
             minute: '2-digit' 
         });
         this.elements.lastUpdated.textContent = `Actualizado: ${timeStr}`;
+
+        // Sin badge de moneda en Top
     }
     
     renderTable(opportunities) {
@@ -292,10 +295,10 @@ class TopOpportunities {
             market_cap,
             pe_ratio
         } = opportunity;
-        
-        // Formatear valores
-        const formattedPrice = current_price ? `$${current_price.toFixed(2)}` : '-';
-        const formattedMarketCap = market_cap ? this.formatMarketCap(market_cap) : '-';
+
+        // Top se muestra siempre en USD
+        const formattedPrice = this.formatPriceUSD(current_price);
+        const formattedMarketCap = this.formatMarketCapUSD(market_cap);
         const formattedPE = pe_ratio ? pe_ratio.toFixed(1) : '-';
         const scoreClass = this.getScoreClass(rvc_score);
         const rankClass = rank <= 3 ? `rank-${rank}` : '';
@@ -342,6 +345,7 @@ class TopOpportunities {
             </tr>
         `;
     }
+    // Eliminados formatos directos; Top solo muestra USD
     
     getRankIcon(rank) {
         const icons = { 1: '🥇', 2: '🥈', 3: '🥉' };
@@ -355,15 +359,28 @@ class TopOpportunities {
         return 'score-poor';
     }
     
-    formatMarketCap(marketCap) {
-        if (marketCap >= 1e12) {
-            return `$${(marketCap / 1e12).toFixed(1)}T`;
-        } else if (marketCap >= 1e9) {
-            return `$${(marketCap / 1e9).toFixed(1)}B`;
-        } else if (marketCap >= 1e6) {
-            return `$${(marketCap / 1e6).toFixed(1)}M`;
+    formatPriceUSD(amount) {
+        const val = Number(amount);
+        if (!Number.isFinite(val)) return '-';
+        const fmt = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return `US$ ${fmt.format(val)}`;
+    }
+
+    formatMarketCapUSD(marketCap) {
+        const value = Number(marketCap);
+        if (!Number.isFinite(value)) return '-';
+        const fmt = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const thresholds = [
+            { value: 1e12, suffix: 'T' },
+            { value: 1e9, suffix: 'B' },
+            { value: 1e6, suffix: 'M' }
+        ];
+        for (const t of thresholds) {
+            if (value >= t.value) {
+                return `US$ ${fmt.format(value / t.value)}${t.suffix}`;
+            }
         }
-        return `$${marketCap.toFixed(0)}`;
+        return `US$ ${fmt.format(value)}`;
     }
     
     showEmptyState() {
