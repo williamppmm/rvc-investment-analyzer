@@ -352,9 +352,24 @@ class TopOpportunities {
     }
     // Eliminados formatos directos; Top solo muestra USD
     
+    iconHTML(name, size = 16, className = '') {
+        return `<svg class="icon ${className}" width="${size}" height="${size}" aria-hidden="true">
+            <use href="/static/icons.svg#${name}"></use>
+        </svg>`;
+    }
+    
     getRankIcon(rank) {
-        const icons = { 1: '🥇', 2: '🥈', 3: '🥉' };
-        return icons[rank] || rank;
+        const medalColors = {
+            1: 'style="color: #FFD700;"',  // Gold
+            2: 'style="color: #C0C0C0;"',  // Silver
+            3: 'style="color: #CD7F32;"'   // Bronze
+        };
+        if (rank <= 3) {
+            return `<svg class="icon" width="20" height="20" ${medalColors[rank]} aria-hidden="true">
+                <use href="/static/icons.svg#award"></use>
+            </svg>`;
+        }
+        return rank;
     }
     
     getScoreClass(score) {
