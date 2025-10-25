@@ -23,6 +23,7 @@ from etf_analyzer import ETFAnalyzer
 from rvc_calculator import RVCCalculator
 from scoring_engine import InvestmentScorer
 from investment_calculator import InvestmentCalculator
+from usage_limiter import get_limiter
 
 
 load_dotenv()
@@ -385,13 +386,36 @@ def analyze():
 
     payload = request.get_json(silent=True) or {}
     ticker = (payload.get("ticker") or "").strip().upper()
+    license_key = payload.get("license_key")  # Usuario puede enviar su licencia
 
     if not ticker:
         logger.warning("Analyze request sin ticker - IP: %s", request.remote_addr)
         return jsonify({"error": "Por favor ingrese un ticker"}), 400
 
+    # ===== VERIFICAR LÍMITE DE USO =====
+    try:
+        limiter = get_limiter()
+        user_id = request.remote_addr
+        limit_check = limiter.check_limit(user_id, license_key)
+        
+        if not limit_check["allowed"]:
+            logger.warning(f"⛔ Límite alcanzado - IP: {user_id} | Usado: {limit_check['limit']}")
+            return jsonify({
+                "error": "Límite de consultas alcanzado",
+                "limit_info": limit_check
+            }), 429  # Too Many Requests
+        
+        # Registrar uso
+        limiter.track_usage(user_id, "/analyze", request.headers.get("User-Agent"))
+        
+    except Exception as e:
+        logger.error(f"Error en verificación de límite: {e}")
+        # Continuar sin bloquear si hay error en el limiter
+    # ===================================
+
     logger.info("=" * 50)
-    logger.info("ANALYZE REQUEST - Ticker: %s | IP: %s", ticker, request.remote_addr)
+    logger.info("ANALYZE REQUEST - Ticker: %s | IP: %s | Plan: %s", 
+                ticker, request.remote_addr, limit_check.get("plan", "FREE"))
 
     try:
         cached = get_cached_data(ticker)
@@ -768,7 +792,8 @@ def comparar():
 
     Payload:
         {
-            "tickers": ["NVDA", "AMD", "TSM"]
+            "tickers": ["NVDA", "AMD", "TSM"],
+            "license_key": "RVC-PRO-XXX" (opcional)
         }
 
     Returns:
@@ -782,6 +807,7 @@ def comparar():
 
     payload = request.get_json(silent=True) or {}
     tickers_input = payload.get("tickers", [])
+    license_key = payload.get("license_key")
 
     if not isinstance(tickers_input, list):
         logger.warning("Comparar request con formato inválido - IP: %s", request.remote_addr)
@@ -794,6 +820,26 @@ def comparar():
     if len(tickers) < 2:
         logger.warning("Comparar request con < 2 tickers - IP: %s", request.remote_addr)
         return jsonify({"error": "Debe proporcionar al menos 2 tickers"}), 400
+    
+    # ===== VERIFICAR LÍMITE DE USO =====
+    try:
+        limiter = get_limiter()
+        user_id = request.remote_addr
+        limit_check = limiter.check_limit(user_id, license_key)
+        
+        if not limit_check["allowed"]:
+            logger.warning(f"⛔ Límite alcanzado (comparar) - IP: {user_id}")
+            return jsonify({
+                "error": "Límite de consultas alcanzado",
+                "limit_info": limit_check
+            }), 429
+        
+        # Registrar uso
+        limiter.track_usage(user_id, "/api/comparar", request.headers.get("User-Agent"))
+        
+    except Exception as e:
+        logger.error(f"Error en verificación de límite: {e}")
+    # ===================================
 
     if len(tickers) > 5:
         logger.warning("Comparar request con > 5 tickers (%d) - IP: %s", len(tickers), request.remote_addr)
@@ -1138,6 +1184,104 @@ def calcular_inversion():
     except Exception as e:
         logger.error(f"Error calculating investment: {e}")
         return jsonify({"error": f"Error en el cálculo: {str(e)}"}), 500
+
+
+# ============================================
+# ENDPOINTS DE SISTEMA DE LÍMITES (FREEMIUM)
+# ============================================
+
+@app.route("/api/check-limit", methods=["POST"])
+def check_usage_limit():
+    """
+    Verificar límite de uso del usuario.
+    
+    Request:
+        {
+            "license_key": "RVC-PRO-XXXX" (opcional)
+        }
+    
+    Response:
+        {
+            "allowed": bool,
+            "remaining": int,
+            "limit": int,
+            "plan": "FREE" | "PRO",
+            "reset_in": str
+        }
+    """
+    try:
+        data = request.get_json() or {}
+        license_key = data.get("license_key")
+        
+        # Obtener identificador del usuario (IP)
+        user_id = request.remote_addr
+        
+        # Verificar límite
+        limiter = get_limiter()
+        limit_info = limiter.check_limit(user_id, license_key)
+        
+        return jsonify(limit_info)
+        
+    except Exception as e:
+        logger.error(f"Error checking limit: {e}")
+        return jsonify({"allowed": True}), 200  # Fail open
+
+
+@app.route("/api/validate-license", methods=["POST"])
+def validate_license():
+    """
+    Validar una licencia PRO.
+    
+    Request:
+        {
+            "license_key": "RVC-PRO-XXXX"
+        }
+    
+    Response:
+        {
+            "valid": bool,
+            "plan": str,
+            "expires_at": str,
+            "email": str
+        }
+    """
+    try:
+        data = request.get_json()
+        license_key = data.get("license_key")
+        
+        if not license_key:
+            return jsonify({"valid": False, "reason": "No se proporcionó licencia"}), 400
+        
+        limiter = get_limiter()
+        validation = limiter.validate_license(license_key)
+        
+        return jsonify(validation)
+        
+    except Exception as e:
+        logger.error(f"Error validating license: {e}")
+        return jsonify({"valid": False, "reason": "Error de validación"}), 500
+
+
+@app.route("/api/usage-stats", methods=["GET"])
+def get_usage_stats():
+    """
+    Obtener estadísticas de uso.
+    Requiere autenticación admin (por implementar).
+    """
+    try:
+        limiter = get_limiter()
+        
+        # Stats globales
+        stats = limiter.get_usage_stats()
+        
+        return jsonify({
+            "global_stats": stats,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting stats: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":

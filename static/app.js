@@ -76,14 +76,33 @@ async function analyzeStock() {
         return;
     }
 
+    // Verificar límite de uso antes de analizar
+    const canProceed = await checkUsageLimitBeforeAction();
+    if (!canProceed) {
+        return; // El modal de límite se mostrará automáticamente
+    }
+
     toggleLoading(true);
     try {
+        const licenseKey = localStorage.getItem('rvc_license_key');
         const response = await fetch("/analyze", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ticker }),
+            body: JSON.stringify({ 
+                ticker,
+                license_key: licenseKey 
+            }),
         });
         const data = await response.json();
+        
+        if (response.status === 429) {
+            // Límite alcanzado durante la consulta
+            if (window.usageLimitManager && data.limit_info) {
+                window.usageLimitManager.show(data.limit_info);
+            }
+            return;
+        }
+        
         if (!response.ok) {
             throw new Error(data.error || "No se pudo completar el análisis");
         }

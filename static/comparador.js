@@ -127,6 +127,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // Verificar límite de uso antes de comparar
+        const canProceed = await checkUsageLimitBeforeAction();
+        if (!canProceed) {
+            return; // Modal de límite se muestra automáticamente
+        }
+
         // Mostrar loading
         hideError();
         resultsContainer.classList.add('hidden');
@@ -134,16 +140,30 @@ document.addEventListener('DOMContentLoaded', function() {
         compareBtn.disabled = true;
 
         try {
+            // Obtener licencia si existe
+            const licenseKey = localStorage.getItem('rvc_license_key');
+            
             // Llamar a la API
             const response = await fetch('/api/comparar', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ tickers: uniqueTickers })
+                body: JSON.stringify({ 
+                    tickers: uniqueTickers,
+                    license_key: licenseKey 
+                })
             });
 
             const data = await response.json();
+
+            if (response.status === 429) {
+                // Límite alcanzado
+                if (window.usageLimitManager && data.limit_info) {
+                    window.usageLimitManager.show(data.limit_info);
+                }
+                return;
+            }
 
             if (!response.ok) {
                 throw new Error(data.error || 'Error al comparar tickers');

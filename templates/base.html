@@ -6,6 +6,7 @@
     <title>{% block title %}RVC Analyzer{% endblock %}</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='usage_limit.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -105,6 +106,7 @@
     </script>
     {% endif %}
     <script src="{{ url_for('static', filename='glossary.js') }}"></script>
+    <script src="{{ url_for('static', filename='usage_limit.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
