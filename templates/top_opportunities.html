@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Top Oportunidades - RVC Analyzer{% endblock %}
 
@@ -9,14 +10,14 @@
 {% block content %}
 <div class="container">
     <section class="page-hero">
-        <h1 class="page-hero__title">🏆 Top Oportunidades de Inversión</h1>
+        <h1 class="page-hero__title">{{ icon('trophy', size=22, class_name='icon--md', aria_label='Top Oportunidades') }} Top Oportunidades de Inversión</h1>
         <p class="page-hero__subtitle">Descubre las mejores acciones según nuestro análisis RVC. Filtra, ordena y encuentra tu próxima inversión.</p>
     </section>
 
     <!-- Panel de filtros -->
     <section class="filters-section">
         <div class="filters-card">
-            <h2 class="filters-title">🔍 Filtros y Ordenamiento</h2>
+            <h2 class="filters-title">{{ icon('filter', size=20, class_name='me-1') }} Filtros y Ordenamiento</h2>
             
             <div class="filters-grid">
                 <!-- Filtro por score mínimo -->
@@ -76,15 +77,15 @@
 
             <div class="filters-actions">
                 <button id="apply-filters" class="btn btn-primary">
-                    <svg class="icon" aria-hidden="true"><use href="{{ url_for('static', filename='icons.svg') }}#search"></use></svg>
+                    {{ icon('search', size=18, class_name='btn__icon', aria_label='Buscar') }}
                     Aplicar Filtros
                 </button>
                 <button id="reset-filters" class="btn btn-secondary">
-                    <svg class="icon" aria-hidden="true"><use href="{{ url_for('static', filename='icons.svg') }}#refresh"></use></svg>
+                    {{ icon('refresh', size=18, class_name='btn__icon') }}
                     Restablecer
                 </button>
                 <button id="clear-cache" class="btn btn-danger" title="Borra todos los datos almacenados en caché (análisis previos)">
-                    <svg class="icon" aria-hidden="true"><use href="{{ url_for('static', filename='icons.svg') }}#trash"></use></svg>
+                    {{ icon('trash', size=18, class_name='btn__icon') }}
                     Borrar caché
                 </button>
             </div>
@@ -98,28 +99,28 @@
     <section class="stats-section" id="stats-section">
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon">📊</div>
+                <div class="stat-icon">{{ icon('trending-up', size=28, class_name='text-primary') }}</div>
                 <div class="stat-content">
                     <div class="stat-value" id="total-count">-</div>
                     <div class="stat-label">Oportunidades</div>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">⭐</div>
+                <div class="stat-icon">{{ icon('star', size=28, class_name='text-warning') }}</div>
                 <div class="stat-content">
                     <div class="stat-value" id="average-score">-</div>
                     <div class="stat-label">Score Promedio</div>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">🏢</div>
+                <div class="stat-icon">{{ icon('building-2', size=28, class_name='text-info') }}</div>
                 <div class="stat-content">
                     <div class="stat-value" id="sectors-count">-</div>
                     <div class="stat-label">Sectores</div>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">🥇</div>
+                <div class="stat-icon">{{ icon('award', size=28, class_name='text-success') }}</div>
                 <div class="stat-content">
                     <div class="stat-value" id="top-ticker">-</div>
                     <div class="stat-label">Líder Actual</div>
@@ -137,7 +138,7 @@
     <!-- Error state -->
     <div class="error-container hidden" id="error-container">
         <div class="error-card">
-            <div class="error-icon">⚠️</div>
+            <div class="error-icon">{{ icon('alert-triangle', size=48, class_name='text-danger') }}</div>
             <h3>Error al cargar datos</h3>
             <p id="error-message">Hubo un problema al obtener las oportunidades. Por favor, intenta nuevamente.</p>
             <button id="retry-button" class="btn btn-primary">Reintentar</button>
@@ -147,7 +148,7 @@
     <!-- Tabla de resultados -->
     <section class="results-section" id="results-section">
         <div class="results-header">
-            <h2>📈 Resultados</h2>
+            <h2>{{ icon('line-chart', size=22, class_name='me-1') }} Resultados</h2>
             <div class="results-info">
                 <span id="results-count">0 oportunidades encontradas</span>
                 <span class="separator">•</span>
@@ -179,7 +180,7 @@
 
         <!-- Empty state -->
         <div class="empty-state hidden" id="empty-state">
-            <div class="empty-icon">🔍</div>
+            <div class="empty-icon">{{ icon('filter', size=48, class_name='text-muted') }}</div>
             <h3>No se encontraron oportunidades</h3>
             <p>Prueba ajustando los filtros para ver más resultados.</p>
         </div>
@@ -187,19 +188,19 @@
 
     <!-- Quick actions -->
     <section class="quick-actions" id="quick-actions">
-        <h3>🚀 Acciones Rápidas</h3>
+        <h3>{{ icon('rocket', size=22, class_name='me-1') }} Acciones Rápidas</h3>
         <div class="quick-buttons">
             <button class="quick-btn" onclick="applyQuickFilter('premium')">
-                ⭐ Solo Premium (Score ≥75)
+                {{ icon('star', size=16, class_name='me-1') }} Solo Premium (Score ≥75)
             </button>
             <button class="quick-btn" onclick="applyQuickFilter('technology')">
-                💻 Solo Technology
+                {{ icon('laptop', size=16, class_name='me-1') }} Solo Technology
             </button>
             <button class="quick-btn" onclick="applyQuickFilter('large-cap')">
-                🏢 Large Cap (>$100B)
+                {{ icon('building-2', size=16, class_name='me-1') }} Large Cap (>$100B)
             </button>
             <button class="quick-btn" onclick="applyQuickFilter('reset')">
-                🔄 Ver Todo
+                {{ icon('refresh-cw', size=16, class_name='me-1') }} Ver Todo
             </button>
         </div>
     </section>
@@ -207,5 +208,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='top_opportunities.js', v='5') }}"></script>
+<script src="{{ url_for('static', filename='top_opportunities.js', v='6') }}"></script>
 {% endblock %}

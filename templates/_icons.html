@@ -1,0 +1,24 @@
+{% macro icon(name, size=24, stroke_width=1.75, class_name='', aria_label=None, aria_hidden=None) -%}
+{#
+  Macro de icono reutilizable.
+  Uso: {{ icon('search', size=20, stroke_width=1.75, class_name='btn__icon', aria_label='Buscar') }}
+  Si no se pasa aria_label, aria-hidden se asume true por accesibilidad.
+#}
+{%- set computed_hidden = aria_hidden if aria_hidden is not none else (aria_label is none) -%}
+<svg
+  class="icon {{ class_name }}"
+  width="{{ size }}"
+  height="{{ size }}"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="{{ stroke_width }}"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  role="img"
+  {%- if aria_label %} aria-label="{{ aria_label }}"{% endif -%}
+  {%- if computed_hidden %} aria-hidden="true"{% endif -%}
+>
+  <use href="{{ url_for('static', filename='icons.svg') }}#{{ name }}"></use>
+</svg>
+{%- endmacro %}
