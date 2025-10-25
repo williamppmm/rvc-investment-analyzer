@@ -60,6 +60,46 @@ document.addEventListener('DOMContentLoaded', function() {
     ];
 
     // ========================================
+    // UTILIDADES PARA GRÁFICOS MODERNOS
+    // ========================================
+
+    // Validación segura de números
+    const safeNum = (v, def = 0) => (typeof v === 'number' && isFinite(v)) ? v : def;
+    
+    // Limitar valores entre 0 y 1
+    const clamp01 = v => Math.max(0, Math.min(1, v));
+    
+    // Paleta de colores moderna (Tailwind-style)
+    const scoreColor = score => {
+        if (score >= 75) return '#10b981'; // Verde esmeralda
+        if (score >= 60) return '#f59e0b'; // Ámbar
+        if (score >= 45) return '#f97316'; // Naranja
+        return '#ef4444'; // Rojo
+    };
+
+    // Configuración base para layouts de Plotly
+    const baseLayout = (opts = {}) => ({
+        font: { family: 'Inter, system-ui, -apple-system, sans-serif', size: 13, color: '#1f2937' },
+        plot_bgcolor: '#fafafa',
+        paper_bgcolor: 'white',
+        margin: { l: 60, r: 40, t: 80, b: 60 },
+        xaxis: { gridcolor: '#e5e7eb', linecolor: '#d1d5db' },
+        yaxis: { gridcolor: '#e5e7eb', linecolor: '#d1d5db' },
+        ...opts
+    });
+
+    // Configuración base para gráficos
+    const baseConfig = {
+        responsive: true,
+        displayModeBar: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d', 'zoom2d', 'autoScale2d']
+    };
+
+    // Limitar número de empresas para visualización
+    const limitCompanies = (companies, max = 10) => companies.slice(0, Math.min(companies.length, max));
+
+    // ========================================
     // MAIN FUNCTIONS
     // ========================================
 
@@ -231,227 +271,286 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ========================================
-    // GRÁFICO 1: SCATTER PLOT (Calidad vs Precio)
+    // GRÁFICO 1: SCATTER PLOT - Mapa de Inversión (Moderno)
     // ========================================
 
     function createScatterPlot(companies) {
-        const traces = companies.map(company => {
+        const data = limitCompanies(companies, 10);
+        
+        const traces = data.map(company => {
             const categoryName = company.category.name;
             const color = getCategoryColor(categoryName);
+            const x = safeNum(company.valuation_score, 0);
+            const y = safeNum(company.quality_score, 0);
 
             return {
-                x: [company.valuation_score],
-                y: [company.quality_score],
+                x: [x],
+                y: [y],
                 mode: 'markers+text',
                 type: 'scatter',
                 name: company.ticker,
                 text: [company.ticker],
                 textposition: 'top center',
                 textfont: {
-                    size: 14,
-                    color: '#000',
-                    family: 'Arial, sans-serif'
+                    size: 13,
+                    color: '#1f2937',
+                    family: 'Inter, system-ui, sans-serif',
+                    weight: 600
                 },
                 marker: {
-                    size: 20,
+                    size: 18,
                     color: color,
+                    opacity: 0.9,
                     line: {
-                        color: 'white',
-                        width: 2
+                        color: 'rgba(255,255,255,0.95)',
+                        width: 2.5
                     }
                 },
                 hovertemplate:
                     `<b>${company.ticker}</b><br>` +
-                    `Calidad: ${company.quality_score.toFixed(1)}<br>` +
-                    `Valoración: ${company.valuation_score.toFixed(1)}<br>` +
-                    `Score Inversión: ${company.investment_score.toFixed(1)}<br>` +
+                    `Calidad: ${y.toFixed(1)}<br>` +
+                    `Valoración: ${x.toFixed(1)}<br>` +
+                    `Score Inversión: ${safeNum(company.investment_score, 0).toFixed(1)}<br>` +
                     `Categoría: ${categoryName}<br>` +
                     '<extra></extra>'
             };
         });
 
-        // Zona ideal (Sweet Spot)
+        // Zona ideal (Sweet Spot) con diseño moderno
         const sweetSpotZone = {
             type: 'rect',
             x0: 60, y0: 70, x1: 100, y1: 100,
-            fillcolor: 'rgba(40, 167, 69, 0.15)',
-            line: { width: 0 },
+            fillcolor: 'rgba(16, 185, 129, 0.12)',
+            line: { 
+                color: 'rgba(16, 185, 129, 0.4)',
+                width: 2,
+                dash: 'dot'
+            },
             layer: 'below'
         };
 
         const layout = {
-            title: {
-                text: '🎯 Mapa de Inversión: Calidad vs Valoración',
-                font: { size: 20, family: 'Arial, sans-serif' }
-            },
+            ...baseLayout({
+                title: {
+                    text: 'Mapa de Inversión: Calidad vs Valoración',
+                    font: { size: 20, weight: 700, color: '#111827' }
+                },
+                height: 550
+            }),
             xaxis: {
-                title: 'Score de Valoración (0=Caro, 100=Barato)',
-                autorange: true,
-                gridcolor: '#e0e0e0'
+                title: { 
+                    text: 'Score de Valoración (0=Caro, 100=Barato)',
+                    font: { size: 13, color: '#4b5563' }
+                },
+                range: [0, 105],
+                gridcolor: '#e5e7eb',
+                linecolor: '#d1d5db',
+                showgrid: true
             },
             yaxis: {
-                title: 'Score de Calidad (0=Mala, 100=Excelente)',
-                autorange: true,
-                gridcolor: '#e0e0e0'
+                title: { 
+                    text: 'Score de Calidad (0=Mala, 100=Excelente)',
+                    font: { size: 13, color: '#4b5563' }
+                },
+                range: [0, 105],
+                gridcolor: '#e5e7eb',
+                linecolor: '#d1d5db',
+                showgrid: true
             },
             shapes: [sweetSpotZone],
             annotations: [
                 {
                     x: 80, y: 85,
-                    text: '🏆 ZONA IDEAL',
+                    text: '⭐ ZONA IDEAL',
                     showarrow: false,
-                    font: { size: 14, color: '#28a745', family: 'Arial, sans-serif' }
+                    font: { size: 13, color: '#059669', family: 'Inter, sans-serif', weight: 600 }
                 }
             ],
             showlegend: false,
-            height: 550,
-            plot_bgcolor: '#fafafa',
-            paper_bgcolor: 'white',
             hovermode: 'closest'
         };
 
-        const config = {
-            responsive: true,
-            displayModeBar: true,
-            displaylogo: false,
-            modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
-        };
-
-        Plotly.newPlot('scatter-plot', traces, layout, config);
+        Plotly.newPlot('scatter-plot', traces, layout, baseConfig);
+        window.addEventListener('resize', () => Plotly.Plots.resize('scatter-plot'));
     }
 
     // ========================================
-    // GRÁFICO 2: BAR CHART (Scores de Inversión)
+    // GRÁFICO 2: BAR CHART - Ranking con efecto Lollipop (Moderno)
     // ========================================
 
     function createBarChart(companies) {
-        const sortedCompanies = [...companies].sort((a, b) =>
+        const data = limitCompanies(companies, 10);
+        const sortedCompanies = [...data].sort((a, b) =>
             b.investment_score - a.investment_score
         );
 
-        const colors = sortedCompanies.map(c => {
-            const score = c.investment_score;
-            if (score >= 75) return '#28a745';
-            if (score >= 60) return '#ffc107';
-            if (score >= 45) return '#fd7e14';
-            return '#dc3545';
-        });
+        const x = sortedCompanies.map(c => safeNum(c.investment_score, 0));
+        const y = sortedCompanies.map(c => c.ticker);
 
-        const trace = {
-            x: sortedCompanies.map(c => c.investment_score),
-            y: sortedCompanies.map(c => c.ticker),
+        // Stems (barras translúcidas de fondo)
+        const stems = {
+            x: x,
+            y: y,
             type: 'bar',
             orientation: 'h',
-            marker: { color: colors },
-            text: sortedCompanies.map(c => c.investment_score.toFixed(0)),
-            textposition: 'outside',
-            textfont: { size: 14, color: '#000' },
-            hovertemplate:
-                '<b>%{y}</b><br>' +
-                'Score: %{x:.1f}<br>' +
-                '<extra></extra>'
+            marker: {
+                color: x.map(scoreColor),
+                opacity: 0.2
+            },
+            hoverinfo: 'skip',
+            showlegend: false,
+            base: 0
+        };
+
+        // Heads (círculos en los extremos con valores)
+        const heads = {
+            x: x,
+            y: y,
+            mode: 'markers+text',
+            type: 'scatter',
+            marker: {
+                size: 14,
+                color: x.map(scoreColor),
+                opacity: 1,
+                line: {
+                    color: 'rgba(255,255,255,0.95)',
+                    width: 2
+                }
+            },
+            text: x.map(v => Math.round(v)),
+            textposition: 'middle right',
+            textfont: {
+                size: 12,
+                weight: 600,
+                color: '#1f2937'
+            },
+            hovertemplate: '<b>%{y}</b><br>Score: %{x:.1f}<extra></extra>'
         };
 
         const layout = {
-            title: {
-                text: '📊 Ranking por Score de Inversión',
-                font: { size: 20, family: 'Arial, sans-serif' }
-            },
+            ...baseLayout({
+                title: {
+                    text: 'Ranking por Score de Inversión',
+                    font: { size: 20, weight: 700, color: '#111827' }
+                },
+                height: Math.max(400, sortedCompanies.length * 50)
+            }),
             xaxis: {
-                title: 'Score de Inversión',
-                autorange: true,
-                gridcolor: '#e0e0e0'
+                title: { 
+                    text: 'Score (0–100)',
+                    font: { size: 13, color: '#4b5563' }
+                },
+                range: [0, Math.max(100, Math.ceil(Math.max(...x, 0) / 5) * 5)],
+                gridcolor: '#e5e7eb',
+                linecolor: '#d1d5db',
+                showgrid: true
             },
             yaxis: {
                 title: '',
-                automargin: true
+                automargin: true,
+                gridcolor: '#e5e7eb',
+                linecolor: '#d1d5db'
             },
-            height: 400,
-            plot_bgcolor: '#fafafa',
-            paper_bgcolor: 'white',
+            bargap: 0.65,
             showlegend: false
         };
 
-        const config = {
-            responsive: true,
-            displayModeBar: true,
-            displaylogo: false,
-            modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d', 'zoom2d']
-        };
-
-        Plotly.newPlot('bars-chart', [trace], layout, config);
+        Plotly.newPlot('bars-chart', [stems, heads], layout, baseConfig);
+        window.addEventListener('resize', () => Plotly.Plots.resize('bars-chart'));
     }
 
     // ========================================
-    // GRÁFICO 3: RADAR CHART (Perfil Multidimensional)
+    // GRÁFICO 3: RADAR CHART - Perfil Multidimensional (Moderno)
     // ========================================
 
     function createRadarChart(companies) {
-        // Limitar a 3 empresas para claridad
-        const topCompanies = companies.slice(0, 3);
+        const data = limitCompanies(companies, 10);
+        const topN = Math.max(1, Math.min(3, data.length));
+        const topCompanies = data.slice(0, topN);
 
-        const categories = [
-            'Calidad',
-            'Valoración',
-            'Salud Financiera',
-            'Crecimiento',
-            'Calidad' // Cerrar el círculo
+        const metrics = [
+            { key: 'quality_score', label: 'Calidad' },
+            { key: 'valuation_score', label: 'Valoración' },
+            { key: 'financial_health_score', label: 'Salud Financiera' },
+            { key: 'growth_score', label: 'Crecimiento' }
+        ];
+
+        const theta = [...metrics.map(m => m.label), metrics[0].label];
+        const paletteLines = [
+            'rgba(79,70,229,1)',   // Índigo
+            'rgba(16,185,129,1)',  // Esmeralda
+            'rgba(245,158,11,1)'   // Ámbar
         ];
 
         const traces = topCompanies.map((company, index) => {
-            const values = [
-                company.quality_score,
-                company.valuation_score,
-                company.financial_health_score,
-                company.growth_score,
-                company.quality_score // Cerrar el círculo
-            ];
+            const rVals = metrics.map(m => {
+                const val = safeNum(company[m.key], 0);
+                return clamp01(val / 100) * 100; // Asegurar rango 0-100
+            });
+            rVals.push(rVals[0]); // Cerrar el círculo
 
-            const colors = ['#667eea', '#28a745', '#ffc107'];
+            const color = paletteLines[index % paletteLines.length];
 
             return {
                 type: 'scatterpolar',
-                r: values,
-                theta: categories,
+                r: rVals,
+                theta: theta,
                 fill: 'toself',
                 name: company.ticker,
-                line: { color: colors[index] },
-                marker: { size: 8 }
+                line: {
+                    color: color,
+                    width: 2.5
+                },
+                fillcolor: color.replace(',1)', ',0.15)'),
+                marker: {
+                    size: 7,
+                    color: color
+                },
+                hovertemplate: '<b>%{theta}</b><br>Score: %{r:.1f}<extra></extra>'
             };
         });
 
         const layout = {
-            title: {
-                text: '🎯 Perfil Comparativo Multidimensional',
-                font: { size: 20, family: 'Arial, sans-serif' }
-            },
+            ...baseLayout({
+                title: {
+                    text: 'Perfil Comparativo Multidimensional',
+                    font: { size: 20, weight: 700, color: '#111827' }
+                },
+                height: 550
+            }),
             polar: {
+                bgcolor: '#fafafa',
                 radialaxis: {
                     visible: true,
                     range: [0, 100],
                     tickvals: [0, 20, 40, 60, 80, 100],
-                    gridcolor: '#e0e0e0'
+                    gridcolor: '#e5e7eb',
+                    linecolor: '#d1d5db',
+                    tickfont: { size: 11, color: '#6b7280' },
+                    angle: 90
                 },
                 angularaxis: {
-                    gridcolor: '#e0e0e0'
+                    gridcolor: '#e5e7eb',
+                    linecolor: '#d1d5db',
+                    tickfont: { size: 12, color: '#374151', weight: 600 }
                 }
             },
             showlegend: true,
             legend: {
-                x: 1.1,
-                y: 0.5
-            },
-            height: 550,
-            paper_bgcolor: 'white'
+                orientation: 'h',
+                x: 0,
+                y: 1.12,
+                xanchor: 'left',
+                yanchor: 'bottom',
+                font: { size: 12, color: '#374151' },
+                bgcolor: 'rgba(255,255,255,0.9)',
+                bordercolor: '#e5e7eb',
+                borderwidth: 1
+            }
         };
 
-        const config = {
-            responsive: true,
-            displayModeBar: true,
-            displaylogo: false
-        };
-
-        Plotly.newPlot('radar-chart', traces, layout, config);
+        Plotly.newPlot('radar-chart', traces, layout, baseConfig);
+        window.addEventListener('resize', () => Plotly.Plots.resize('radar-chart'));
     }
 
     // ========================================
