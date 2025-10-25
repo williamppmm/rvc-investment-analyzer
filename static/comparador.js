@@ -467,7 +467,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const tbody = document.createElement('tbody');
 
         // Sección: DECISIÓN
-        tbody.appendChild(createSectionRow('🎯 DECISIÓN', companies.length));
+        tbody.appendChild(createSectionRow(`${iconHTML('target', 16)} DECISIÓN`, companies.length));
         tbody.appendChild(createMetricRow('Score de Inversión', companies, c =>
             formatScore(c.investment_score)
         ));
@@ -491,7 +491,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ));
 
         // Sección: SCORES
-        tbody.appendChild(createSectionRow('📊 SCORES', companies.length));
+        tbody.appendChild(createSectionRow(`${iconHTML('bar-chart', 16)} SCORES`, companies.length));
         tbody.appendChild(createMetricRow('Calidad', companies, c =>
             formatScore(c.quality_score)
         ));
@@ -506,7 +506,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ));
 
         // Sección: CALIDAD
-        tbody.appendChild(createSectionRow('⭐ CALIDAD DEL NEGOCIO', companies.length));
+        tbody.appendChild(createSectionRow(`${iconHTML('trophy', 16)} CALIDAD DEL NEGOCIO`, companies.length));
         tbody.appendChild(createMetricRow('ROE', companies, c =>
             formatPercentage(c.metrics.roe)
         ));
@@ -521,7 +521,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ));
 
         // Sección: VALORACIÓN
-        tbody.appendChild(createSectionRow('💸 VALORACIÓN', companies.length));
+        tbody.appendChild(createSectionRow(`${iconHTML('dollar-sign', 16)} VALORACIÓN`, companies.length));
         tbody.appendChild(createMetricRow('P/E Ratio', companies, c =>
             formatRatio(c.metrics.pe_ratio)
         ));
@@ -533,7 +533,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ));
 
         // Sección: BALANCE
-        tbody.appendChild(createSectionRow('💪 SALUD FINANCIERA', companies.length));
+        tbody.appendChild(createSectionRow(`${iconHTML('shield', 16)} SALUD FINANCIERA`, companies.length));
         tbody.appendChild(createMetricRow('Debt/Equity', companies, c =>
             formatRatio(c.metrics.debt_to_equity)
         ));
@@ -545,7 +545,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ));
 
         // Sección: CRECIMIENTO
-        tbody.appendChild(createSectionRow('📈 CRECIMIENTO', companies.length));
+        tbody.appendChild(createSectionRow(`${iconHTML('trending-up', 16)} CRECIMIENTO`, companies.length));
         tbody.appendChild(createMetricRow('Crecimiento Ingresos', companies, c =>
             formatPercentage(c.metrics.revenue_growth)
         ));
