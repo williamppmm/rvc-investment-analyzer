@@ -248,7 +248,31 @@ body {
 
 .page-hero__subtitle {
     color: var(--text-secondary);
-    max-width: 750px;
+    max-width: 100%;
+    width: 100%;
+    display: block;
+    text-align: justify;
+}
+
+.page-hero__disclaimer {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    max-width: 100%;
+    width: 100%;
+    display: block;
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(251, 191, 36, 0.08);
+    border-left: 3px solid var(--warning);
+    border-radius: var(--radius-md);
+    text-align: justify;
+    box-sizing: border-box;
+}
+
+.page-hero__disclaimer strong {
+    color: var(--text);
+    font-weight: 600;
 }
 
 .hero-card {

@@ -109,7 +109,7 @@
             </div>
             <div class="creator-details">
                 <h3>William Pérez Muñoz</h3>
-                <p class="creator-role">Tecnólogo ADSO – Desarrollador Full-Stack</p>
+                <p class="creator-role">Desarrollador</p>
                 <div class="social-links" aria-label="Enlaces y contacto">
                     <a class="social-link" href="https://williamppmm.link/" target="_blank" rel="noopener noreferrer" aria-label="Sitio web de William Pérez Muñoz">
                         {{ icon('globe', size=18, class_name='me-1') }} Sitio
@@ -129,7 +129,7 @@
                 <div class="tool-icon" aria-hidden="true">{{ icon('bar-chart', size=36, class_name='text-primary') }}</div>
                 <h4>Análisis Individual</h4>
                 <p>Análisis de acciones con métricas clave simplificadas</p>
-                <a href="{{ url_for('analyze') }}" class="tool-link">Probar análisis {{ icon('arrow-right', size=16, class_name='ms-1') }}</a>
+                <a href="{{ url_for('index') }}" class="tool-link">Probar análisis {{ icon('arrow-right', size=16, class_name='ms-1') }}</a>
             </div>
             <div class="tool-card">
                 <div class="tool-icon" aria-hidden="true">{{ icon('scale', size=36, class_name='text-info') }}</div>
@@ -156,7 +156,7 @@
         <p class="section-description">No esperes más para tomar control de tu futuro financiero. Prueba nuestras herramientas y forma parte de una nueva generación de inversionistas responsables.</p>
         <div class="cta-buttons">
             <a href="{{ url_for('top_opportunities_page') }}" class="btn btn--primary">Ver ranking {{ icon('rocket', size=18, class_name='ms-1') }}</a>
-            <a href="{{ url_for('analyze') }}" class="btn btn--secondary">Analizar acción {{ icon('bar-chart', size=18, class_name='ms-1') }}</a>
+            <a href="{{ url_for('index') }}" class="btn btn--secondary">Analizar acción {{ icon('bar-chart', size=18, class_name='ms-1') }}</a>
         </div>
     </section>
 </div>
