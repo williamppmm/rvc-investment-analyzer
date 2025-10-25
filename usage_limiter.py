@@ -15,10 +15,10 @@ class UsageLimiter:
     """Gestor de límites de uso y licencias."""
     
     # Límites por plan
-    FREE_DAILY_LIMIT = 20  # 20 consultas por día
-    PRO_LIMIT = -1  # Ilimitado
+    FREE_DAILY_LIMIT = 20      # 20 consultas por día (APIs gratuitas)
+    PRO_DAILY_LIMIT = 200      # 200 consultas por día (APIs de pago también tienen límites)
     LICENSE_DURATION_DAYS = 30  # Licencias válidas por 30 días
-    LICENSE_PRICE_USD = 3  # Precio sugerido por licencia mensual
+    LICENSE_PRICE_USD = 3       # Precio sugerido por licencia mensual
     
     def __init__(self, db_path="data/rvc_database.db"):
         """Inicializar limiter con base de datos."""
@@ -155,30 +155,36 @@ class UsageLimiter:
                 "license_days_left": int (solo PRO)
             }
         """
-        # Verificar si tiene licencia PRO
-        if license_key:
-            license_info = self.validate_license(license_key)
-            if license_info["valid"]:
-                return {
-                    "allowed": True,
-                    "remaining": -1,  # Ilimitado
-                    "limit": -1,
-                    "plan": "PRO",
-                    "reset_in": "N/A",
-                    "license_days_left": license_info.get("days_left", 0),
-                    "expires_at": license_info.get("expires_at")
-                }
-        
-        # Usuario FREE - verificar límite diario
-        usage_count = self.get_usage_count(identifier, period="daily")
-        remaining = max(0, self.FREE_DAILY_LIMIT - usage_count)
-        allowed = usage_count < self.FREE_DAILY_LIMIT
-        
         # Calcular cuándo se resetea (medianoche)
         now = datetime.now()
         tomorrow = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
         hours_until_reset = int((tomorrow - now).total_seconds() / 3600)
         reset_str = f"{hours_until_reset} horas" if hours_until_reset > 0 else "menos de 1 hora"
+        
+        # Verificar si tiene licencia PRO
+        if license_key:
+            license_info = self.validate_license(license_key)
+            if license_info["valid"]:
+                # Usuario PRO - verificar límite de 200/día
+                usage_count = self.get_usage_count(identifier, period="daily")
+                remaining = max(0, self.PRO_DAILY_LIMIT - usage_count)
+                allowed = usage_count < self.PRO_DAILY_LIMIT
+                
+                return {
+                    "allowed": allowed,
+                    "remaining": remaining,
+                    "limit": self.PRO_DAILY_LIMIT,
+                    "plan": "PRO",
+                    "reset_in": reset_str,
+                    "reset_date": tomorrow.strftime("%d/%m/%Y %H:%M"),
+                    "license_days_left": license_info.get("days_left", 0),
+                    "expires_at": license_info.get("expires_at")
+                }
+        
+        # Usuario FREE - verificar límite de 20/día
+        usage_count = self.get_usage_count(identifier, period="daily")
+        remaining = max(0, self.FREE_DAILY_LIMIT - usage_count)
+        allowed = usage_count < self.FREE_DAILY_LIMIT
         
         return {
             "allowed": allowed,

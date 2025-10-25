@@ -88,7 +88,7 @@ class UsageLimitManager {
                                         <small>/30 días</small>
                                     </div>
                                     <ul class="plan-features">
-                                        <li>Consultas ilimitadas</li>
+                                        <li>200 consultas diarias (10x más)</li>
                                         <li>APIs premium (Alpha Vantage, Twelve Data)</li>
                                         <li>Datos en tiempo real</li>
                                         <li>Soporte prioritario</li>
@@ -207,15 +207,24 @@ class UsageLimitManager {
             resetInfoEl.innerHTML = `<br><strong>Se restablece en: ${usageData.reset_in}</strong> (${usageData.reset_date})`;
         }
         
-        // Si es usuario PRO, mostrar días restantes
-        if (usageData.plan === 'PRO' && usageData.license_days_left !== undefined) {
+        // Si es usuario PRO
+        if (usageData.plan === 'PRO') {
             const headerEl = document.querySelector('.limit-modal-header h2');
             const subheaderEl = document.querySelector('.limit-modal-header p');
             
-            if (headerEl) headerEl.textContent = '✨ Licencia PRO Activa';
-            if (subheaderEl) {
+            if (usageData.remaining === 0) {
+                // PRO que alcanzó el límite diario de 200
+                if (headerEl) headerEl.textContent = '⚡ Límite Diario PRO Alcanzado';
+                if (subheaderEl) {
+                    subheaderEl.textContent = `Has usado tus 200 consultas diarias. El límite se restablece en ${usageData.reset_in}.`;
+                }
+            } else if (usageData.license_days_left !== undefined) {
+                // PRO con licencia activa (mostrar días restantes)
                 const daysLeft = usageData.license_days_left;
-                subheaderEl.textContent = `Te quedan ${daysLeft} día${daysLeft !== 1 ? 's' : ''} de acceso ilimitado`;
+                if (headerEl) headerEl.textContent = '✨ Licencia PRO Activa';
+                if (subheaderEl) {
+                    subheaderEl.textContent = `Te quedan ${daysLeft} día${daysLeft !== 1 ? 's' : ''} de acceso PRO (${usageData.remaining} consultas hoy)`;
+                }
             }
         }
 
@@ -324,8 +333,10 @@ async function checkUsageLimitBeforeAction() {
     }
 
     // Mostrar advertencia si quedan pocas consultas
-    if (limitCheck.remaining <= 3 && limitCheck.remaining > 0) {
-        showWarningToast(`⚠️ Te quedan ${limitCheck.remaining} consultas gratuitas esta semana`);
+    if (limitCheck.plan === 'FREE' && limitCheck.remaining <= 3 && limitCheck.remaining > 0) {
+        showWarningToast(`⚠️ Te quedan ${limitCheck.remaining} consultas gratuitas hoy`);
+    } else if (limitCheck.plan === 'PRO' && limitCheck.remaining <= 20 && limitCheck.remaining > 0) {
+        showWarningToast(`⚠️ PRO: Te quedan ${limitCheck.remaining} consultas hoy (de 200)`);
     }
 
     return true;
