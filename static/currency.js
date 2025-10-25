@@ -2,7 +2,7 @@
   const STORAGE_KEY = 'rvc_currency';
   const RATE_KEY = 'rvc_rates_v1';
   const DEFAULT_CURRENCY = 'USD';
-  const SYMBOLS = { USD: 'US$', EUR: '€' };
+  const SYMBOLS = { USD: '$', EUR: '€' };
   const rates = {}; // base USD -> target
   const lastFetchedMap = {}; // per target currency
   let current = localStorage.getItem(STORAGE_KEY) || DEFAULT_CURRENCY;

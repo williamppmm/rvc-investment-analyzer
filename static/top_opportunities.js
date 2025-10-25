@@ -368,7 +368,7 @@ class TopOpportunities {
         const val = Number(amount);
         if (!Number.isFinite(val)) return '-';
         const fmt = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        return `US$ ${fmt.format(val)}`;
+        return `$ ${fmt.format(val)}`;
     }
 
     formatMarketCapUSD(marketCap) {
@@ -382,10 +382,10 @@ class TopOpportunities {
         ];
         for (const t of thresholds) {
             if (value >= t.value) {
-                return `US$ ${fmt.format(value / t.value)}${t.suffix}`;
+                return `$ ${fmt.format(value / t.value)}${t.suffix}`;
             }
         }
-        return `US$ ${fmt.format(value)}`;
+        return `$ ${fmt.format(value)}`;
     }
     
     showEmptyState() {

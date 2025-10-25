@@ -823,8 +823,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         const symbol = converted || base === target
-            ? (window.CurrencyManager?.getSymbol?.() || (target === 'EUR' ? '€' : 'US$'))
-            : (base === 'EUR' ? '€' : 'US$');
+            ? (window.CurrencyManager?.getSymbol?.() || (target === 'EUR' ? '€' : '$'))
+            : (base === 'EUR' ? '€' : '$');
         const formatter = new Intl.NumberFormat('es-CO', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
@@ -848,8 +848,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         const symbol = converted || base === target
-            ? (window.CurrencyManager?.getSymbol?.() || (target === 'EUR' ? '€' : 'US$'))
-            : (base === 'EUR' ? '€' : 'US$');
+            ? (window.CurrencyManager?.getSymbol?.() || (target === 'EUR' ? '€' : '$'))
+            : (base === 'EUR' ? '€' : '$');
         const formatter = new Intl.NumberFormat('es-CO', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2

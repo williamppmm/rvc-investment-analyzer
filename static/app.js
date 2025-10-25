@@ -668,8 +668,8 @@ function formatPriceDisplay(value, currency, conversions) {
         }
     }
     const symbol = converted || base === target
-        ? (window.CurrencyManager?.getSymbol?.() || (target === "EUR" ? "€" : "US$"))
-        : (base === "EUR" ? "€" : "US$");
+        ? (window.CurrencyManager?.getSymbol?.() || (target === "EUR" ? "€" : "$"))
+        : (base === "EUR" ? "€" : "$");
     const formatter = new Intl.NumberFormat("es-CO", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
@@ -695,8 +695,8 @@ function formatMarketCapDisplay(value, currency, conversions) {
         }
     }
     const symbol = converted || base === target
-        ? (window.CurrencyManager?.getSymbol?.() || (target === "EUR" ? "€" : "US$"))
-        : (base === "EUR" ? "€" : "US$");
+        ? (window.CurrencyManager?.getSymbol?.() || (target === "EUR" ? "€" : "$"))
+        : (base === "EUR" ? "€" : "$");
     // Escala a T/B/M manteniendo símbolo y sin sufijo de moneda
     const formatter = new Intl.NumberFormat("es-CO", {
         minimumFractionDigits: 2,
