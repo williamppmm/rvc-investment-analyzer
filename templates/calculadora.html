@@ -78,6 +78,17 @@
             </div>
         </div>
 
+        <!-- Checkbox de indexación anual -->
+        <div class="form-group" style="margin-top: 1rem; margin-bottom: 1.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="ret-indexing" checked style="width: auto; cursor: pointer;">
+                <span>Ajustar aportes por inflación cada 12 meses</span>
+            </label>
+            <small class="field-hint" style="margin-left: 1.5rem;">
+                Si está activo, subiremos tu aporte una vez al año según la inflación indicada para mantener el mismo esfuerzo real. Si está desactivado, aportarás siempre la misma cantidad en dólares, pero perderá poder adquisitivo con el tiempo.
+            </small>
+        </div>
+
 
         <button id="calculate-retirement" type="button" class="btn btn--primary btn--block">
             {{ icon('calculator', size=18, class_name='me-1') }} Calcular plan de jubilación
@@ -139,6 +150,17 @@
                 </select>
                 <small class="field-hint">Explora el impacto de iniciar con precios altos o bajos.</small>
             </div>
+        </div>
+
+        <!-- Checkbox de indexación anual -->
+        <div class="form-group" style="margin-top: 1rem; margin-bottom: 1.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="dca-indexing" checked style="width: auto; cursor: pointer;">
+                <span>Ajustar aportes por inflación cada 12 meses</span>
+            </label>
+            <small class="field-hint" style="margin-left: 1.5rem;">
+                Si está activo, subiremos tu aporte una vez al año según la inflación indicada para mantener el mismo esfuerzo real. Si está desactivado, aportarás siempre la misma cantidad en dólares, pero perderá poder adquisitivo con el tiempo.
+            </small>
         </div>
 
     <h3>Escenarios de rendimiento</h3>

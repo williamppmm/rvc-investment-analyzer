@@ -1048,6 +1048,7 @@ def calcular_inversion():
             market_timing = payload.get("market_timing", "normal")
             initial_amount = float(payload.get("initial_amount", 0))
             annual_inflation = float(payload.get("annual_inflation", 0.0))
+            index_contributions = payload.get("index_contributions_annually", True)
 
             if monthly_amount < 0:
                 return jsonify({"error": "El aporte mensual no puede ser negativo"}), 400
@@ -1071,7 +1072,7 @@ def calcular_inversion():
                 market_timing=market_timing,
                 include_simulation=True,
                 initial_amount=initial_amount,
-                annual_inflation=annual_inflation,
+                annual_inflation=annual_inflation if index_contributions else 0.0,
                 max_portfolio_value=investment_calculator.MAX_PORTFOLIO_VALUE
             )
 
@@ -1139,6 +1140,7 @@ def calcular_inversion():
             scenario = payload.get("scenario", "moderado")
             annual_inflation = float(payload.get("annual_inflation", 0.03))
             annual_return_override = payload.get("annual_return_override")
+            index_contributions = payload.get("index_contributions_annually", True)
 
             if current_age < 18 or current_age > 75:
                 return jsonify({"error": "La edad actual debe estar entre 18 y 75 años"}), 400
@@ -1162,7 +1164,7 @@ def calcular_inversion():
                 initial_amount=initial_amount,
                 monthly_contribution=monthly_contribution,
                 annual_return=annual_return,
-                annual_inflation=annual_inflation,
+                annual_inflation=annual_inflation if index_contributions else 0.0,
                 include_yearly_detail=True,
                 max_portfolio_value=investment_calculator.MAX_PORTFOLIO_VALUE
             )

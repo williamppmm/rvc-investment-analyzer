@@ -189,6 +189,7 @@ class InvestmentCalculator:
                 "total_months_planned": total_months_planned,
                 "effective_months": months_executed,
                 "annual_inflation_pct": round(annual_inflation * 100, 2),
+                "index_contributions_annually": annual_inflation > 0,
                 "scenario": scenario,
                 "market_timing": market_timing,
                 "market_timing_label": market_info["label"],
@@ -470,7 +471,9 @@ class InvestmentCalculator:
                 "initial_amount": initial_amount,
                 "monthly_contribution": monthly_contribution,
                 "annual_return_pct": round(annual_return * 100, 2),
+                "annual_inflation": annual_inflation,
                 "annual_inflation_pct": round(annual_inflation * 100, 2),
+                "index_contributions_annually": annual_inflation > 0,
                 "max_portfolio_value": max_value
             },
             "results": {

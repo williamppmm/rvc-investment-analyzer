@@ -124,6 +124,7 @@ async function calculateDCA() {
     const years = parseInt(document.getElementById('dca-years').value, 10);
     const inflationPct = parseFloat(document.getElementById('dca-inflation').value) || 0;
     const marketTiming = document.getElementById('dca-timing').value;
+    const indexContributions = document.getElementById('dca-indexing')?.checked ?? true;
 
     if (initialAmount < 0 || monthlyAmount < 0) {
         alert('Los montos no pueden ser negativos.');
@@ -140,7 +141,7 @@ async function calculateDCA() {
         return;
     }
 
-    if (inflacion < 0 || inflacion > 15) {
+    if (inflationPct < 0 || inflationPct > 15) {
         alert('La inflación anual debe estar entre 0% y 15%.');
         return;
     }
@@ -162,7 +163,8 @@ async function calculateDCA() {
                 years,
                 scenario: selectedScenario,
                 market_timing: marketTiming,
-                annual_inflation: inflationPct / 100
+                annual_inflation: inflationPct / 100,
+                index_contributions_annually: indexContributions
             })
         });
 
@@ -204,6 +206,37 @@ function renderDCAResults(result) {
             </div>
         </div>
     `;
+
+    // Bloque "Nominal vs Hoy" (poder adquisitivo)
+    const inflationPct = input.annual_inflation_pct || 0;
+    const years = input.years || 0;
+    if (inflationPct > 0 && years > 0) {
+        const realValue = calculateRealValue(res.final_value, years, inflationPct);
+        html += `
+            <div class="chart-container" style="background: #f8f9fa; border-left: 4px solid #4a8fe3;">
+                <h3>💡 Nominal vs Poder Adquisitivo</h3>
+                <div class="results-grid" style="margin-bottom: 0;">
+                    <div class="result-card" style="background: linear-gradient(135deg, #4a8fe3, #175499);">
+                        <div class="label">Capital final (nominal)</div>
+                        <div class="value">${formatMoney(res.final_value)}</div>
+                        <div class="subvalue">Valor en dólares del futuro</div>
+                    </div>
+                    <div class="result-card" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                        <div class="label">Equivalente hoy</div>
+                        <div class="value">${formatMoney(realValue)}</div>
+                        <div class="subvalue">Poder adquisitivo actual</div>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem; margin-bottom: 0; color: #6c757d; font-size: 0.9rem;">
+                    Con inflación de ${formatPercent(inflationPct)} anual por ${years} años, 
+                    ${formatMoney(res.final_value)} equivale a ${formatMoney(realValue)} en poder de compra actual.
+                    ${input.index_contributions_annually !== false 
+                        ? 'Como activaste la indexación anual, tus aportes crecen con la inflación manteniendo tu esfuerzo real constante.' 
+                        : 'Sin indexación anual, tus aportes pierden poder adquisitivo cada año.'}
+                </p>
+            </div>
+        `;
+    }
 
     html += `
         <div class="chart-container">
@@ -540,6 +573,7 @@ async function calculateRetirement() {
     const monthlyAmount = parseLocaleInt(document.getElementById('ret-monthly').value);
     const annualReturnPct = parseFloat(document.getElementById('ret-return').value) || 0;
     const annualInflationPct = parseFloat(document.getElementById('ret-inflation').value) || 0;
+    const indexContributions = document.getElementById('ret-indexing')?.checked ?? true;
 
     if (!currentAge || currentAge < 18 || currentAge > 75) {
         alert('La edad actual debe estar entre 18 y 75 años.');
@@ -584,7 +618,8 @@ async function calculateRetirement() {
                 monthly_amount: monthlyAmount,
                 scenario: 'moderado',
                 annual_inflation: annualInflationPct / 100,
-                annual_return_override: annualReturnPct / 100
+                annual_return_override: annualReturnPct / 100,
+                index_contributions_annually: indexContributions
             })
         });
 
@@ -630,6 +665,37 @@ function renderRetirementResults(result) {
             </div>
         </div>
     `;
+
+    // Bloque "Nominal vs Hoy" (poder adquisitivo)
+    const inflationPct = (input.annual_inflation || 0) * 100;
+    const years = input.years_to_retirement || 0;
+    if (inflationPct > 0 && years > 0) {
+        const realValue = calculateRealValue(res.final_capital, years, inflationPct);
+        html += `
+            <div class="chart-container" style="background: #f8f9fa; border-left: 4px solid #4a8fe3;">
+                <h3>💡 Nominal vs Poder Adquisitivo</h3>
+                <div class="results-grid" style="margin-bottom: 0;">
+                    <div class="result-card" style="background: linear-gradient(135deg, #4a8fe3, #175499);">
+                        <div class="label">Capital proyectado (nominal)</div>
+                        <div class="value">${formatMoney(res.final_capital)}</div>
+                        <div class="subvalue">Valor a los ${input.retirement_age} años</div>
+                    </div>
+                    <div class="result-card" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                        <div class="label">Equivalente hoy</div>
+                        <div class="value">${formatMoney(realValue)}</div>
+                        <div class="subvalue">Poder adquisitivo actual</div>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem; margin-bottom: 0; color: #6c757d; font-size: 0.9rem;">
+                    Con inflación de ${formatPercent(inflationPct)} anual por ${years} años, 
+                    ${formatMoney(res.final_capital)} equivale a ${formatMoney(realValue)} en poder de compra actual.
+                    ${input.index_contributions_annually !== false 
+                        ? 'Como activaste la indexación anual, tus aportes crecen con la inflación manteniendo tu esfuerzo real constante.' 
+                        : 'Sin indexación anual, tus aportes pierden poder adquisitivo cada año.'}
+                </p>
+            </div>
+        `;
+    }
 
     html += `
         <div class="chart-container">
@@ -790,4 +856,17 @@ function formatMoney(value) {
     // Calculadora: formatear con símbolo $ y separadores de miles
     const amount = Number(value) || 0;
     return '$' + new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(amount);
+}
+
+/**
+ * Calcula el valor real (deflactado) desde un valor nominal.
+ * Formula: valor_real = valor_nominal / (1 + inflacion)^(meses/12)
+ */
+function calculateRealValue(nominalValue, years, annualInflationPct) {
+    if (!annualInflationPct || annualInflationPct === 0) {
+        return nominalValue;
+    }
+    const inflationRate = annualInflationPct / 100;
+    const realValue = nominalValue / Math.pow(1 + inflationRate, years);
+    return realValue;
 }
