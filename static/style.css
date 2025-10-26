@@ -3,11 +3,11 @@
 .icon--md { width: 1.25em; height: 1.25em; }
 .btn .icon { margin-right: 0.35rem; }
 :root {
-    /* Colores principales */
-    --primary: #667eea;
-    --primary-dark: #764ba2;
-    --primary-light: #8b96f0;
-    --primary-hover: #5a6ed8;
+    /* Colores principales - Paleta RVC Logo */
+    --primary: #4a8fe3;          /* Azul principal del logo */
+    --primary-dark: #175499;     /* Azul oscuro del logo */
+    --primary-light: #87c1ff;    /* Azul claro del logo */
+    --primary-hover: #1a5bac;    /* Azul medio del logo */
 
     /* Colores de estado */
     --success: #28a745;
@@ -27,13 +27,13 @@
 
     /* Colores de texto */
     --text: #1f2937;
-    --text-dark: #2c3e50;
+    --text-dark: #0a2d5e;        /* Azul oscuro del logo para textos importantes */
     --text-secondary: #495057;
     --muted: #6b7280;
     --text-light: #6c757d;
 
-    /* Gradientes unificados */
-    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    /* Gradientes unificados - Paleta RVC */
+    --gradient-primary: linear-gradient(135deg, #4a8fe3 0%, #175499 100%);
     --gradient-success: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     --gradient-warning: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
     --gradient-info: linear-gradient(135deg, #17a2b8 0%, #0056b3 100%);

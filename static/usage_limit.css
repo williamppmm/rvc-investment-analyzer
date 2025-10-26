@@ -34,7 +34,7 @@
 }
 
 .limit-modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4a8fe3 0%, #175499 100%);
     color: white;
     padding: 2rem;
     text-align: center;
@@ -108,7 +108,7 @@
 .usage-stat-value {
     font-size: 2rem;
     font-weight: 700;
-    color: #667eea;
+    color: #4a8fe3;
     display: block;
 }
 
@@ -166,7 +166,7 @@
 }
 
 .plan-card.featured {
-    border-color: #667eea;
+    border-color: #4a8fe3;
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
 }
 
@@ -174,7 +174,7 @@
     position: absolute;
     top: -12px;
     right: 1rem;
-    background: #667eea;
+    background: #4a8fe3;
     color: white;
     padding: 0.25rem 0.75rem;
     border-radius: 12px;
@@ -191,7 +191,7 @@
 .plan-price {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #667eea;
+    color: #4a8fe3;
     margin-bottom: 1rem;
 }
 
@@ -228,7 +228,7 @@
 }
 
 .contact-creator {
-    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+    background: linear-gradient(135deg, #4a8fe315 0%, #17549915 100%);
     border-radius: 12px;
     padding: 1.5rem;
     margin-top: 1.5rem;
@@ -252,7 +252,7 @@
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4a8fe3 0%, #175499 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -298,7 +298,7 @@
 }
 
 .contact-btn.primary {
-    background: #667eea;
+    background: #4a8fe3;
     color: white;
 }
 
@@ -310,12 +310,12 @@
 
 .contact-btn.secondary {
     background: white;
-    color: #667eea;
-    border: 2px solid #667eea;
+    color: #4a8fe3;
+    border: 2px solid #4a8fe3;
 }
 
 .contact-btn.secondary:hover {
-    background: #667eea;
+    background: #4a8fe3;
     color: white;
 }
 

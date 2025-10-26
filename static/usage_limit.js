@@ -135,7 +135,7 @@ class UsageLimitManager {
                     <div class="modal-footer-note">
                         <p>
                             <strong>¿Ya tienes una licencia PRO?</strong> 
-                            <a href="#" id="activate-license-link" style="color: #667eea; font-weight: 600;">
+                            <a href="#" id="activate-license-link" style="color: #4a8fe3; font-weight: 600;">
                                 Actívala aquí
                             </a>
                         </p>
@@ -297,7 +297,7 @@ class UsageLimitManager {
             position: fixed;
             top: 70px;
             right: 20px;
-            background: ${plan === 'PRO' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#6c757d'};
+            background: ${plan === 'PRO' ? 'linear-gradient(135deg, #4a8fe3 0%, #175499 100%)' : '#6c757d'};
             color: white;
             padding: 0.5rem 1rem;
             border-radius: 20px;
