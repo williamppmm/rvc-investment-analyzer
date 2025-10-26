@@ -61,7 +61,27 @@
                 <small class="field-hint">Se actualiza cada año según la inflación estimada.</small>
             </div>
             <div class="form-group">
-                <label for="ret-return">Rendimiento anual esperado (%)</label>
+                <div class="label-with-tooltip">
+                    <label for="ret-return">Rendimiento anual esperado (%)</label>
+                    <span class="info-tooltip">
+                        <span>ℹ</span>
+                        <div class="tooltip-content">
+                            <div class="tooltip-title">💡 Guía de Rendimiento</div>
+                            <div class="tooltip-option">
+                                <strong>Conservador (7%)</strong>
+                                <small>Cartera diversificada 60/40 o sesgo defensivo. Media histórica ~6–7%.</small>
+                            </div>
+                            <div class="tooltip-option">
+                                <strong>Base S&P 500 (10%)</strong>
+                                <small>Promedio histórico del S&P 500 con dividendos reinvertidos.</small>
+                            </div>
+                            <div class="tooltip-option">
+                                <strong>Optimista (12%)</strong>
+                                <small>Growth/tecnología en ciclo favorable. No es promedio histórico sostenible.</small>
+                            </div>
+                        </div>
+                    </span>
+                </div>
                 <div class="input-with-symbol">
                     <input type="number" id="ret-return" value="10" min="-10" max="20" step="0.5" data-suffix="%">
                     <span class="input-suffix">%</span>
@@ -69,7 +89,21 @@
                 <small class="field-hint">Usa 10% como referencia del S&P 500 histórico.</small>
             </div>
             <div class="form-group">
-                <label for="ret-inflation">Inflación anual esperada (%)</label>
+                <div class="label-with-tooltip">
+                    <label for="ret-inflation">Inflación anual esperada (%)</label>
+                    <span class="info-tooltip">
+                        <span>ℹ</span>
+                        <div class="tooltip-content">
+                            <div class="tooltip-title">📊 Referencia Colombia</div>
+                            <div class="tooltip-reference">
+                                En Colombia, la <strong>inflación promedio</strong> de los últimos 10 años (2015–2024) fue de <strong>~5,8% anual</strong> (variación anual del IPC).
+                            </div>
+                            <div class="tooltip-reference" style="margin-top: 0.5rem;">
+                                💡 <strong>Tip:</strong> Usa 3-4% para economías estables (USD), 5-6% para Colombia.
+                            </div>
+                        </div>
+                    </span>
+                </div>
                 <div class="input-with-symbol">
                     <input type="number" id="ret-inflation" value="3" min="0" max="15" step="0.5" data-suffix="%">
                     <span class="input-suffix">%</span>
@@ -134,7 +168,21 @@
                 <small class="field-hint">Largo plazo recomendado: 10, 20 o 30 años.</small>
             </div>
             <div class="form-group">
-                <label for="dca-inflation">Inflación anual esperada (%)</label>
+                <div class="label-with-tooltip">
+                    <label for="dca-inflation">Inflación anual esperada (%)</label>
+                    <span class="info-tooltip">
+                        <span>ℹ</span>
+                        <div class="tooltip-content">
+                            <div class="tooltip-title">📊 Referencia Colombia</div>
+                            <div class="tooltip-reference">
+                                En Colombia, la <strong>inflación promedio</strong> de los últimos 10 años (2015–2024) fue de <strong>~5,8% anual</strong> (variación anual del IPC).
+                            </div>
+                            <div class="tooltip-reference" style="margin-top: 0.5rem;">
+                                💡 <strong>Tip:</strong> Usa 3-4% para economías estables (USD), 5-6% para Colombia.
+                            </div>
+                        </div>
+                    </span>
+                </div>
                 <div class="input-with-symbol">
                     <input type="number" id="dca-inflation" value="3" min="0" max="15" step="0.5" data-suffix="%">
                     <span class="input-suffix">%</span>
@@ -217,7 +265,27 @@
                 </div>
             </div>
             <div class="form-group">
-                <label for="ls-scenario">Escenario de rendimiento</label>
+                <div class="label-with-tooltip">
+                    <label for="ls-scenario">Escenario de rendimiento</label>
+                    <span class="info-tooltip">
+                        <span>ℹ</span>
+                        <div class="tooltip-content">
+                            <div class="tooltip-title">💡 Guía de Rendimiento</div>
+                            <div class="tooltip-option">
+                                <strong>Conservador (7%)</strong>
+                                <small>Cartera diversificada 60/40 o sesgo defensivo. Media histórica ~6–7%.</small>
+                            </div>
+                            <div class="tooltip-option">
+                                <strong>Base S&P 500 (10%)</strong>
+                                <small>Promedio histórico del S&P 500 con dividendos reinvertidos.</small>
+                            </div>
+                            <div class="tooltip-option">
+                                <strong>Optimista (12%)</strong>
+                                <small>Growth/tecnología en ciclo favorable. No es promedio histórico sostenible.</small>
+                            </div>
+                        </div>
+                    </span>
+                </div>
                 <select id="ls-scenario">
                     <option value="conservador">Conservador (7%)</option>
                     <option value="moderado" selected>Moderado (10%)</option>
@@ -267,7 +335,27 @@
                 </div>
             </div>
             <div class="form-group">
-                <label for="ci-scenario">Retorno esperado</label>
+                <div class="label-with-tooltip">
+                    <label for="ci-scenario">Retorno esperado</label>
+                    <span class="info-tooltip">
+                        <span>ℹ</span>
+                        <div class="tooltip-content">
+                            <div class="tooltip-title">💡 Guía de Rendimiento</div>
+                            <div class="tooltip-option">
+                                <strong>Conservador (7%)</strong>
+                                <small>Cartera diversificada 60/40 o sesgo defensivo. Media histórica ~6–7%.</small>
+                            </div>
+                            <div class="tooltip-option">
+                                <strong>Base S&P 500 (10%)</strong>
+                                <small>Promedio histórico del S&P 500 con dividendos reinvertidos.</small>
+                            </div>
+                            <div class="tooltip-option">
+                                <strong>Optimista (12%)</strong>
+                                <small>Growth/tecnología en ciclo favorable. No es promedio histórico sostenible.</small>
+                            </div>
+                        </div>
+                    </span>
+                </div>
                 <select id="ci-scenario">
                     <option value="conservador">Conservador (7%)</option>
                     <option value="moderado" selected>Moderado (10%)</option>
