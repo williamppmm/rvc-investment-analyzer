@@ -883,6 +883,33 @@ footer {
     color: #ffffff;
 }
 
+/* Contador de visitas */
+.visit-counter {
+    text-align: center;
+    padding: 0.75rem 0 0.25rem 0;
+    margin-top: 0.5rem;
+    border-top: 1px solid rgba(243, 244, 246, 0.1);
+    color: rgba(243, 244, 246, 0.6);
+    font-size: 0.8rem;
+}
+
+.counter-number,
+.today-number {
+    font-weight: 600;
+    color: var(--primary-light);
+}
+
+.visit-counter .separator {
+    margin: 0 0.5rem;
+    color: rgba(243, 244, 246, 0.3);
+}
+
+.visit-counter .icon-sm {
+    width: 14px;
+    height: 14px;
+    margin-right: 0.25rem;
+}
+
 /* ============================================
    ESTILOS COMUNES DE SECCIONES
    ============================================ */

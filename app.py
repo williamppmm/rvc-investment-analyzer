@@ -8,13 +8,14 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import sqlite3
 from datetime import datetime, timedelta
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, session
 from dotenv import load_dotenv
 import requests
 
@@ -98,6 +99,68 @@ investment_scorer = InvestmentScorer()
 etf_analyzer = ETFAnalyzer()
 investment_calculator = InvestmentCalculator()
 
+# ============================================
+# CONTADOR DE VISITAS - FILTRO ANTI-BOTS
+# ============================================
+
+# Patrón regex para detectar bots (case-insensitive)
+BOT_PATTERN = re.compile(
+    r'bot|crawler|spider|slurp|facebook|twitter|discord|'
+    r'curl|wget|requests|python|java|okhttp|axios|'
+    r'headless|phantom|selenium|scraper|preview|postman',
+    re.IGNORECASE
+)
+
+
+def is_bot_request() -> bool:
+    """
+    Detecta si el request viene de un bot.
+    Retorna True si es bot, False si es humano.
+    """
+    user_agent = request.headers.get('User-Agent', '')
+    
+    # Sin User-Agent = probablemente bot
+    if not user_agent:
+        return True
+    
+    # Coincide con patrón de bot
+    if BOT_PATTERN.search(user_agent):
+        return True
+    
+    return False
+
+
+def init_visits_counter() -> None:
+    """Inicializa la tabla de contador de visitas."""
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS site_visits (
+                id INTEGER PRIMARY KEY,
+                total_visits INTEGER DEFAULT 0,
+                last_updated TEXT
+            )
+        ''')
+        
+        # Inicializar contador si no existe
+        cursor.execute('SELECT COUNT(*) FROM site_visits')
+        if cursor.fetchone()[0] == 0:
+            cursor.execute('''
+                INSERT INTO site_visits (id, total_visits, last_updated) 
+                VALUES (1, 0, ?)
+            ''', (datetime.now().isoformat(),))
+        
+        # Tabla para visitas diarias (opcional)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS daily_visits (
+                date TEXT PRIMARY KEY,
+                visits INTEGER DEFAULT 0
+            )
+        ''')
+        
+        conn.commit()
+
 
 def pick_metric(metrics: Dict[str, Any], keys: Iterable[str], default: Optional[float] = None):
     """Return the first non-None metric value following the provided priority order."""
@@ -135,12 +198,16 @@ def init_database() -> None:
             """
         )
         conn.commit()
+    
+    # Inicializar contador de visitas
+    init_visits_counter()
 
 
 # Asegurar el esquema de la base de datos al importar el módulo (modo WSGI)
 try:
     init_database()
     logger.info("✓ Base de datos inicializada (tablas aseguradas)")
+    logger.info("✓ Contador de visitas inicializado")
 except Exception as e:
     logger.error("✗ Error inicializando base de datos al importar: %s", e, exc_info=True)
 
@@ -281,6 +348,64 @@ def prepare_analysis_response(
     return response
 
 
+# ============================================
+# MIDDLEWARE - CONTADOR DE VISITAS
+# ============================================
+
+@app.before_request
+def count_visit():
+    """
+    Cuenta visitas reales (humanos) en la página principal.
+    - Solo cuenta en GET /
+    - Filtra bots por User-Agent
+    - Una visita por sesión (cookie)
+    """
+    if request.path == '/' and request.method == 'GET':
+        # Ignorar bots
+        if is_bot_request():
+            logger.debug("Bot detectado, visita no contada")
+            return
+        
+        # Solo contar una vez por sesión
+        if session.get('visited'):
+            return
+        
+        try:
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            
+            # Incrementar contador total
+            cursor.execute('''
+                UPDATE site_visits 
+                SET total_visits = total_visits + 1,
+                    last_updated = ?
+                WHERE id = 1
+            ''', (datetime.now().isoformat(),))
+            
+            # Incrementar contador del día
+            today = datetime.now().strftime('%Y-%m-%d')
+            cursor.execute('''
+                INSERT INTO daily_visits (date, visits) VALUES (?, 1)
+                ON CONFLICT(date) DO UPDATE SET visits = visits + 1
+            ''', (today,))
+            
+            conn.commit()
+            conn.close()
+            
+            # Marcar sesión como visitada
+            session['visited'] = True
+            session.permanent = False  # Expira con el navegador
+            
+            logger.info("✓ Visita contada (sesión única)")
+            
+        except Exception as e:
+            logger.error(f"Error counting visit: {e}")
+
+
+# ============================================
+# RUTAS PRINCIPALES
+# ============================================
+
 @app.route("/")
 def index():
     return render_template("index.html", active_page="home")
@@ -377,6 +502,38 @@ def exchange_rate():
     target = request.args.get("target", "EUR")
     data = get_exchange_rate(base, target)
     return jsonify(data)
+
+
+@app.route('/api/visit-count')
+def get_visit_count():
+    """
+    Retorna el contador de visitas para mostrar en el footer.
+    Incluye visitas totales y del día actual.
+    """
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Total visitas
+        cursor.execute('SELECT total_visits FROM site_visits WHERE id = 1')
+        result = cursor.fetchone()
+        total = result[0] if result else 0
+        
+        # Visitas del día
+        today = datetime.now().strftime('%Y-%m-%d')
+        cursor.execute('SELECT visits FROM daily_visits WHERE date = ?', (today,))
+        result = cursor.fetchone()
+        daily = result[0] if result else 0
+        
+        conn.close()
+        
+        return jsonify({
+            'visits': total,
+            'today': daily
+        })
+    except Exception as e:
+        logger.error(f"Error getting visit count: {e}")
+        return jsonify({'visits': 0, 'today': 0})
 
 
 @app.route("/analyze", methods=["POST"])

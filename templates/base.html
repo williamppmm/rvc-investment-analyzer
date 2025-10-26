@@ -53,6 +53,18 @@
                 <p class="site-footer__help">
                     <a href="#" id="footer-glossary-link" class="footer-link">¿Dudas sobre los términos? Consulta el glosario</a>
                 </p>
+                <!-- Contador de visitas -->
+                <div class="visit-counter">
+                    <span id="visit-count">
+                        <svg class="icon-sm" style="vertical-align: middle;">
+                            <use href="#icon-users"></use>
+                        </svg>
+                        <span class="counter-number">...</span> visitas
+                        <span class="separator">|</span>
+                        <span style="color: #f59e0b;">🔥</span>
+                        <span class="today-number">...</span> hoy
+                    </span>
+                </div>
             </div>
         </footer>
     </div>
@@ -109,6 +121,28 @@
     <script src="{{ url_for('static', filename='splash.js') }}"></script>
     <script src="{{ url_for('static', filename='glossary.js') }}"></script>
     <script src="{{ url_for('static', filename='usage_limit.js') }}"></script>
+    
+    <!-- Contador de visitas -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/api/visit-count')
+            .then(res => res.json())
+            .then(data => {
+                const counterEl = document.querySelector('.counter-number');
+                const todayEl = document.querySelector('.today-number');
+                if (counterEl && data.visits !== undefined) {
+                    counterEl.textContent = data.visits.toLocaleString('es-ES');
+                }
+                if (todayEl && data.today !== undefined) {
+                    todayEl.textContent = data.today.toLocaleString('es-ES');
+                }
+            })
+            .catch(err => {
+                console.log('No se pudo cargar el contador de visitas');
+            });
+    });
+    </script>
+    
     {% block extra_js %}{% endblock %}
 </body>
 </html>
