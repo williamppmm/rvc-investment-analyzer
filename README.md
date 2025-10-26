@@ -27,6 +27,13 @@ RVC es una aplicación web completa que te ayuda a identificar las mejores oport
 - **Tipografía Inter** - Sistema profesional sans-serif
 - **Paleta actualizada** - Verde esmeralda, ámbar, naranja, rojo
 - **Responsive total** - Optimizado para móvil, tablet y desktop
+- **Splash Screen** - Video de logo RVC en primera carga (2-3s, skippable)
+
+### 💎 **Sistema Freemium**
+- **FREE** - 20 consultas diarias, acceso completo
+- **PRO** - 200 consultas/día, $3 USD/30 días
+- **Licencias** - Sistema con contador de 30 días
+- **Modal profesional** - Comparativa visual de planes
 
 ---
 
@@ -380,6 +387,8 @@ self.quality_weights = {
 - **[API_ENDPOINTS_GUIDE.md](API_ENDPOINTS_GUIDE.md)**: Guía práctica de endpoints de la API REST
 - **[TECHNICAL_DOCUMENTATION.md](TECHNICAL_DOCUMENTATION.md)**: Documentación técnica y arquitectura interna
 - **[LOGGING.md](LOGGING.md)**: Sistema de logs y debugging
+- **[FREEMIUM_SYSTEM.md](FREEMIUM_SYSTEM.md)**: Documentación completa del modelo freemium
+- **[SPLASH_SCREEN.md](SPLASH_SCREEN.md)**: Guía del splash screen con video de logo
 - **[Glosario Interactivo](static/glossary.js)**: 60+ términos financieros explicados
 
 ---
