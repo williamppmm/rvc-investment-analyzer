@@ -81,19 +81,30 @@ Compara hasta **5 acciones simultáneamente** lado a lado con gráficos profesio
 - ✅ Conclusiones automáticas (mejor/peor opción)
 - ✅ **Guarda scores en BD** para el ranking
 
-### 3️⃣ Calculadora de Inversiones
-Simulador DCA (Dollar Cost Averaging) con **4 módulos interactivos**:
+### 3️⃣ Calculadora de Inversiones **[ACTUALIZADA - Fase 2 Educativa]**
+Simulador DCA (Dollar Cost Averaging) con **4 módulos interactivos** y sistema educativo de inflación:
+
+**🆕 Fase 2: Sistema Educativo de Poder Adquisitivo**
+- ✅ **Valores reales deflactados** - Comparación nominal vs poder adquisitivo actual
+- ✅ **Tabla anual agregada** - Resumen año por año con valores reales
+- ✅ **Tooltips educativos** - Explicaciones sobre impacto de inflación
+- ✅ **Fórmula de deflactación** - `valor_real = valor_nominal / (1 + π)^años`
+- ✅ **Indexación automática** - Aportes ajustados por inflación
+- ✅ **12 tests unitarios** - Validación completa de cálculos
 
 **Módulo 1: Plan de Jubilación**
 - Proyección con ajuste por inflación
-- Aportes mensuales crecientes
+- Aportes mensuales crecientes indexados
 - Límite configurable ($1,000,000)
-- Tabla anual completa
+- Tabla anual con columna de valor real
+- Comparación nominal vs poder adquisitivo
 
 **Módulo 2: Dollar Cost Averaging**
 - 3 escenarios (conservador 7%, moderado 10%, optimista 12%)
 - Timing del mercado (normal, crisis -40%, burbuja +40%)
-- Visualización del impacto de volatilidad
+- Checkbox de indexación anual
+- Tabla mensual + tabla anual agregada
+- Visualización del impacto de volatilidad e inflación
 - Formateo con separadores de miles
 
 **Módulo 3: Lump Sum vs DCA**
@@ -181,9 +192,20 @@ rcv_proyecto/
 ├── scoring_engine.py               # Motor de 3 scores (Investment)
 ├── rvc_calculator.py               # Calculadora RVC (Legacy)
 ├── data_agent.py                   # Agente de recolección de datos
-├── investment_calculator.py        # Simulador DCA
+├── investment_calculator.py        # Simulador DCA con valores reales
 ├── asset_classifier.py             # Clasificador de activos
 ├── etf_analyzer.py                 # Análisis especializado ETFs
+├── usage_limiter.py                # Sistema freemium con límites
+├── manage_licenses.py              # Gestor de licencias PRO
+│
+├── tests/                          # Suite de testing
+│   ├── test_calculator.py         # Tests calculadora básica
+│   ├── test_deflation.py          # Tests valores reales (Fase 2)
+│   ├── test_retirement_calculator.py  # Tests plan jubilación
+│   ├── test_api_retirement.py     # Tests endpoint retirement
+│   ├── test_scoring.py            # Tests motor de scoring
+│   ├── test_data_agent.py         # Tests agente de datos
+│   └── test_top_opportunities.py  # Tests ranking RVC
 │
 ├── services/                       # Integraciones con APIs
 │   ├── alpha_vantage.py           # Alpha Vantage API
