@@ -181,6 +181,23 @@ class InvestmentCalculator:
         )
         effective_years = months_executed / 12 if months_executed else 0.0
 
+        # Calcular valores reales (deflactados)
+        final_value_real = None
+        total_invested_real = None
+        total_gain_real = None
+        total_return_real_pct = None
+        
+        if annual_inflation > 0 and effective_years > 0:
+            # Deflactar al poder adquisitivo actual
+            deflation_factor = (1 + annual_inflation) ** effective_years
+            final_value_real = final_value / deflation_factor
+            total_invested_real = total_invested / deflation_factor
+            total_gain_real = final_value_real - total_invested_real
+            total_return_real_pct = (
+                ((final_value_real / total_invested_real) - 1) * 100 
+                if total_invested_real > 0 else 0.0
+            )
+
         result = {
             "input": {
                 "initial_amount": initial_amount,
@@ -201,6 +218,10 @@ class InvestmentCalculator:
                 "final_value": round(final_value, 2),
                 "total_gain": round(total_gain, 2),
                 "total_return_pct": round(total_return_pct, 2),
+                "final_value_real": round(final_value_real, 2) if final_value_real is not None else None,
+                "total_invested_real": round(total_invested_real, 2) if total_invested_real is not None else None,
+                "total_gain_real": round(total_gain_real, 2) if total_gain_real is not None else None,
+                "total_return_real_pct": round(total_return_real_pct, 2) if total_return_real_pct is not None else None,
                 "simple_projection": round(projection_baseline["final_value"], 2),
                 "baseline_projection": projection_baseline,
                 "cap_reached": cap_reached,
@@ -462,6 +483,17 @@ class InvestmentCalculator:
                 "interest_pct": round((total_interest_nominal / final_capital) * 100, 2)
             }
 
+        # Calcular valores reales (deflactados)
+        final_capital_real = None
+        total_contributions_real = None
+        total_interest_real = None
+        
+        if annual_inflation > 0 and effective_years > 0:
+            deflation_factor = (1 + annual_inflation) ** effective_years
+            final_capital_real = final_capital / deflation_factor
+            total_contributions_real = (total_contributions_nominal + initial_amount) / deflation_factor
+            total_interest_real = final_capital_real - total_contributions_real
+
         return {
             "input": {
                 "current_age": current_age,
@@ -481,6 +513,9 @@ class InvestmentCalculator:
                 "initial_capital": initial_amount,
                 "total_contributions": total_contributions_nominal,
                 "total_interest": total_interest_nominal,
+                "final_capital_real": round(final_capital_real, 2) if final_capital_real is not None else None,
+                "total_contributions_real": round(total_contributions_real, 2) if total_contributions_real is not None else None,
+                "total_interest_real": round(total_interest_real, 2) if total_interest_real is not None else None,
                 "average_return_pct": round(annual_return * 100, 2),
                 "cap_reached": cap_reached
             },

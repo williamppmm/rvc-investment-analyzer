@@ -302,6 +302,50 @@ function renderDCAResults(result) {
                 </table>
             </div>
         `;
+
+        // Tabla anual agregada
+        const yearlyData = aggregateMonthlyToYearly(timeline, inflationPct);
+        if (yearlyData.length > 0) {
+            html += `
+                <div class="yearly-table" style="margin-top: 2rem;">
+                    <h3>📊 Resumen Anual</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Año</th>
+                                <th>Aportes del año</th>
+                                <th>Aportes acumulados</th>
+                                <th>Valor nominal</th>
+                                ${inflationPct > 0 ? '<th>Valor real (hoy)</th>' : ''}
+                                <th>Rentabilidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            yearlyData.forEach((row) => {
+                html += `
+                    <tr>
+                        <td>${row.year}</td>
+                        <td>${formatMoney(row.contributions)}</td>
+                        <td>${formatMoney(row.invested)}</td>
+                        <td>${formatMoney(row.portfolioValue)}</td>
+                        ${inflationPct > 0 ? `<td>${formatMoney(row.portfolioValueReal || 0)}</td>` : ''}
+                        <td>${formatPercent(row.returnPct)}</td>
+                    </tr>
+                `;
+            });
+            html += `
+                        </tbody>
+                    </table>
+                    ${inflationPct > 0 ? `
+                    <p style="margin-top: 1rem; color: #6c757d; font-size: 0.9rem;">
+                        💡 <strong>Valor real (hoy)</strong>: muestra el poder adquisitivo del portafolio expresado en dólares de hoy, 
+                        descontando el efecto de la inflación del ${formatPercent(inflationPct)} anual.
+                    </p>
+                    ` : ''}
+                </div>
+            `;
+        }
     }
 
     if (res.cap_reached) {
@@ -771,6 +815,7 @@ function renderRetirementResults(result) {
     if (yearly && yearly.length) {
         html += `
             <div class="yearly-table">
+                <h3>📊 Proyección Anual Detallada</h3>
                 <table>
                     <thead>
                         <tr>
@@ -779,13 +824,15 @@ function renderRetirementResults(result) {
                             <th>Aportes acumulados</th>
                             <th>Interés del año</th>
                             <th>Interes acumulado</th>
-                            <th>Capital total</th>
+                            <th>Capital total (nominal)</th>
+                            ${inflationPct > 0 ? '<th>Capital real (hoy)</th>' : ''}
                         </tr>
                     </thead>
                     <tbody>
         `;
 
         yearly.forEach((row) => {
+            const realValue = inflationPct > 0 ? calculateRealValue(row.portfolio_value, row.year, inflationPct) : null;
             html += `
                 <tr>
                     <td>${row.year} (${row.age})</td>
@@ -794,6 +841,7 @@ function renderRetirementResults(result) {
                     <td>${formatMoney(row.interest_this_year)}</td>
                     <td>${formatMoney(row.interest_accumulated)}</td>
                     <td>${formatMoney(row.portfolio_value)}</td>
+                    ${inflationPct > 0 ? `<td>${formatMoney(realValue || 0)}</td>` : ''}
                 </tr>
             `;
         });
@@ -801,6 +849,12 @@ function renderRetirementResults(result) {
         html += `
                     </tbody>
                 </table>
+                ${inflationPct > 0 ? `
+                <p style="margin-top: 1rem; color: #6c757d; font-size: 0.9rem;">
+                    💡 <strong>Capital real (hoy)</strong>: muestra el poder adquisitivo del portafolio expresado en dólares de hoy, 
+                    descontando el efecto de la inflación del ${formatPercent(inflationPct)} anual.
+                </p>
+                ` : ''}
             </div>
         `;
     }
@@ -856,6 +910,55 @@ function formatMoney(value) {
     // Calculadora: formatear con símbolo $ y separadores de miles
     const amount = Number(value) || 0;
     return '$' + new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(amount);
+}
+
+/**
+ * Agrega datos mensuales en una tabla anual.
+ * Retorna un array con un elemento por año, sumando aportes y tomando el último valor del año.
+ */
+function aggregateMonthlyToYearly(monthlyTimeline, annualInflationPct = 0) {
+    if (!monthlyTimeline || monthlyTimeline.length === 0) {
+        return [];
+    }
+
+    const yearlyData = {};
+    const inflationRate = annualInflationPct / 100;
+
+    monthlyTimeline.forEach(row => {
+        const year = Math.floor((row.month - 1) / 12) + 1;
+        
+        if (!yearlyData[year]) {
+            yearlyData[year] = {
+                year: year,
+                contributions: 0,
+                portfolioValue: 0,
+                invested: 0,
+                returnPct: 0
+            };
+        }
+
+        // Sumar contribuciones del año
+        yearlyData[year].contributions += row.monthly_contribution || 0;
+        // Tomar el último valor del año (se sobrescribe)
+        yearlyData[year].portfolioValue = row.portfolio_value || 0;
+        yearlyData[year].invested = row.invested_to_date || 0;
+        yearlyData[year].returnPct = row.return_pct || 0;
+    });
+
+    // Convertir a array y calcular valores reales
+    const result = Object.values(yearlyData).map(item => {
+        let realValue = null;
+        if (inflationRate > 0 && item.year > 0) {
+            const deflationFactor = Math.pow(1 + inflationRate, item.year);
+            realValue = item.portfolioValue / deflationFactor;
+        }
+        return {
+            ...item,
+            portfolioValueReal: realValue
+        };
+    });
+
+    return result.sort((a, b) => a.year - b.year);
 }
 
 /**
