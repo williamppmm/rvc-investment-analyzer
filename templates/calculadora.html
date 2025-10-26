@@ -32,30 +32,48 @@
         <div class="form-grid">
             <div class="form-group">
                 <label for="ret-current-age">Edad actual</label>
-                <input type="number" id="ret-current-age" value="35" min="18" max="75" step="1">
+                <div class="input-with-symbol">
+                    <input type="number" id="ret-current-age" value="35" min="18" max="75" step="1" data-suffix="años">
+                    <span class="input-suffix">años</span>
+                </div>
             </div>
             <div class="form-group">
                 <label for="ret-retirement-age">Edad de retiro deseada</label>
-                <input type="number" id="ret-retirement-age" value="65" min="18" max="75" step="1">
+                <div class="input-with-symbol">
+                    <input type="number" id="ret-retirement-age" value="65" min="18" max="75" step="1" data-suffix="años">
+                    <span class="input-suffix">años</span>
+                </div>
             </div>
             <div class="form-group">
                 <label for="ret-initial">Capital inicial</label>
-                <input type="text" id="ret-initial" value="10.000" inputmode="numeric" pattern="[0-9\.]*">
+                <div class="input-with-symbol">
+                    <span class="input-prefix">$</span>
+                    <input type="text" id="ret-initial" value="10.000" inputmode="numeric" pattern="[0-9\.]*" data-prefix="$">
+                </div>
                 <small class="field-hint">Ahorros o inversiones ya acumuladas.</small>
             </div>
             <div class="form-group">
                 <label for="ret-monthly">Ahorro mensual inicial</label>
-                <input type="text" id="ret-monthly" value="500" inputmode="numeric" pattern="[0-9\.]*">
+                <div class="input-with-symbol">
+                    <span class="input-prefix">$</span>
+                    <input type="text" id="ret-monthly" value="500" inputmode="numeric" pattern="[0-9\.]*" data-prefix="$">
+                </div>
                 <small class="field-hint">Se actualiza cada año según la inflación estimada.</small>
             </div>
             <div class="form-group">
                 <label for="ret-return">Rendimiento anual esperado (%)</label>
-                <input type="number" id="ret-return" value="10" min="-10" max="20" step="0.5">
+                <div class="input-with-symbol">
+                    <input type="number" id="ret-return" value="10" min="-10" max="20" step="0.5" data-suffix="%">
+                    <span class="input-suffix">%</span>
+                </div>
                 <small class="field-hint">Usa 10% como referencia del S&P 500 histórico.</small>
             </div>
             <div class="form-group">
                 <label for="ret-inflation">Inflación anual esperada (%)</label>
-                <input type="number" id="ret-inflation" value="3" min="0" max="15" step="0.5">
+                <div class="input-with-symbol">
+                    <input type="number" id="ret-inflation" value="3" min="0" max="15" step="0.5" data-suffix="%">
+                    <span class="input-suffix">%</span>
+                </div>
                 <small class="field-hint">Aumentamos tus aportes cada 12 meses con este ritmo.</small>
             </div>
         </div>
@@ -82,22 +100,34 @@
         <div class="form-grid">
             <div class="form-group">
                 <label for="dca-initial">Capital inicial</label>
-                <input type="text" id="dca-initial" value="0" inputmode="numeric" pattern="[0-9\.]*">
+                <div class="input-with-symbol">
+                    <span class="input-prefix">$</span>
+                    <input type="text" id="dca-initial" value="0" inputmode="numeric" pattern="[0-9\.]*" data-prefix="$">
+                </div>
                 <small class="field-hint">Se invierte en el primer mes al precio simulado.</small>
             </div>
             <div class="form-group">
                 <label for="dca-monthly">Aporte mensual inicial</label>
-                <input type="text" id="dca-monthly" value="500" inputmode="numeric" pattern="[0-9\.]*">
+                <div class="input-with-symbol">
+                    <span class="input-prefix">$</span>
+                    <input type="text" id="dca-monthly" value="500" inputmode="numeric" pattern="[0-9\.]*" data-prefix="$">
+                </div>
                 <small class="field-hint">Se incrementa cada año con la inflación indicada.</small>
             </div>
             <div class="form-group">
                 <label for="dca-years">Años de inversión</label>
-                <input type="number" id="dca-years" value="15" min="1" max="50" step="1">
+                <div class="input-with-symbol">
+                    <input type="number" id="dca-years" value="15" min="1" max="50" step="1" data-suffix="años">
+                    <span class="input-suffix">años</span>
+                </div>
                 <small class="field-hint">Largo plazo recomendado: 10, 20 o 30 años.</small>
             </div>
             <div class="form-group">
                 <label for="dca-inflation">Inflación anual esperada (%)</label>
-                <input type="number" id="dca-inflation" value="3" min="0" max="15" step="0.5">
+                <div class="input-with-symbol">
+                    <input type="number" id="dca-inflation" value="3" min="0" max="15" step="0.5" data-suffix="%">
+                    <span class="input-suffix">%</span>
+                </div>
                 <small class="field-hint">Ajustamos tus aportes cada 12 meses con este porcentaje.</small>
             </div>
             <div class="form-group">
@@ -152,11 +182,17 @@
         <div class="form-grid">
             <div class="form-group">
                 <label for="ls-total">Monto total disponible</label>
-                <input type="text" id="ls-total" value="10.000" inputmode="numeric" pattern="[0-9\.]*">
+                <div class="input-with-symbol">
+                    <span class="input-prefix">$</span>
+                    <input type="text" id="ls-total" value="10.000" inputmode="numeric" pattern="[0-9\.]*" data-prefix="$">
+                </div>
             </div>
             <div class="form-group">
-                <label for="ls-years">Periodo de comparación (años)</label>
-                <input type="number" id="ls-years" value="10" min="1" max="50" step="1">
+                <label for="ls-years">Período de comparación (años)</label>
+                <div class="input-with-symbol">
+                    <input type="number" id="ls-years" value="10" min="1" max="50" step="1" data-suffix="años">
+                    <span class="input-suffix">años</span>
+                </div>
             </div>
             <div class="form-group">
                 <label for="ls-scenario">Escenario de rendimiento</label>
@@ -189,15 +225,24 @@
         <div class="form-grid">
             <div class="form-group">
                 <label for="ci-initial">Inversión inicial</label>
-                <input type="text" id="ci-initial" value="5.000" inputmode="numeric" pattern="[0-9\.]*">
+                <div class="input-with-symbol">
+                    <span class="input-prefix">$</span>
+                    <input type="text" id="ci-initial" value="5.000" inputmode="numeric" pattern="[0-9\.]*" data-prefix="$">
+                </div>
             </div>
             <div class="form-group">
                 <label for="ci-monthly">Aporte mensual</label>
-                <input type="text" id="ci-monthly" value="300" inputmode="numeric" pattern="[0-9\.]*">
+                <div class="input-with-symbol">
+                    <span class="input-prefix">$</span>
+                    <input type="text" id="ci-monthly" value="300" inputmode="numeric" pattern="[0-9\.]*" data-prefix="$">
+                </div>
             </div>
             <div class="form-group">
                 <label for="ci-years">Años de inversión</label>
-                <input type="number" id="ci-years" value="20" min="1" max="50" step="1">
+                <div class="input-with-symbol">
+                    <input type="number" id="ci-years" value="20" min="1" max="50" step="1" data-suffix="años">
+                    <span class="input-suffix">años</span>
+                </div>
             </div>
             <div class="form-group">
                 <label for="ci-scenario">Retorno esperado</label>

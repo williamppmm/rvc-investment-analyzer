@@ -280,3 +280,58 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ============================================
+   INPUT PREFIJOS Y SUFIJOS VISUALES
+   ============================================ */
+
+/* Wrapper para inputs con símbolos */
+.input-with-symbol {
+    position: relative;
+    display: block;
+}
+
+/* Prefijo ($) - dentro del input a la izquierda */
+.input-prefix {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-weight: 600;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Input con prefijo - agregar padding izquierdo */
+.input-with-symbol input[data-prefix] {
+    padding-left: 28px;
+}
+
+/* Sufijo (%, años) - dentro del input a la derecha */
+.input-suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-weight: 500;
+    pointer-events: none;
+    z-index: 2;
+    font-size: 0.9rem;
+}
+
+/* Input con sufijo - agregar padding derecho */
+.input-with-symbol input[data-suffix] {
+    padding-right: 50px;
+}
+
+/* Ajuste para sufijos más largos */
+.input-with-symbol input[data-suffix="años"] {
+    padding-right: 60px;
+}
+
+/* Asegurar que el input tenga la altura correcta */
+.input-with-symbol input {
+    width: 100%;
+}

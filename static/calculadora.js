@@ -136,12 +136,12 @@ async function calculateDCA() {
     }
 
     if (!years || years <= 0 || years > 50) {
-        alert('El periodo debe estar entre 1 y 50 años.');
+        alert('El período debe estar entre 1 y 50 años.');
         return;
     }
 
-    if (inflationPct < 0 || inflationPct > 15) {
-        alert('La inflacion anual debe estar entre 0% y 15%.');
+    if (inflacion < 0 || inflacion > 15) {
+        alert('La inflación anual debe estar entre 0% y 15%.');
         return;
     }
 
@@ -315,7 +315,7 @@ async function calculateLumpSum() {
     }
 
     if (!years || years <= 0 || years > 50) {
-        alert('El periodo debe estar entre 1 y 50 años.');
+        alert('El período debe estar entre 1 y 50 años.');
         return;
     }
 
@@ -429,7 +429,7 @@ async function calculateCompound() {
     }
 
     if (!years || years <= 0 || years > 50) {
-        alert('El periodo debe estar entre 1 y 50 años.');
+        alert('El período debe estar entre 1 y 50 años.');
         return;
     }
 
@@ -787,7 +787,7 @@ function capitalize(text) {
 }
 
 function formatMoney(value) {
-    // Calculadora: sin símbolos monetarios, solo separadores de miles
+    // Calculadora: formatear con símbolo $ y separadores de miles
     const amount = Number(value) || 0;
-    return new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(amount);
+    return '$' + new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(amount);
 }
