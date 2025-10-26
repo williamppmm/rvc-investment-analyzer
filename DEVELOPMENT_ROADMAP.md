@@ -23,6 +23,12 @@
 - ✅ **12 tests unitarios** - test_deflation.py con 100% passing
 - ✅ **Columna valor real** - En tablas anuales de DCA y Retirement
 - ✅ **Indexación automática** - Aportes ajustados por inflación
+- ✅ **Sistema contador visitas** - SQLite + filtro anti-bots
+  - Regex: 15+ patrones de bots detectados
+  - Cookie sesión: 1 visita por usuario
+  - Endpoint: /api/visit-count (JSON)
+  - Frontend: footer con formateo español
+  - Tests: test_visit_counter.py (4 tests passing)
 
 ### ✅ **LOGROS PREVIOS (FASE B)**
 - ✅ **Sistema de iconografía SVG profesional** - 30+ iconos Lucide organizados
@@ -39,16 +45,17 @@
 - ✅ **Sistema de scoring dual** - Investment Score + RVC Calculator
 
 ### 📊 **Métricas Actualizadas (Post Fase C)**
-- 📦 **~10,500 líneas de código** (Python, JS, CSS, HTML)
-- 🧪 **19 tests unitarios** (7 archivos de test, 100% passing)
+- 📦 **~10,700 líneas de código** (Python, JS, CSS, HTML)
+- 🧪 **23 tests unitarios** (8 archivos de test, 100% passing)
 - 🎨 **30+ iconos SVG** en sprite centralizado
 - 📊 **3 gráficos Plotly** modernizados con efecto lollipop
-- 🔗 **13 endpoints API** completamente documentados
+- 🔗 **14 endpoints API** completamente documentados
 - 📱 **100% responsive** en todas las vistas
 - ⚡ **<2s carga promedio** con sistema de caché optimizado
 - 🎯 **Sistema de ranking** con 6 filtros interactivos
 - 🌐 **5 páginas principales** (Index, Comparador, Calculadora, Ranking, About)
 - 💎 **Sistema educativo** - Valores nominales vs reales con deflactación
+- 📈 **Sistema analytics** - Contador visitas anónimo con filtro anti-bots
 
 ### 🎨 **SISTEMA EDUCATIVO CALCULADORA**
 ✅ **Deflactación backend** - Campos *_real en calculate_dca() y calculate_retirement_plan()  
