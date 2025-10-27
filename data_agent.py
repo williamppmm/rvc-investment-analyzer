@@ -296,23 +296,42 @@ class DataAgent:
             # Guardar resultado para análisis de dispersión
             source_results.append(result)
 
+            # Contar métricas realmente agregadas (no solo intentadas)
+            added_count = 0
             for key, value in result.data.items():
                 if key in self.metric_priority:
                     self._update_metric(metrics, key, value, result.source)
+                    added_count += 1
                     continue
                 if value is None:
                     continue
                 if metrics.get(key) is None:
                     metrics[key] = value
                     self.provenance[key] = self._resolve_provenance_label(key, result.source)
+                    added_count += 1
+            
             metrics["primary_source"] = metrics.get("primary_source") or result.source
-            logger.info(
-                "%s aportó %s campos para %s (origen %s)",
-                source.__name__,
-                len(result.data),
-                ticker,
-                result.source,
-            )
+            
+            # Log transparente: campos intentados vs campos agregados
+            attempted = len(result.data)
+            if added_count == attempted:
+                logger.info(
+                    "%s aportó %s campos para %s (origen %s)",
+                    source.__name__,
+                    added_count,
+                    ticker,
+                    result.source,
+                )
+            else:
+                logger.info(
+                    "%s aportó %s/%s campos para %s (origen %s) - %s ya existían",
+                    source.__name__,
+                    added_count,
+                    attempted,
+                    ticker,
+                    result.source,
+                    attempted - added_count,
+                )
 
             if self._calculate_completeness(metrics) >= 80:
                 break
