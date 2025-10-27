@@ -15,6 +15,7 @@ from __future__ import annotations
 from typing import Any, Dict, Iterable, List, Optional
 
 from .base_analyzer import BaseAnalyzer
+from .sector_benchmarks import SectorNormalizer, SECTOR_BENCHMARKS
 from metric_normalizer import MetricNormalizer
 
 
@@ -27,6 +28,10 @@ class EquityAnalyzer(BaseAnalyzer):
         
         # Inicializar MetricNormalizer para normalización de períodos
         self.normalizer = MetricNormalizer()
+        
+        # Inicializar SectorNormalizer para scores sector-relativos (Mejora #4)
+        self.sector_normalizer = SectorNormalizer()
+        self.use_sector_relative = True  # Flag para activar/desactivar normalización sectorial
         
         # Pesos para sub-scores
         self.quality_weights = {
@@ -105,7 +110,20 @@ class EquityAnalyzer(BaseAnalyzer):
         overall_confidence = self.get_overall_confidence()
         
         # 2. CALIDAD: ¿Qué tan buena es la empresa?
-        quality_result = self._calculate_quality(working_metrics)
+        # Mejora #4: Usar scores sector-relativos si hay información de sector
+        sector = working_metrics.get("sector", "Unknown")
+        use_sector_scoring = (
+            self.use_sector_relative and 
+            sector and 
+            sector != "Unknown" and
+            self._extract_primary_sector(sector) in SECTOR_BENCHMARKS
+        )
+        
+        if use_sector_scoring:
+            quality_result = self._calculate_quality_sector_relative(working_metrics, sector)
+        else:
+            quality_result = self._calculate_quality(working_metrics)
+        
         quality_score = quality_result["score"]
 
         # 3. VALORACIÓN: ¿Qué tan caro está el precio?
@@ -225,6 +243,112 @@ class EquityAnalyzer(BaseAnalyzer):
         )
         
         return normalized
+    
+    def _extract_primary_sector(self, sector: str) -> str:
+        """
+        Extrae el sector principal de un string de sector.
+        
+        Ejemplos:
+            "Technology - Semiconductors" → "Technology"
+            "Consumer Discretionary" → "Consumer Discretionary"
+            "Healthcare - Pharmaceuticals" → "Healthcare"
+        
+        Args:
+            sector: String de sector (puede incluir sub-industria)
+        
+        Returns:
+            Sector principal compatible con SECTOR_BENCHMARKS
+        """
+        if not sector or sector == "Unknown":
+            return "Unknown"
+        
+        # Si tiene guión, tomar la parte antes del guión
+        if " - " in sector:
+            primary = sector.split(" - ")[0].strip()
+        else:
+            primary = sector.strip()
+        
+        return primary
+    
+    def _calculate_quality_sector_relative(
+        self, 
+        metrics: Dict[str, Any],
+        sector: str
+    ) -> Dict[str, Any]:
+        """
+        Score de CALIDAD con normalización sector-relativa (Mejora #4).
+        
+        Usa z-scores para comparar contra benchmarks del sector:
+        - z > +2.0: Mucho mejor que el sector (score 100)
+        - z > +1.0: Mejor que el sector (score 85)
+        - z > 0: Por encima del promedio (score 70)
+        - z < -2.0: Mucho peor que el sector (score 15)
+        
+        Args:
+            metrics: Dict con métricas financieras
+            sector: Sector de la empresa (ej: "Technology")
+        
+        Returns:
+            Dict con score, components, used_metrics, method="sector_relative"
+        """
+        primary_sector = self._extract_primary_sector(sector)
+        components = []
+        used: List[str] = []
+        
+        # ROE sector-relativo
+        roe = metrics.get("roe")
+        if roe is not None:
+            roe_result = self.sector_normalizer.normalize_metric(
+                roe, "roe", primary_sector, invert=False
+            )
+            roe_score = roe_result["score"]
+            z_roe = roe_result.get("z_score", 0)
+            
+            components.append(("ROE", roe_score, self.quality_weights["roe"]))
+            used.append(f"ROE: {roe:.1f}% (z={z_roe:.2f})")
+        
+        # ROIC sector-relativo
+        roic = metrics.get("roic")
+        if roic is not None:
+            roic_result = self.sector_normalizer.normalize_metric(
+                roic, "roic", primary_sector, invert=False
+            )
+            roic_score = roic_result["score"]
+            z_roic = roic_result.get("z_score", 0)
+            
+            components.append(("ROIC", roic_score, self.quality_weights["roic"]))
+            used.append(f"ROIC: {roic:.1f}% (z={z_roic:.2f})")
+        
+        # Operating Margin sector-relativo
+        op_margin = metrics.get("operating_margin")
+        if op_margin is not None:
+            op_result = self.sector_normalizer.normalize_metric(
+                op_margin, "operating_margin", primary_sector, invert=False
+            )
+            op_score = op_result["score"]
+            z_op = op_result.get("z_score", 0)
+            
+            components.append(("Op. Margin", op_score, self.quality_weights["operating_margin"]))
+            used.append(f"Op. Margin: {op_margin:.1f}% (z={z_op:.2f})")
+        
+        # Net Margin sector-relativo
+        net_margin = metrics.get("net_margin")
+        if net_margin is not None:
+            net_result = self.sector_normalizer.normalize_metric(
+                net_margin, "net_margin", primary_sector, invert=False
+            )
+            net_score = net_result["score"]
+            z_net = net_result.get("z_score", 0)
+            
+            components.append(("Net Margin", net_score, self.quality_weights["net_margin"]))
+            used.append(f"Net Margin: {net_margin:.1f}% (z={z_net:.2f})")
+        
+        # Calcular score ponderado
+        result = self._weighted_result(components, used, "Sin datos de calidad")
+        result["method"] = "sector_relative"  # Metadata
+        result["sector"] = primary_sector
+        
+        return result
 
     def _calculate_quality(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -309,7 +433,9 @@ class EquityAnalyzer(BaseAnalyzer):
             components.append(("Net Margin", score, self.quality_weights["net_margin"]))
             used.append(f"Net Margin: {net_margin:.1f}%")
 
-        return self._weighted_result(components, used, "Sin datos de calidad")
+        result = self._weighted_result(components, used, "Sin datos de calidad")
+        result["method"] = "absolute"  # Metadata para distinguir de sector_relative
+        return result
 
     def _calculate_valuation(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
         """
