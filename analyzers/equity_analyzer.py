@@ -15,6 +15,7 @@ from __future__ import annotations
 from typing import Any, Dict, Iterable, List, Optional
 
 from .base_analyzer import BaseAnalyzer
+from metric_normalizer import MetricNormalizer
 
 
 class EquityAnalyzer(BaseAnalyzer):
@@ -23,6 +24,9 @@ class EquityAnalyzer(BaseAnalyzer):
     def __init__(self):
         # Inicializar BaseAnalyzer (confidence_factors)
         super().__init__()
+        
+        # Inicializar MetricNormalizer para normalización de períodos
+        self.normalizer = MetricNormalizer()
         
         # Pesos para sub-scores
         self.quality_weights = {
@@ -82,46 +86,53 @@ class EquityAnalyzer(BaseAnalyzer):
             Dict con quality_score, valuation_score, investment_score,
             recommendation, category, y breakdown completo
         """
-        # 0. CALCULAR FACTORES DE CONFIANZA
+        # 0. NORMALIZACIÓN DE MÉTRICAS (MEJORA #2)
+        # Normalizar métricas a períodos estándar (TTM > MRQ > MRY > 5Y > FWD)
+        normalized_metrics = self._normalize_metrics(metrics)
+        
+        # Usar métricas normalizadas para todos los cálculos
+        working_metrics = {**metrics, **normalized_metrics}
+        
+        # 1. CALCULAR FACTORES DE CONFIANZA
         # Completeness (ya existente)
         critical_fields = ["pe_ratio", "roe", "roic", "operating_margin"]
-        data_completeness = self.get_data_completeness(metrics, critical_fields)
+        data_completeness = self.get_data_completeness(working_metrics, critical_fields)
         
         # Dispersion (NUEVO)
-        dispersion_confidence = self.calculate_dispersion_confidence(metrics)
+        dispersion_confidence = self.calculate_dispersion_confidence(working_metrics)
         
         # Overall confidence
         overall_confidence = self.get_overall_confidence()
         
-        # 1. CALIDAD: ¿Qué tan buena es la empresa?
-        quality_result = self._calculate_quality(metrics)
+        # 2. CALIDAD: ¿Qué tan buena es la empresa?
+        quality_result = self._calculate_quality(working_metrics)
         quality_score = quality_result["score"]
 
-        # 2. VALORACIÓN: ¿Qué tan caro está el precio?
-        valuation_result = self._calculate_valuation(metrics)
+        # 3. VALORACIÓN: ¿Qué tan caro está el precio?
+        valuation_result = self._calculate_valuation(working_metrics)
         valuation_score = valuation_result["score"]
 
-        # 3. SALUD FINANCIERA
-        health_result = self._calculate_health(metrics)
+        # 4. SALUD FINANCIERA
+        health_result = self._calculate_health(working_metrics)
         health_score = health_result["score"]
 
-        # 4. CRECIMIENTO
-        growth_result = self._calculate_growth(metrics)
+        # 5. CRECIMIENTO
+        growth_result = self._calculate_growth(working_metrics)
         growth_score = growth_result["score"]
 
-        # 5. INVERSIÓN: ¿Vale la pena comprar AHORA?
+        # 6. INVERSIÓN: ¿Vale la pena comprar AHORA?
         investment_score = self._calculate_investment(
             quality_score,
             valuation_score,
             health_score,
             growth_score,
-            metrics
+            working_metrics
         )
 
-        # 6. CATEGORIZACIÓN
+        # 7. CATEGORIZACIÓN
         category = self._categorize(quality_score, valuation_score)
 
-        # 7. RECOMENDACIÓN
+        # 8. RECOMENDACIÓN
         recommendation = self._get_recommendation(
             investment_score,
             quality_score,
@@ -144,14 +155,76 @@ class EquityAnalyzer(BaseAnalyzer):
                 "growth": growth_result,
             },
             "data_completeness": round(data_completeness, 2),
-            "confidence_level": self._confidence(metrics),
+            "confidence_level": self._confidence(working_metrics),
             "confidence_factors": {
                 "completeness": round(self.confidence_factors["completeness"] * 100, 2),
                 "dispersion": round(self.confidence_factors["dispersion"] * 100, 2),
                 "overall": round(overall_confidence, 2)
             },
-            "dispersion_detail": metrics.get("dispersion", {})  # Detalle técnico para debugging
+            "dispersion_detail": working_metrics.get("dispersion", {}),  # Detalle técnico para debugging
+            "normalization_metadata": normalized_metrics.get("_normalization_metadata", {})  # Metadata de normalización
         }
+    
+    def _normalize_metrics(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Normaliza métricas a período estándar (TTM > MRQ > MRY > 5Y > FWD).
+        
+        Mejora #2 del IMPROVEMENT_PLAN.md (Prioridad P0).
+        
+        Args:
+            metrics: Dict con métricas crudas (pueden tener sufijos _ttm, _mrq, etc.)
+        
+        Returns:
+            Dict con métricas normalizadas + metadata:
+                {
+                    "roe": 22.3,
+                    "roe_period": "TTM",
+                    "revenue_growth": 15.2,
+                    "revenue_growth_period": "MRQ",
+                    "_normalization_metadata": {...}
+                }
+        """
+        # Lista de métricas críticas que requieren normalización
+        metrics_to_normalize = [
+            # Calidad
+            "roe",
+            "roic", 
+            "roa",
+            "operating_margin",
+            "net_margin",
+            "gross_margin",
+            
+            # Crecimiento
+            "revenue_growth",
+            "earnings_growth",
+            "revenue_growth_qoq",
+            "earnings_growth_qoq",
+            "earnings_growth_this_y",
+            "earnings_growth_next_y",
+            "earnings_growth_next_5y",
+            "revenue_growth_5y",
+            
+            # Valoración (generalmente usan TTM)
+            "pe_ratio",
+            "peg_ratio",
+            "price_to_book",
+            "price_to_sales",
+            "ev_to_ebitda",
+            
+            # Salud financiera
+            "debt_to_equity",
+            "current_ratio",
+            "quick_ratio"
+        ]
+        
+        # Normalizar en lote
+        normalized = self.normalizer.normalize_metrics_batch(
+            metrics_dict=metrics,
+            metric_names=metrics_to_normalize,
+            currency=metrics.get("currency", "USD")
+        )
+        
+        return normalized
 
     def _calculate_quality(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
         """
