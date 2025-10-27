@@ -484,9 +484,11 @@ function updateManualControls(metrics, manualOverrides) {
     if (manualHint) {
         manualHint.textContent = recommended ? MANUAL_HINT_RECOMMENDED : MANUAL_HINT_DEFAULT;
     }
+    // Mantener el formulario cerrado por defecto, solo cambiar el texto del botón
     if (recommended) {
         manualToggleBtn.textContent = MANUAL_TOGGLE_LABEL_PROMPT;
-        openManualSection();
+        // NO abrir automáticamente - el usuario debe hacerlo manualmente
+        // openManualSection();
     } else if (manualSection.classList.contains("hidden")) {
         manualToggleBtn.textContent = MANUAL_TOGGLE_LABEL_DEFAULT;
     } else {

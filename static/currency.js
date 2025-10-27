@@ -5,7 +5,12 @@
   const SYMBOLS = { USD: '$', EUR: '€' };
   const rates = {}; // base USD -> target
   const lastFetchedMap = {}; // per target currency
-  let current = localStorage.getItem(STORAGE_KEY) || DEFAULT_CURRENCY;
+  
+  // Siempre iniciar con USD, no usar localStorage para el inicio
+  let current = DEFAULT_CURRENCY;
+  
+  // Resetear a USD al cargar la página
+  localStorage.setItem(STORAGE_KEY, DEFAULT_CURRENCY);
 
   // Cargar tasas persistidas (si existen)
   try {
