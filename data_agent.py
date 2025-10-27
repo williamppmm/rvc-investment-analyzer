@@ -343,19 +343,19 @@ class DataAgent:
             # Calcular completitud actual
             current_completeness = self._calculate_completeness(metrics)
 
-            # OPTIMIZACIÓN: Si FMP proporcionó datos completos (≥75%), no consultar otras APIs
+            # OPTIMIZACIÓN: Si FMP proporcionó datos casi completos (≥85%), no consultar otras APIs
             # Esto ahorra cuota de API y reduce latencia
-            # Nota: FMP no proporciona peg_ratio, revenue_growth, earnings_growth de forma confiable
-            # pero sí cubre todas las métricas de calidad/salud (9/12 métricas = 75%)
-            if result.source == "fmp" and current_completeness >= 75:
+            # Umbral 85%: permite que otras fuentes aporten métricas críticas que FMP no tiene
+            # (peg_ratio, revenue_growth, earnings_growth, métricas avanzadas de flujo de caja)
+            if result.source == "fmp" and current_completeness >= 85:
                 logger.info(
-                    "✓ FMP proporcionó datos suficientes (%.1f%%) para %s - omitiendo otras fuentes",
+                    "✓ FMP proporcionó datos casi completos (%.1f%%) para %s - omitiendo otras fuentes",
                     current_completeness,
                     ticker
                 )
                 break
 
-            # Para otras fuentes o si FMP no alcanzó 75%, usar umbral estándar de 80%
+            # Para otras fuentes o si FMP no alcanzó 85%, continuar consultando hasta 80%
             if current_completeness >= 80:
                 logger.info(
                     "✓ Completitud alcanzada (%.1f%%) para %s - finalizando consultas",
