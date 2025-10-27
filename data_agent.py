@@ -304,7 +304,7 @@ class DataAgent:
                     continue
                 if metrics.get(key) is None:
                     metrics[key] = value
-                    self.provenance[key] = self._resolve_provenance_label(key, source)
+                    self.provenance[key] = self._resolve_provenance_label(key, result.source)
             metrics["primary_source"] = metrics.get("primary_source") or result.source
             logger.info(
                 "%s aportó %s campos para %s (origen %s)",
