@@ -114,6 +114,12 @@ class DataAgent:
             "earnings_growth_next_y": {"EPS next Y"},
             "earnings_growth_next_5y": {"EPS next 5Y"},
             "earnings_growth_qoq": {"EPS Q/Q"},
+            # Mejora #3: Métricas de valoración basadas en caja
+            "ev_to_ebit": {"EV/EBIT"},
+            "fcf_yield": {"FCF Yield", "Free Cash Flow Yield"},
+            "enterprise_value": {"Enterprise Value", "EV"},
+            "free_cash_flow": {"Free Cash Flow", "FCF", "Free CF"},
+            "ebit": {"EBIT", "Operating Income"},
         }
         self.metric_priority = {
             "current_price": [
@@ -163,6 +169,12 @@ class DataAgent:
             "roic",
             "operating_margin",
             "net_margin",
+            # Mejora #3: Métricas basadas en caja (TIER1 valuation)
+            "ev_to_ebit",
+            "fcf_yield",
+            "enterprise_value",
+            "free_cash_flow",
+            "ebit",
         ]
         self.alpha_client = AlphaVantageClient()
         self.twelve_client = TwelveDataClient()
@@ -308,6 +320,9 @@ class DataAgent:
                         ", ".join(disp_result["sources"])
                     )
 
+        # Calcular métricas derivadas (FCF Yield, EV/EBIT, etc.) - Mejora #3
+        metrics = self._calculate_derived_metrics(metrics)
+        
         metrics = self._finalize_metrics(metrics)
         
         # Adjuntar información de dispersión
@@ -1632,6 +1647,56 @@ class DataAgent:
             "service unavailable",
         ]
         return any(keyword in normalized for keyword in suspicious_keywords)
+    
+    def _calculate_derived_metrics(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Calcula métricas derivadas a partir de métricas base.
+        
+        Mejora #3 (IMPROVEMENT_PLAN.md):
+        - FCF Yield = Free Cash Flow / Market Cap * 100
+        - EV/EBIT = Enterprise Value / EBIT (si no viene directamente)
+        
+        Args:
+            metrics: Dict con métricas base
+        
+        Returns:
+            Dict con métricas actualizadas (incluyendo derivadas)
+        """
+        # FCF Yield = FCF / Market Cap
+        # Métrica clave para valoración TIER1 (mide retorno de caja por dólar invertido)
+        if "free_cash_flow" in metrics and "market_cap" in metrics:
+            fcf = metrics.get("free_cash_flow")
+            mcap = metrics.get("market_cap")
+            
+            if fcf is not None and mcap is not None and mcap > 0:
+                fcf_yield = (fcf / mcap) * 100
+                metrics["fcf_yield"] = fcf_yield
+                self.provenance["fcf_yield"] = "calculated:fcf/mcap"
+                logger.debug(
+                    "Métrica derivada: FCF Yield = %.2f%% (FCF: %s, MCap: %s)",
+                    fcf_yield,
+                    fcf,
+                    mcap
+                )
+        
+        # EV/EBIT = Enterprise Value / EBIT
+        # Múltiplo preferido vs EV/EBITDA (no incluye D&A que puede distorsionar)
+        if "enterprise_value" in metrics and "ebit" in metrics:
+            ev = metrics.get("enterprise_value")
+            ebit = metrics.get("ebit")
+            
+            if ev is not None and ebit is not None and abs(ebit) > 1e-6:
+                ev_to_ebit = ev / ebit
+                metrics["ev_to_ebit"] = ev_to_ebit
+                self.provenance["ev_to_ebit"] = "calculated:ev/ebit"
+                logger.debug(
+                    "Métrica derivada: EV/EBIT = %.2f (EV: %s, EBIT: %s)",
+                    ev_to_ebit,
+                    ev,
+                    ebit
+                )
+        
+        return metrics
 
     def _calculate_dispersion(self, metric_name: str, source_results: List[SourceResult]) -> Optional[Dict[str, Any]]:
         """

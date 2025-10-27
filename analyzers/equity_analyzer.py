@@ -314,10 +314,117 @@ class EquityAnalyzer(BaseAnalyzer):
     def _calculate_valuation(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
         """
         Score de VALORACIÓN (0-100).
+        
+        Mejora #3: Sistema de 2 niveles (TIER1 y TIER2)
+        
+        TIER 1 (preferido): EV/EBIT + FCF Yield
+            - Métricas basadas en caja libre (más confiables)
+            - Requiere: ev_to_ebit Y fcf_yield
+        
+        TIER 2 (fallback): P/E + PEG + P/B
+            - Múltiplos tradicionales (sistema actual)
+            - Se usa si faltan métricas TIER1
 
-        Evalúa: P/E, PEG, P/B
         Score ALTO = BARATO (buena valoración)
         Score BAJO = CARO (mala valoración)
+        """
+        # Intentar TIER 1 primero (métricas basadas en caja)
+        ev_ebit = metrics.get("ev_to_ebit")
+        fcf_yield = metrics.get("fcf_yield")
+        
+        if ev_ebit is not None and fcf_yield is not None:
+            return self._tier1_valuation(ev_ebit, fcf_yield, metrics)
+        
+        # Fallback a TIER 2 (múltiplos tradicionales)
+        return self._tier2_valuation(metrics)
+    
+    def _tier1_valuation(self, ev_ebit: float, fcf_yield: float, metrics: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Valoración TIER1: Basada en caja libre (EV/EBIT + FCF Yield).
+        
+        EV/EBIT:
+        - Menos sensible a políticas contables vs EV/EBITDA
+        - Refleja valor empresarial vs ganancias operativas
+        
+        FCF Yield:
+        - Retorno de caja por dólar invertido
+        - > 10% = excelente generación de caja
+        
+        Args:
+            ev_ebit: Enterprise Value / EBIT
+            fcf_yield: Free Cash Flow / Market Cap * 100
+            metrics: Dict completo (para metadata)
+        
+        Returns:
+            Dict con score, components, used
+        """
+        components = []
+        used: List[str] = []
+        
+        # EV/EBIT Score (60% del peso TIER1)
+        if ev_ebit > 0:  # Validar positivo (EBIT negativo invalida el ratio)
+            if ev_ebit < 8:
+                ev_score = 100  # Muy barato
+            elif ev_ebit < 12:
+                ev_score = 85
+            elif ev_ebit < 15:
+                ev_score = 70
+            elif ev_ebit < 20:
+                ev_score = 50
+            elif ev_ebit < 25:
+                ev_score = 35
+            else:
+                ev_score = 20  # Caro
+            
+            components.append(("EV/EBIT", ev_score, 0.60))
+            used.append(f"EV/EBIT: {ev_ebit:.2f}")
+        
+        # FCF Yield Score (40% del peso TIER1)
+        # Yield positivo = empresa genera caja (bueno)
+        # Yield negativo = quema caja (malo)
+        if fcf_yield > 10:
+            fcf_score = 100  # Excelente generación de caja
+        elif fcf_yield > 7:
+            fcf_score = 85
+        elif fcf_yield > 5:
+            fcf_score = 70
+        elif fcf_yield > 3:
+            fcf_score = 50
+        elif fcf_yield > 0:
+            fcf_score = 30   # Genera caja pero poco
+        else:
+            fcf_score = 10   # Quema caja (FCF negativo)
+        
+        components.append(("FCF Yield", fcf_score, 0.40))
+        used.append(f"FCF Yield: {fcf_yield:.1f}%")
+        
+        # Calcular score ponderado
+        if components:
+            total_weight = sum(w for _, _, w in components)
+            weighted_sum = sum(s * w for _, s, w in components)
+            final_score = weighted_sum / total_weight if total_weight > 0 else 0
+        else:
+            final_score = 0
+        
+        return {
+            "score": final_score,
+            "components": [{"metric": m, "score": s, "weight": w} for m, s, w in components],
+            "used_metrics": used if used else ["Sin datos de valoración"],
+            "tier": "TIER1",  # Metadata para debugging
+            "method": "cash_flow_based"
+        }
+    
+    def _tier2_valuation(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Valoración TIER2: Múltiplos tradicionales (P/E + PEG + P/B).
+        
+        Sistema original, se usa como fallback si no hay métricas TIER1.
+        
+        Args:
+            metrics: Dict con métricas financieras
+        
+        Returns:
+            Dict con score, components, used
         """
         components = []
         used: List[str] = []
@@ -378,7 +485,10 @@ class EquityAnalyzer(BaseAnalyzer):
             components.append(("P/B", score, self.valuation_weights["price_to_book"]))
             used.append(f"P/B: {pb:.2f}")
 
-        return self._weighted_result(components, used, "Sin datos de valoración")
+        result = self._weighted_result(components, used, "Sin datos de valoración")
+        result["tier"] = "TIER2"  # Metadata para debugging
+        result["method"] = "traditional_multiples"
+        return result
 
     def _calculate_health(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
         """Score de SALUD FINANCIERA (0-100)."""
