@@ -21,7 +21,6 @@ import requests
 
 from data_agent import DataAgent, METRIC_SCHEMA_VERSION
 from analyzers import EquityAnalyzer, ETFAnalyzer  # Modular architecture
-from rvc_calculator import RVCCalculator
 from investment_calculator import InvestmentCalculator
 from usage_limiter import get_limiter
 
@@ -96,7 +95,6 @@ logger.info(f"Nivel de logging: {LOG_LEVEL}")
 logger.info("=" * 60)
 
 data_agent = DataAgent()
-rvc_calculator = RVCCalculator()
 investment_scorer = InvestmentScorer()
 etf_analyzer = ETFAnalyzer()
 investment_calculator = InvestmentCalculator()
@@ -286,7 +284,6 @@ def prepare_analysis_response(
 
     if asset_type == "EQUITY" and analysis_allowed:
         investment_scores = investment_scorer.calculate_all_scores(metrics)
-        rvc_score = rvc_calculator.calculate_score(metrics)
     elif asset_type == "ETF":
         investment_scores = None
         etf_summary = etf_analyzer.analyze(metrics)
