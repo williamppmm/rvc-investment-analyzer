@@ -284,6 +284,21 @@ def prepare_analysis_response(
 
     if asset_type == "EQUITY" and analysis_allowed:
         investment_scores = investment_scorer.calculate_all_scores(metrics)
+        # Adaptar formato de investment_scores a rvc_score para compatibilidad
+        rvc_score = {
+            "total_score": investment_scores.get("investment_score"),
+            "classification": investment_scores.get("category", "No evaluado"),
+            "recommendation": investment_scores.get("recommendation"),
+            "breakdown": {
+                "calidad": investment_scores["breakdown"]["quality"],
+                "valoracion": investment_scores["breakdown"]["valuation"],
+                "salud": investment_scores["breakdown"]["health"],
+                "crecimiento": investment_scores["breakdown"]["growth"],
+            },
+            "data_completeness": investment_scores.get("data_completeness", 0),
+            "confidence_level": investment_scores.get("confidence_level", "Media"),
+            "confidence_factors": investment_scores.get("confidence_factors", {}),
+        }
     elif asset_type == "ETF":
         investment_scores = None
         etf_summary = etf_analyzer.analyze(metrics)
