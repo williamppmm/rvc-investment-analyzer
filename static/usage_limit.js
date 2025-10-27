@@ -31,7 +31,7 @@ class UsageLimitManager {
                         </button>
                         <div class="limit-modal-icon">🎯</div>
                         <h2>Límite de Consultas Alcanzado</h2>
-                        <p>Has utilizado todas tus consultas gratuitas de esta semana</p>
+                        <p>Has utilizado todas tus consultas gratuitas hoy</p>
                     </div>
 
                     <div class="limit-modal-body">
@@ -89,7 +89,7 @@ class UsageLimitManager {
                                     </div>
                                     <ul class="plan-features">
                                         <li>200 consultas diarias (10x más)</li>
-                                        <li>APIs premium (Alpha Vantage, Twelve Data)</li>
+                                        <li>APIs premium (Alpha Vantage, Twelve Data, FMP)</li>
                                         <li>Datos en tiempo real</li>
                                         <li>Soporte prioritario</li>
                                         <li>Contribuyes al sostenimiento del proyecto</li>
