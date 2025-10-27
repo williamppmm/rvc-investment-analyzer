@@ -139,8 +139,8 @@ class DataAgent:
             "current_price": [
                 "manual_override",
                 # Prefer structured API sources over scraped HTML to avoid mis-parsing/scaling issues
+                "fmp",             # ← FMP ahora es primera prioridad
                 "twelvedata",
-                "fmp",
                 "alpha_vantage",
                 "yahoo",
                 "finviz",
@@ -150,8 +150,8 @@ class DataAgent:
             "market_cap": [
                 "manual_override",
                 # Prefer structured API sources over scraped HTML to avoid mis-parsing/scaling issues
+                "fmp",             # ← FMP ahora es primera prioridad
                 "twelvedata",
-                "fmp",
                 "alpha_vantage",
                 "yahoo",
                 "finviz",
@@ -270,18 +270,18 @@ class DataAgent:
         }
 
         # Cascada de fuentes optimizada (orden de prioridad)
-        # 1. AlphaVantage: API premium con fundamentales completos
-        # 2. TwelveData: API premium con precio en tiempo real
-        # 3. Finviz: Scraping confiable como respaldo (funciona sin API key)
-        # 4. Yahoo: Último recurso para métricas básicas
-        # 5. FMP: Reservado para producción (límite gratuito bajo)
+        # 1. FMP (Financial Modeling Prep): API premium con datos completos y actualizados
+        # 2. AlphaVantage: API premium con fundamentales completos
+        # 3. TwelveData: API premium con precio en tiempo real
+        # 4. Finviz: Scraping confiable como respaldo (funciona sin API key)
+        # 5. Yahoo: Último recurso para métricas básicas
         # 6. MarketWatch: Backup adicional
         sources = [
+            self._fetch_fmp,           # ← Primera prioridad
             self._fetch_alpha_vantage,
             self._fetch_twelve_data,
-            self._fetch_finviz,        # ← Movido antes de FMP/Yahoo
+            self._fetch_finviz,
             self._fetch_yahoo,
-            self._fetch_fmp,           # ← Después de Finviz
             self._fetch_marketwatch,
             self._fetch_example_data,
         ]
@@ -340,8 +340,30 @@ class DataAgent:
                     attempted - added_count,
                 )
 
-            if self._calculate_completeness(metrics) >= 80:
+            # Calcular completitud actual
+            current_completeness = self._calculate_completeness(metrics)
+
+            # OPTIMIZACIÓN: Si FMP proporcionó datos completos (≥75%), no consultar otras APIs
+            # Esto ahorra cuota de API y reduce latencia
+            # Nota: FMP no proporciona peg_ratio, revenue_growth, earnings_growth de forma confiable
+            # pero sí cubre todas las métricas de calidad/salud (9/12 métricas = 75%)
+            if result.source == "fmp" and current_completeness >= 75:
+                logger.info(
+                    "✓ FMP proporcionó datos suficientes (%.1f%%) para %s - omitiendo otras fuentes",
+                    current_completeness,
+                    ticker
+                )
                 break
+
+            # Para otras fuentes o si FMP no alcanzó 75%, usar umbral estándar de 80%
+            if current_completeness >= 80:
+                logger.info(
+                    "✓ Completitud alcanzada (%.1f%%) para %s - finalizando consultas",
+                    current_completeness,
+                    ticker
+                )
+                break
+
             time.sleep(0.6)
 
         # Calcular dispersión para métricas críticas (solo si tenemos múltiples fuentes)
@@ -660,6 +682,13 @@ class DataAgent:
                 if parsed_cap is not None:
                     data.setdefault("market_cap", parsed_cap)
                     prov["market_cap"] = "fmp:quote"
+            # Extraer PE ratio del quote
+            pe = quote.get("pe")
+            if pe is not None:
+                parsed_pe = self._parse_number(str(pe))
+                if parsed_pe is not None:
+                    data.setdefault("pe_ratio", parsed_pe)
+                    prov["pe_ratio"] = "fmp:quote"
 
         ratios = self.fmp_client.get_ratios(ticker)
         if ratios:
@@ -671,6 +700,8 @@ class DataAgent:
                 "current_ratio": ratios.get("currentRatioTTM"),
                 "quick_ratio": ratios.get("quickRatioTTM"),
                 "debt_to_equity": ratios.get("debtEquityRatioTTM"),
+                "pe_ratio": ratios.get("priceEarningsRatioTTM"),
+                "price_to_book": ratios.get("priceToBookRatioTTM"),
             }
             for field, value in ratio_map.items():
                 if value is None:
@@ -1838,16 +1869,16 @@ class DataAgent:
                 "quality": "SINGLE_SOURCE"
             }
         
-        # PRIORIZACIÓN: Si tenemos AlphaVantage + TwelveData, usar SOLO esas (ignorar Yahoo/scraping)
-        premium_sources = ["alpha_vantage", "twelvedata"]
+        # PRIORIZACIÓN: Si tenemos FMP + otras fuentes premium, usar SOLO esas (ignorar Yahoo/scraping)
+        premium_sources = ["fmp", "alpha_vantage", "twelvedata"]
         premium_values = []
         premium_source_names = []
-        
+
         for i, source in enumerate(sources):
             if source in premium_sources:
                 premium_values.append(values[i])
                 premium_source_names.append(source)
-        
+
         # Si tenemos 2+ fuentes premium, usar solo esas (mejor calidad)
         if len(premium_values) >= 2:
             values = premium_values
