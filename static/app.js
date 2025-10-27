@@ -245,6 +245,20 @@ function displayResults(data) {
     } else {
         etfSection.classList.add("hidden");
     }
+
+    // Renderizar gráfico RVC Compass si es una acción analizable
+    if (analysisAllowed && window.RVCCompass) {
+        // Actualizar nombre en la descripción
+        const compassTickerName = document.getElementById("compass-ticker-name");
+        if (compassTickerName) {
+            compassTickerName.textContent = data.company_name || data.ticker;
+        }
+        // Mostrar y renderizar el gráfico
+        window.RVCCompass.show(data);
+    } else if (window.RVCCompass) {
+        // Ocultar el gráfico si no es analizable
+        window.RVCCompass.hide();
+    }
 }
 
 function updateDimension(prefix, dimData, isEtf) {

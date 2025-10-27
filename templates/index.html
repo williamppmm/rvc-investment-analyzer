@@ -101,6 +101,19 @@
             </div>
         </div>
 
+        <!-- RVC Compass - Visualización interactiva -->
+        <section id="rvc-compass-section" class="rvc-compass-section hidden">
+            <h3>Brújula RVC: Mapa de Calidad vs Valoración</h3>
+            <p class="compass-description">
+                Este mapa interactivo muestra la posición de <strong id="compass-ticker-name">la empresa</strong>
+                en un grid de 9 cuadrantes. El <strong>tamaño del punto</strong> representa la salud financiera,
+                el <strong>anillo externo</strong> indica el potencial de crecimiento, y el <strong>estilo del borde</strong>
+                muestra el nivel de confianza (sólido=alta, punteado=baja). Las zonas verdes son oportunidades ideales,
+                las rojas indican alto riesgo. Usa el cursor para explorar cada zona y ver detalles completos.
+            </p>
+            <div id="rvc-compass-chart" class="rvc-compass-chart"></div>
+        </section>
+
         <div class="metrics-found">
             <h3>Métricas encontradas</h3>
             <div id="metrics-grid" class="metrics-grid"></div>
@@ -131,5 +144,6 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='rvc_compass.js') }}?v=2.0"></script>
 <script src="{{ url_for('static', filename='app.js') }}"></script>
 {% endblock %}

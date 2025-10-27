@@ -1832,3 +1832,202 @@ footer {
         font-size: 0.85rem;
     }
 }
+
+/* ============================================
+   RVC COMPASS - VISUALIZACIÓN INTERACTIVA
+   ============================================ */
+
+.rvc-compass-section {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-2xl);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.rvc-compass-section:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.rvc-compass-section h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.compass-description {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-md);
+    background: var(--bg);
+    border-left: 4px solid var(--primary);
+    border-radius: var(--radius-sm);
+}
+
+.compass-description strong {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.rvc-compass-chart {
+    min-height: 500px;
+    width: 100%;
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+}
+
+/* Leyenda del gráfico */
+.rvc-compass-legend {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+}
+
+.legend-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: var(--spacing-md);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.legend-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.legend-icon {
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+/* Animación de entrada */
+.rvc-compass-section:not(.hidden) {
+    animation: slideInUp 0.4s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive - Tablets */
+@media (max-width: 960px) {
+    .rvc-compass-section {
+        padding: var(--spacing-xl);
+    }
+
+    .rvc-compass-chart {
+        min-height: 450px;
+    }
+
+    .legend-items {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Responsive - Móviles */
+@media (max-width: 700px) {
+    .rvc-compass-section {
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .rvc-compass-section h3 {
+        font-size: 1.25rem;
+    }
+
+    .compass-description {
+        font-size: 0.9rem;
+        padding: var(--spacing-sm);
+    }
+
+    .rvc-compass-chart {
+        min-height: 400px;
+        padding: 0;
+    }
+
+    .rvc-compass-legend {
+        padding: var(--spacing-md);
+    }
+
+    .legend-title {
+        font-size: 0.85rem;
+    }
+
+    .legend-items {
+        gap: var(--spacing-sm);
+    }
+
+    .legend-item {
+        font-size: 0.8rem;
+    }
+}
+
+/* Responsive - Móviles pequeños */
+@media (max-width: 480px) {
+    .rvc-compass-section {
+        padding: var(--spacing-md);
+    }
+
+    .rvc-compass-section h3 {
+        font-size: 1.1rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-xs);
+    }
+
+    .compass-description {
+        font-size: 0.85rem;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .rvc-compass-chart {
+        min-height: 350px;
+    }
+
+    .rvc-compass-legend {
+        padding: var(--spacing-sm);
+    }
+
+    .legend-title {
+        font-size: 0.8rem;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .legend-item {
+        font-size: 0.75rem;
+        gap: var(--spacing-xs);
+    }
+
+    .legend-icon {
+        width: 10px !important;
+        height: 10px !important;
+    }
+}
