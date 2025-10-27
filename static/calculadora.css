@@ -369,17 +369,207 @@
     }
 }
 
-@media (max-width: 768px) {
-    .calc-tabs {
-        flex-direction: column;
+/* ============================================
+   RESPONSIVE DESIGN - CALCULADORA
+   ============================================ */
+
+/* Tablets y pantallas medianas */
+@media (max-width: 1024px) {
+    .scenario-cards {
+        grid-template-columns: repeat(2, 1fr);
     }
 
+    .results-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    /* Tabs apilados verticalmente */
+    .calc-tabs {
+        flex-direction: column;
+        gap: 0;
+        border-bottom: none;
+    }
+
+    .calc-tab {
+        width: 100%;
+        text-align: left;
+        border-bottom: none;
+        border-left: 3px solid transparent;
+        padding: var(--spacing-md);
+        font-size: 0.95rem;
+    }
+
+    .calc-tab.active {
+        border-left-color: var(--primary);
+        border-bottom-color: transparent;
+    }
+
+    /* Escenarios en columna única */
+    .scenario-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .scenario-card {
+        padding: var(--spacing-lg);
+    }
+
+    /* Resultados en columna única */
     .results-grid {
         grid-template-columns: 1fr;
     }
 
+    /* Formularios */
     .form-grid {
         grid-template-columns: 1fr;
+    }
+
+    /* Inputs más grandes para touch */
+    .form-group input,
+    .form-group select {
+        min-height: 48px;
+        font-size: 1rem;
+        padding: var(--spacing-md);
+    }
+
+    /* Chart container */
+    .chart-container {
+        padding: var(--spacing-lg);
+        overflow-x: auto;
+    }
+
+    /* Tooltips informativos */
+    .info-tooltip .tooltip-content {
+        width: 250px;
+        font-size: 0.85rem;
+    }
+
+    /* Tabla anual responsive */
+    .yearly-table {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .yearly-table table {
+        min-width: 600px;
+    }
+
+    .yearly-table th,
+    .yearly-table td {
+        padding: var(--spacing-sm);
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+}
+
+/* Móviles */
+@media (max-width: 480px) {
+    /* Secciones más compactas */
+    .calc-section {
+        padding: var(--spacing-md);
+    }
+
+    /* Tabs más compactos */
+    .calc-tab {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.9rem;
+    }
+
+    /* Escenarios más compactos */
+    .scenario-card {
+        padding: var(--spacing-md);
+    }
+
+    .scenario-title {
+        font-size: 0.95rem;
+    }
+
+    .scenario-return {
+        font-size: 1.3rem !important;
+    }
+
+    .scenario-desc {
+        font-size: 0.8rem;
+    }
+
+    /* Resultados más compactos */
+    .result-card {
+        padding: var(--spacing-md);
+    }
+
+    .result-card .label {
+        font-size: 0.85rem;
+    }
+
+    .result-card .value {
+        font-size: 1.6rem;
+    }
+
+    .result-card .subvalue {
+        font-size: 0.85rem;
+    }
+
+    /* Chart más compacto */
+    .chart-container {
+        padding: var(--spacing-md);
+    }
+
+    /* Inputs compactos pero táctiles */
+    .form-group input,
+    .form-group select {
+        min-height: 44px;
+        font-size: 0.95rem;
+    }
+
+    .form-group label {
+        font-size: 0.9rem;
+    }
+
+    .field-hint {
+        font-size: 0.75rem;
+    }
+
+    /* Símbolos de input */
+    .input-prefix,
+    .input-suffix {
+        font-size: 0.85rem;
+    }
+
+    /* Tooltips más pequeños */
+    .info-tooltip {
+        width: 16px;
+        height: 16px;
+        font-size: 0.7rem;
+    }
+
+    .info-tooltip .tooltip-content {
+        width: 220px;
+        padding: var(--spacing-sm);
+        font-size: 0.8rem;
+    }
+
+    /* Tabla scroll con indicador visual */
+    .yearly-table {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+    }
+
+    .yearly-table::after {
+        content: '← Desliza para ver más →';
+        display: block;
+        text-align: center;
+        padding: var(--spacing-xs);
+        background: var(--bg);
+        color: var(--muted);
+        font-size: 0.75rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .yearly-table th,
+    .yearly-table td {
+        padding: 6px 8px;
+        font-size: 0.8rem;
     }
 }
 

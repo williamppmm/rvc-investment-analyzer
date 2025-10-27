@@ -506,54 +506,308 @@
     display: none !important;
 }
 
-/* Responsive */
+/* ============================================
+   RESPONSIVE DESIGN - COMPARADOR
+   ============================================ */
+
+/* Tablets y pantallas medianas */
 @media (max-width: 1024px) {
+    /* Inputs de ticker en una sola columna */
     .ticker-inputs {
         grid-template-columns: 1fr;
     }
 
+    /* Conclusiones en una sola columna */
     .conclusion-grid {
         grid-template-columns: 1fr;
     }
 
+    /* Ranking card con menos columnas */
     .ranking-card {
-        grid-template-columns: 50px 1fr;
+        grid-template-columns: 60px 1fr;
         gap: var(--spacing-md);
     }
 
     .rank-score,
     .rank-recommendation {
         grid-column: 2 / -1;
+        margin-top: var(--spacing-sm);
+    }
+
+    .rank-ticker {
+        font-size: 1.3rem;
     }
 }
 
 @media (max-width: 768px) {
+    /* Header */
     .header-content {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
+        gap: var(--spacing-md);
     }
 
+    /* Tabs verticales */
     .tabs {
         flex-direction: column;
         border-bottom: none;
+        gap: 0;
     }
 
     .tab-btn {
+        width: 100%;
+        text-align: left;
         border-bottom: none;
         border-left: 3px solid transparent;
-        text-align: left;
+        padding: var(--spacing-md);
+        font-size: 0.95rem;
     }
 
     .tab-btn.active {
         border-left-color: var(--primary);
+        border-bottom-color: transparent;
+    }
+
+    /* Inputs de ticker */
+    .ticker-input-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .ticker-input-row label {
+        min-width: auto;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .ticker-input {
+        min-height: 48px;
+        font-size: 1rem;
+    }
+
+    /* Botones de acción */
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .action-buttons .btn {
+        width: 100%;
+        min-height: 48px;
+    }
+
+    /* Ranking cards más compactas */
+    .ranking-card {
+        grid-template-columns: 50px 1fr;
+        padding: var(--spacing-md);
+        gap: var(--spacing-sm);
+    }
+
+    .rank-position {
+        font-size: 1.6rem;
+    }
+
+    .rank-ticker {
+        font-size: 1.2rem;
+    }
+
+    .rank-company {
+        font-size: 0.9rem;
+    }
+
+    .rank-confidence {
+        font-size: 0.85rem;
+    }
+
+    /* Tabla de comparación */
+    .comparison-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .comparison-table {
         font-size: 0.85rem;
+        min-width: 700px;
     }
 
     .comparison-table th,
     .comparison-table td {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        white-space: nowrap;
+    }
+
+    /* Charts más compactos */
+    .chart-container {
+        padding: var(--spacing-md);
+        overflow-x: auto;
+    }
+
+    .chart-legend {
+        padding: var(--spacing-md);
+    }
+
+    .chart-legend ul {
+        font-size: 0.85rem;
+    }
+
+    /* Conclusiones */
+    .conclusion-card {
+        padding: var(--spacing-md);
+    }
+
+    .conclusion-card h3 {
+        font-size: 1.3rem;
+    }
+
+    .conclusion-card .score-big {
+        font-size: 2.2rem;
+    }
+}
+
+/* Móviles */
+@media (max-width: 480px) {
+    /* Secciones más compactas */
+    .selector-section,
+    .ranking-section,
+    .visualization-section,
+    .table-section,
+    .conclusion-section {
+        padding: var(--spacing-md);
+    }
+
+    /* Tabs más pequeños */
+    .tab-btn {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.9rem;
+    }
+
+    /* Inputs más compactos pero táctiles */
+    .ticker-input {
+        min-height: 44px;
+        font-size: 0.95rem;
+        padding: var(--spacing-sm);
+    }
+
+    .action-buttons .btn {
+        min-height: 44px;
+        font-size: 0.95rem;
+    }
+
+    /* Ranking ultra compacto */
+    .ranking-card {
+        grid-template-columns: 45px 1fr;
+        padding: var(--spacing-sm);
+    }
+
+    .rank-position {
+        font-size: 1.4rem;
+    }
+
+    .rank-ticker {
+        font-size: 1.1rem;
+    }
+
+    .rank-info {
+        gap: 0.15rem;
+    }
+
+    .rank-company {
+        font-size: 0.85rem;
+    }
+
+    .rank-confidence {
+        font-size: 0.8rem;
+    }
+
+    .rank-score {
+        margin-top: var(--spacing-xs);
+    }
+
+    .rank-score .score-number {
+        font-size: 1.3rem;
+    }
+
+    .rank-score .score-label {
+        font-size: 0.8rem;
+    }
+
+    .rank-recommendation {
         padding: var(--spacing-xs);
+        font-size: 0.8rem;
+    }
+
+    /* Tabla de comparación scroll mejorado */
+    .comparison-table-container {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+    }
+
+    .comparison-table-container::after {
+        content: '← Desliza →';
+        display: block;
+        text-align: center;
+        padding: 6px;
+        background: var(--bg);
+        color: var(--muted);
+        font-size: 0.75rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .comparison-table {
+        font-size: 0.8rem;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+        padding: 6px 8px;
+    }
+
+    /* Charts */
+    .chart-container {
+        padding: var(--spacing-sm);
+    }
+
+    .chart-legend {
+        padding: var(--spacing-sm);
+    }
+
+    .chart-legend h4 {
+        font-size: 1rem;
+    }
+
+    .chart-legend ul {
+        font-size: 0.8rem;
+    }
+
+    /* Conclusiones compactas */
+    .conclusion-card {
+        padding: var(--spacing-sm);
+    }
+
+    .conclusion-card h3 {
+        font-size: 1.1rem;
+    }
+
+    .conclusion-card .score-big {
+        font-size: 1.8rem;
+    }
+
+    .conclusion-card .category-badge {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+    }
+
+    .conclusion-card .reason {
+        font-size: 0.85rem;
+        padding: var(--spacing-sm);
+    }
+
+    /* Loading spinner */
+    .loading {
+        font-size: 0.95rem;
+        padding: var(--spacing-md);
+    }
+
+    .spinner {
+        width: 32px;
+        height: 32px;
     }
 }

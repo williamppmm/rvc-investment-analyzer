@@ -551,65 +551,266 @@
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN
+   RESPONSIVE DESIGN - TOP OPPORTUNITIES
    ========================================================================== */
 
-@media (max-width: 768px) {
+/* Tablets y pantallas medianas */
+@media (max-width: 1024px) {
     .filters-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
+    .opportunities-table {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Filtros en una columna */
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Stats en dos columnas */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+
+    /* Header de resultados */
     .results-header {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
+        gap: var(--spacing-md);
     }
-    
+
+    .results-title {
+        font-size: 1.3rem;
+    }
+
+    .results-count {
+        font-size: 0.9rem;
+    }
+
+    /* Tabla con scroll horizontal */
     .table-container {
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
     }
-    
+
     .opportunities-table {
-        min-width: 800px;
+        min-width: 900px;
+        font-size: 0.85rem;
     }
-    
-    .quick-buttons {
-        justify-content: center;
+
+    .opportunities-table th,
+    .opportunities-table td {
+        padding: var(--spacing-sm);
+        white-space: nowrap;
     }
-    
+
+    /* Indicador de scroll */
+    .table-container::after {
+        content: '← Desliza para ver todas las columnas →';
+        display: block;
+        text-align: center;
+        padding: var(--spacing-xs);
+        background: var(--bg);
+        color: var(--muted);
+        font-size: 0.75rem;
+        border-top: 1px solid var(--border);
+        position: sticky;
+        bottom: 0;
+        left: 0;
+    }
+
+    /* Filtros */
+    .filters-card {
+        padding: var(--spacing-lg);
+    }
+
+    .filter-select,
+    .filter-slider {
+        min-height: 44px;
+    }
+
+    .filter-label {
+        font-size: 0.85rem;
+    }
+
+    /* Botones de filtros */
     .filters-actions {
         justify-content: stretch;
     }
-    
+
     .btn {
         flex: 1;
         justify-content: center;
+        min-height: 48px;
+    }
+
+    /* Quick actions */
+    .quick-buttons {
+        justify-content: center;
+        gap: var(--spacing-sm);
+    }
+
+    .quick-btn {
+        font-size: 0.85rem;
+    }
+
+    /* Stat cards */
+    .stat-card {
+        padding: var(--spacing-md);
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
     }
 }
 
 @media (max-width: 480px) {
+    /* Stats en una columna */
     .stats-grid {
         grid-template-columns: 1fr;
     }
-    
+
+    /* Stat cards con diseño centrado */
     .stat-card {
         flex-direction: column;
         text-align: center;
+        padding: var(--spacing-sm);
     }
-    
+
     .stat-icon {
-        margin-bottom: var(--spacing-sm);
+        margin-bottom: var(--spacing-xs);
+        margin-right: 0;
     }
-    
+
+    .stat-value {
+        font-size: 1.3rem;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+    }
+
+    /* Filtros más compactos */
     .filters-card {
+        padding: var(--spacing-md);
+    }
+
+    .filters-title {
+        font-size: 1.1rem;
+    }
+
+    .filter-label {
+        font-size: 0.8rem;
+    }
+
+    .filter-select {
+        min-height: 44px;
+        font-size: 0.9rem;
+    }
+
+    .slider-labels {
+        font-size: 0.75rem;
+    }
+
+    /* Botones más compactos pero táctiles */
+    .btn {
+        min-height: 44px;
+        font-size: 0.9rem;
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    /* Tabla ultra compacta */
+    .opportunities-table {
+        min-width: 800px;
+        font-size: 0.8rem;
+    }
+
+    .opportunities-table th,
+    .opportunities-table td {
+        padding: 6px 8px;
+    }
+
+    /* Scroll indicator más visible */
+    .table-container::after {
+        font-size: 0.7rem;
+        padding: 6px;
+        font-weight: 600;
+    }
+
+    /* Quick actions */
+    .quick-actions {
+        padding: var(--spacing-md);
+    }
+
+    .quick-actions h3 {
+        font-size: 1rem;
+    }
+
+    .quick-buttons {
+        flex-direction: column;
+    }
+
+    .quick-btn {
+        width: 100%;
+        text-align: center;
+        font-size: 0.85rem;
+    }
+
+    /* Empty state */
+    .empty-state {
         padding: var(--spacing-lg);
     }
-    
-    .quick-actions {
-        padding: var(--spacing-lg);
+
+    .empty-icon {
+        font-size: 3rem;
+    }
+
+    .empty-state h3 {
+        font-size: 1.1rem;
+    }
+
+    .empty-state p {
+        font-size: 0.85rem;
+    }
+
+    /* Results header */
+    .results-title {
+        font-size: 1.2rem;
+    }
+
+    .results-count {
+        font-size: 0.85rem;
+    }
+}
+
+/* Landscape en móviles pequeños */
+@media (max-width: 768px) and (orientation: landscape) {
+    .table-container {
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .filters-card {
+        padding: var(--spacing-md);
+    }
+
+    .filters-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
