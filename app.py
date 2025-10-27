@@ -256,6 +256,11 @@ def save_cache(ticker: str, metrics: Dict[str, Any]) -> None:
 def save_score(ticker: str, score: Dict[str, Any]) -> None:
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
+        # Simplificar breakdown a solo scores para SQLite
+        simplified_breakdown = {
+            key: value["score"] if isinstance(value, dict) and "score" in value else value
+            for key, value in score["breakdown"].items()
+        }
         cursor.execute(
             """
             INSERT OR REPLACE INTO rvc_scores (ticker, score, classification, breakdown, last_calculated)
@@ -265,7 +270,7 @@ def save_score(ticker: str, score: Dict[str, Any]) -> None:
                 ticker,
                 score["total_score"],
                 score["classification"],
-                json.dumps(score["breakdown"]),
+                json.dumps(simplified_breakdown),
                 datetime.now().isoformat(timespec="seconds"),
             ),
         )
@@ -285,9 +290,10 @@ def prepare_analysis_response(
     if asset_type == "EQUITY" and analysis_allowed:
         investment_scores = investment_scorer.calculate_all_scores(metrics)
         # Adaptar formato de investment_scores a rvc_score para compatibilidad
+        category_info = investment_scores.get("category", {})
         rvc_score = {
             "total_score": investment_scores.get("investment_score"),
-            "classification": investment_scores.get("category", "No evaluado"),
+            "classification": category_info.get("name", "No evaluado") if isinstance(category_info, dict) else category_info,
             "recommendation": investment_scores.get("recommendation"),
             "breakdown": {
                 "calidad": investment_scores["breakdown"]["quality"],
