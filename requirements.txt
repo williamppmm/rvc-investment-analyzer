@@ -6,5 +6,8 @@ numpy==1.26.3
 lxml==5.0.0
 python-dotenv==1.0.1
 
+# Base de datos
+psycopg2-binary==2.9.9  # PostgreSQL para produccion
+
 # Servidor WSGI para producción
 gunicorn==21.2.0

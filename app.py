@@ -23,6 +23,7 @@ from data_agent import DataAgent, METRIC_SCHEMA_VERSION
 from analyzers import EquityAnalyzer, ETFAnalyzer  # Modular architecture
 from investment_calculator import InvestmentCalculator
 from usage_limiter import get_limiter
+from db_manager import get_db_manager
 
 # Alias para compatibilidad con código existente
 InvestmentScorer = EquityAnalyzer
@@ -98,6 +99,10 @@ data_agent = DataAgent()
 investment_scorer = InvestmentScorer()
 etf_analyzer = ETFAnalyzer()
 investment_calculator = InvestmentCalculator()
+
+# Inicializar gestor de base de datos (SQLite en dev, PostgreSQL en prod)
+db_manager = get_db_manager(DB_PATH)
+logger.info(f"Modo BD: {'PostgreSQL (produccion)' if db_manager.is_production else 'SQLite (desarrollo)'}")
 
 # ============================================
 # CONTADOR DE VISITAS - FILTRO ANTI-BOTS
@@ -391,31 +396,37 @@ def count_visit():
             return
         
         try:
-            conn = sqlite3.connect(DB_PATH)
+            conn = db_manager.get_connection()
             cursor = conn.cursor()
-            
+
             # Incrementar contador total
-            cursor.execute('''
-                UPDATE site_visits 
+            query = '''
+                UPDATE site_visits
                 SET total_visits = total_visits + 1,
                     last_updated = ?
                 WHERE id = 1
-            ''', (datetime.now().isoformat(),))
-            
+            '''
+            if db_manager.is_production:
+                query = query.replace('?', '%s')
+            cursor.execute(query, (datetime.now().isoformat(),))
+
             # Incrementar contador del día
             today = datetime.now().strftime('%Y-%m-%d')
-            cursor.execute('''
+            query = '''
                 INSERT INTO daily_visits (date, visits) VALUES (?, 1)
                 ON CONFLICT(date) DO UPDATE SET visits = visits + 1
-            ''', (today,))
-            
+            '''
+            if db_manager.is_production:
+                query = query.replace('?', '%s')
+            cursor.execute(query, (today,))
+
             conn.commit()
             conn.close()
-            
+
             # Marcar sesión como visitada
             session['visited'] = True
             session.permanent = False  # Expira con el navegador
-            
+
             logger.info("✓ Visita contada (sesión única)")
             
         except Exception as e:
@@ -531,22 +542,25 @@ def get_visit_count():
     Incluye visitas totales y del día actual.
     """
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = db_manager.get_connection()
         cursor = conn.cursor()
-        
+
         # Total visitas
         cursor.execute('SELECT total_visits FROM site_visits WHERE id = 1')
         result = cursor.fetchone()
         total = result[0] if result else 0
-        
+
         # Visitas del día
         today = datetime.now().strftime('%Y-%m-%d')
-        cursor.execute('SELECT visits FROM daily_visits WHERE date = ?', (today,))
+        query = 'SELECT visits FROM daily_visits WHERE date = ?'
+        if db_manager.is_production:
+            query = query.replace('?', '%s')
+        cursor.execute(query, (today,))
         result = cursor.fetchone()
         daily = result[0] if result else 0
-        
+
         conn.close()
-        
+
         return jsonify({
             'visits': total,
             'today': daily
