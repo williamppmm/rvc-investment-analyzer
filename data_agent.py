@@ -246,6 +246,9 @@ class DataAgent:
             self._fetch_example_data,
         ]
 
+        # Almacenar resultados para calcular dispersión
+        source_results = []
+
         for source in sources:
             logger.info("Consultando %s para %s", source.__name__, ticker)
             result = None
@@ -257,6 +260,9 @@ class DataAgent:
                 logger.info("%s no aportó datos para %s", source.__name__, ticker)
                 continue
 
+            # Guardar resultado para análisis de dispersión
+            source_results.append(result)
+
             for key, value in result.data.items():
                 if key in self.metric_priority:
                     self._update_metric(metrics, key, value, result.source)
@@ -265,7 +271,7 @@ class DataAgent:
                     continue
                 if metrics.get(key) is None:
                     metrics[key] = value
-                    self.provenance[key] = self._resolve_provenance_label(key, result.source)
+                    self.provenance[key] = self._resolve_provenance_label(key, source)
             metrics["primary_source"] = metrics.get("primary_source") or result.source
             logger.info(
                 "%s aportó %s campos para %s (origen %s)",
@@ -279,7 +285,35 @@ class DataAgent:
                 break
             time.sleep(0.6)
 
+        # Calcular dispersión para métricas críticas (solo si tenemos múltiples fuentes)
+        dispersion_data = {}
+        if len(source_results) >= 2:
+            for critical_metric in self.critical_metrics:
+                disp_result = self._calculate_dispersion(critical_metric, source_results)
+                if disp_result:
+                    # Usar valor consolidado (mediana) en vez de primera fuente
+                    metrics[critical_metric] = disp_result["value"]
+                    dispersion_data[critical_metric] = {
+                        "sources": disp_result["sources"],
+                        "cv": disp_result["dispersion"],
+                        "confidence_adj": disp_result["confidence_adj"],
+                        "quality": disp_result["quality"]
+                    }
+                    logger.info(
+                        "Dispersión para %s: CV=%.2f%%, confianza=%.2f, calidad=%s (fuentes: %s)",
+                        critical_metric,
+                        disp_result["dispersion"],
+                        disp_result["confidence_adj"],
+                        disp_result["quality"],
+                        ", ".join(disp_result["sources"])
+                    )
+
         metrics = self._finalize_metrics(metrics)
+        
+        # Adjuntar información de dispersión
+        if dispersion_data:
+            metrics["dispersion"] = dispersion_data
+        
         # Adjuntar trazabilidad de origen por métrica para depuración/auditoría.
         # Esto permite verificar rápidamente qué fuente aportó cada valor
         # (p. ej., alpha_vantage, fmp, twelvedata, scraping, override manual, etc.).
@@ -1598,3 +1632,104 @@ class DataAgent:
             "service unavailable",
         ]
         return any(keyword in normalized for keyword in suspicious_keywords)
+
+    def _calculate_dispersion(self, metric_name: str, source_results: List[SourceResult]) -> Optional[Dict[str, Any]]:
+        """
+        Calcula dispersión de una métrica entre múltiples fuentes.
+        
+        ESTRATEGIA:
+        - Prioriza fuentes premium (AlphaVantage + TwelveData) si ambas proveen el dato
+        - Calcula Coefficient of Variation (CV) para medir concordancia
+        - Usa mediana como valor consolidado (robusto a outliers)
+        - Ajusta confidence según dispersión (CV bajo = alta confianza)
+        
+        Args:
+            metric_name: Nombre de la métrica (ej: "pe_ratio")
+            source_results: Lista de resultados de todas las fuentes consultadas
+        
+        Returns:
+            Dict con:
+                - value: Valor consolidado (mediana)
+                - sources: Lista de fuentes que proveyeron el dato
+                - dispersion: Coefficient of Variation (0-100)
+                - confidence_adj: Factor de ajuste de confianza (0.5-1.0)
+                - quality: "PREMIUM_SOURCES", "MIXED_SOURCES", o "SINGLE_SOURCE"
+            None si ninguna fuente tiene el dato
+        """
+        import numpy as np
+        
+        # Recolectar valores de todas las fuentes
+        values = []
+        sources = []
+        
+        for result in source_results:
+            if metric_name in result.data and result.data[metric_name] is not None:
+                values.append(result.data[metric_name])
+                sources.append(result.source)
+        
+        # Sin datos
+        if len(values) == 0:
+            return None
+        
+        # Una sola fuente: sin dispersión calculable
+        if len(values) == 1:
+            return {
+                "value": values[0],
+                "sources": sources,
+                "dispersion": 0.0,
+                "confidence_adj": 1.0,
+                "quality": "SINGLE_SOURCE"
+            }
+        
+        # PRIORIZACIÓN: Si tenemos AlphaVantage + TwelveData, usar SOLO esas (ignorar Yahoo/scraping)
+        premium_sources = ["alpha_vantage", "twelvedata"]
+        premium_values = []
+        premium_source_names = []
+        
+        for i, source in enumerate(sources):
+            if source in premium_sources:
+                premium_values.append(values[i])
+                premium_source_names.append(source)
+        
+        # Si tenemos 2+ fuentes premium, usar solo esas (mejor calidad)
+        if len(premium_values) >= 2:
+            values = premium_values
+            sources = premium_source_names
+            quality = "PREMIUM_SOURCES"
+        else:
+            quality = "MIXED_SOURCES"
+        
+        # Valor consolidado: mediana (robusto a outliers)
+        consolidated_value = float(np.median(values))
+        
+        # Dispersión: Coefficient of Variation (CV = std/mean * 100)
+        mean_val = np.mean(values)
+        std_val = np.std(values)
+        
+        # Evitar división por cero
+        if abs(mean_val) < 1e-9:
+            cv = 0.0
+        else:
+            cv = (std_val / abs(mean_val)) * 100
+        
+        # Ajuste de confidence según dispersión
+        # CV bajo = fuentes concuerdan → alta confianza
+        # CV alto = fuentes discrepan → baja confianza
+        if cv < 5.0:
+            confidence_adj = 1.0     # Concordancia perfecta (AlphaVantage ≈ TwelveData)
+        elif cv < 10.0:
+            confidence_adj = 0.95    # Muy buena concordancia
+        elif cv < 20.0:
+            confidence_adj = 0.85    # Aceptable
+        elif cv < 40.0:
+            confidence_adj = 0.70    # Discrepante (posible problema con una fuente)
+        else:
+            confidence_adj = 0.50    # Muy discrepante (datos sospechosos)
+        
+        return {
+            "value": consolidated_value,
+            "sources": sources,
+            "dispersion": float(cv),
+            "confidence_adj": float(confidence_adj),
+            "quality": quality
+        }
