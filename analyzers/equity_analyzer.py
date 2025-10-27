@@ -131,7 +131,16 @@ class EquityAnalyzer(BaseAnalyzer):
         valuation_score = valuation_result["score"]
 
         # 4. SALUD FINANCIERA
-        health_result = self._calculate_health(working_metrics)
+        # Mejora #6: Usar TIER1 (Net Debt/EBITDA + Interest Coverage) si disponible
+        # Fallback a TIER2 (D/E + Current + Quick)
+        nd_ebitda = working_metrics.get("net_debt_to_ebitda")
+        interest_cov = working_metrics.get("interest_coverage")
+        
+        if nd_ebitda is not None and interest_cov is not None:
+            health_result = self._calculate_health_tier1(working_metrics, nd_ebitda, interest_cov)
+        else:
+            health_result = self._calculate_health(working_metrics)
+        
         health_score = health_result["score"]
 
         # 5. CRECIMIENTO
@@ -675,7 +684,101 @@ class EquityAnalyzer(BaseAnalyzer):
             components.append(("Quick Ratio", score, self.health_weights["quick_ratio"]))
             used.append(f"Quick: {quick:.2f}")
 
-        return self._weighted_result(components, used, "Sin datos de salud financiera")
+        result = self._weighted_result(components, used, "Sin datos de salud financiera")
+        result["method"] = "tier2_health"
+        result["tier"] = "TIER2"
+        
+        return result
+
+    def _calculate_health_tier1(
+        self, 
+        metrics: Dict[str, Any], 
+        net_debt_to_ebitda: float, 
+        interest_coverage: float
+    ) -> Dict[str, Any]:
+        """
+        Score de SALUD FINANCIERA TIER1 (0-100).
+        
+        TIER1: Métricas basadas en generación de caja (preferido)
+        - Net Debt/EBITDA: Mide apalancamiento real vs flujo operativo
+        - Interest Coverage: Mide capacidad de pagar intereses
+        
+        Mejora #6 (IMPROVEMENT_PLAN.md):
+        Sistema de 2 niveles para salud financiera, priorizando métricas
+        basadas en caja sobre ratios contables tradicionales.
+        
+        Args:
+            metrics: Dict con todas las métricas disponibles
+            net_debt_to_ebitda: Net Debt / EBITDA
+            interest_coverage: EBIT / Interest Expense
+        
+        Returns:
+            Dict con score, used_metrics, method="tier1_health"
+        """
+        components = []
+        used: List[str] = []
+        
+        # Net Debt/EBITDA (65% del peso)
+        # Métrica principal para medir apalancamiento real
+        if net_debt_to_ebitda < 0:
+            # Caja neta (deuda negativa) - empresa tiene más caja que deuda
+            nd_score = 100
+            interpretation = "Caja neta"
+        elif net_debt_to_ebitda < 1.5:
+            # Excelente - deuda muy baja vs generación de caja
+            nd_score = 90
+            interpretation = "Muy bajo"
+        elif net_debt_to_ebitda < 3.0:
+            # Bueno - apalancamiento moderado
+            nd_score = 75
+            interpretation = "Moderado"
+        elif net_debt_to_ebitda < 5.0:
+            # Aceptable - apalancamiento elevado pero manejable
+            nd_score = 50
+            interpretation = "Elevado"
+        else:
+            # Malo - apalancamiento muy alto, riesgo de insolvencia
+            nd_score = 20
+            interpretation = "Muy alto"
+        
+        components.append(("Net Debt/EBITDA", nd_score, 0.65))
+        used.append(f"Net Debt/EBITDA: {net_debt_to_ebitda:.2f}x ({interpretation})")
+        
+        # Interest Coverage (35% del peso)
+        # Mide capacidad de pagar intereses desde operaciones
+        if interest_coverage > 10:
+            # Excelente - ganancias cubren intereses 10+ veces
+            ic_score = 100
+            interpretation = "Muy alta"
+        elif interest_coverage > 5:
+            # Bueno - cobertura sólida
+            ic_score = 85
+            interpretation = "Alta"
+        elif interest_coverage > 3:
+            # Aceptable - cobertura adecuada
+            ic_score = 70
+            interpretation = "Adecuada"
+        elif interest_coverage > 1.5:
+            # Débil - cobertura justa
+            ic_score = 45
+            interpretation = "Débil"
+        else:
+            # Malo - no genera suficiente para cubrir intereses
+            ic_score = 15
+            interpretation = "Insuficiente"
+        
+        components.append(("Interest Coverage", ic_score, 0.35))
+        used.append(f"Interest Coverage: {interest_coverage:.2f}x ({interpretation})")
+        
+        result = self._weighted_result(components, used, "Sin datos de salud TIER1")
+        result["method"] = "tier1_health"
+        result["tier"] = "TIER1"
+        result["metrics_used"] = {
+            "net_debt_to_ebitda": net_debt_to_ebitda,
+            "interest_coverage": interest_coverage
+        }
+        
+        return result
 
     def _calculate_growth(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
         """Score de CRECIMIENTO (0-100)."""

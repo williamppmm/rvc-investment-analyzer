@@ -68,6 +68,13 @@ class DataAgent:
         "earnings_growth_next_y": "percent",
         "earnings_growth_next_5y": "percent",
         "earnings_growth_qoq": "percent",
+        # Mejora #6: Métricas de salud financiera avanzada
+        "net_debt_to_ebitda": "number",
+        "interest_coverage": "number",
+        "total_debt": "number",
+        "cash_and_equivalents": "number",
+        "ebitda": "number",
+        "interest_expense": "number",
     }
 
     def __init__(self):
@@ -120,6 +127,13 @@ class DataAgent:
             "enterprise_value": {"Enterprise Value", "EV"},
             "free_cash_flow": {"Free Cash Flow", "FCF", "Free CF"},
             "ebit": {"EBIT", "Operating Income"},
+            # Mejora #6: Métricas de salud financiera avanzada
+            "net_debt_to_ebitda": {"Net Debt/EBITDA", "Net Debt to EBITDA"},
+            "interest_coverage": {"Interest Coverage", "Times Interest Earned"},
+            "total_debt": {"Total Debt", "Total Liabilities"},
+            "cash_and_equivalents": {"Cash and Equivalents", "Cash", "Cash & ST Investments"},
+            "ebitda": {"EBITDA"},
+            "interest_expense": {"Interest Expense"},
         }
         self.metric_priority = {
             "current_price": [
@@ -175,6 +189,13 @@ class DataAgent:
             "enterprise_value",
             "free_cash_flow",
             "ebit",
+            # Mejora #6: Métricas de salud financiera (TIER1 health)
+            "net_debt_to_ebitda",
+            "interest_coverage",
+            "total_debt",
+            "cash_and_equivalents",
+            "ebitda",
+            "interest_expense",
         ]
         self.alpha_client = AlphaVantageClient()
         self.twelve_client = TwelveDataClient()
@@ -1694,6 +1715,45 @@ class DataAgent:
                     ev_to_ebit,
                     ev,
                     ebit
+                )
+        
+        # Mejora #6: Net Debt/EBITDA = (Total Debt - Cash) / EBITDA
+        # Métrica clave para health TIER1 (mide apalancamiento real vs generación de caja)
+        if "total_debt" in metrics and "cash_and_equivalents" in metrics and "ebitda" in metrics:
+            total_debt = metrics.get("total_debt")
+            cash = metrics.get("cash_and_equivalents")
+            ebitda = metrics.get("ebitda")
+            
+            if total_debt is not None and cash is not None and ebitda is not None:
+                net_debt = total_debt - cash
+                
+                if abs(ebitda) > 1e-6:  # Evitar división por 0
+                    net_debt_to_ebitda = net_debt / ebitda
+                    metrics["net_debt_to_ebitda"] = net_debt_to_ebitda
+                    self.provenance["net_debt_to_ebitda"] = "calculated:(debt-cash)/ebitda"
+                    logger.debug(
+                        "Métrica derivada: Net Debt/EBITDA = %.2f (Debt: %s, Cash: %s, EBITDA: %s)",
+                        net_debt_to_ebitda,
+                        total_debt,
+                        cash,
+                        ebitda
+                    )
+        
+        # Mejora #6: Interest Coverage = EBIT / Interest Expense
+        # Métrica clave para health TIER1 (mide capacidad de pagar intereses)
+        if "ebit" in metrics and "interest_expense" in metrics:
+            ebit = metrics.get("ebit")
+            interest = metrics.get("interest_expense")
+            
+            if ebit is not None and interest is not None and abs(interest) > 1e-6:
+                interest_coverage = ebit / interest
+                metrics["interest_coverage"] = interest_coverage
+                self.provenance["interest_coverage"] = "calculated:ebit/interest"
+                logger.debug(
+                    "Métrica derivada: Interest Coverage = %.2fx (EBIT: %s, Interest: %s)",
+                    interest_coverage,
+                    ebit,
+                    interest
                 )
         
         return metrics
