@@ -20,11 +20,13 @@ from dotenv import load_dotenv
 import requests
 
 from data_agent import DataAgent, METRIC_SCHEMA_VERSION
-from etf_analyzer import ETFAnalyzer
+from analyzers import EquityAnalyzer, ETFAnalyzer  # Modular architecture
 from rvc_calculator import RVCCalculator
-from scoring_engine import InvestmentScorer
 from investment_calculator import InvestmentCalculator
 from usage_limiter import get_limiter
+
+# Alias para compatibilidad con código existente
+InvestmentScorer = EquityAnalyzer
 
 
 load_dotenv()
@@ -1267,6 +1269,8 @@ def calcular_inversion():
             monthly_contribution = float(payload.get("monthly_amount", 0))
             years = int(payload.get("years", 10))
             scenario = payload.get("scenario", "moderado")
+            mode = payload.get("mode", "deterministic")  # "deterministic" o "simulation"
+            num_paths = int(payload.get("num_paths", 5))  # Número de simulaciones
 
             if initial_amount < 0 or monthly_contribution < 0:
                 return jsonify({"error": "Los montos no pueden ser negativos"}), 400
@@ -1276,12 +1280,23 @@ def calcular_inversion():
 
             annual_return = investment_calculator.HISTORICAL_RETURNS.get(scenario, 0.10)
 
-            result = investment_calculator.calculate_compound_interest_impact(
-                initial_amount=initial_amount,
-                monthly_contribution=monthly_contribution,
-                years=years,
-                annual_return=annual_return
-            )
+            if mode == "simulation":
+                result = investment_calculator.calculate_compound_interest_simulation(
+                    initial_amount=initial_amount,
+                    monthly_contribution=monthly_contribution,
+                    years=years,
+                    annual_return=annual_return,
+                    scenario=scenario,
+                    use_stochastic=True,
+                    num_paths=min(max(num_paths, 3), 10)  # Entre 3 y 10 caminos
+                )
+            else:
+                result = investment_calculator.calculate_compound_interest_impact(
+                    initial_amount=initial_amount,
+                    monthly_contribution=monthly_contribution,
+                    years=years,
+                    annual_return=annual_return
+                )
 
             return jsonify({
                 "calculation_type": "compound_interest",
