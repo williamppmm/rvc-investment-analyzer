@@ -269,12 +269,19 @@ class DataAgent:
             "warnings": [],
         }
 
+        # Cascada de fuentes optimizada (orden de prioridad)
+        # 1. AlphaVantage: API premium con fundamentales completos
+        # 2. TwelveData: API premium con precio en tiempo real
+        # 3. Finviz: Scraping confiable como respaldo (funciona sin API key)
+        # 4. Yahoo: Último recurso para métricas básicas
+        # 5. FMP: Reservado para producción (límite gratuito bajo)
+        # 6. MarketWatch: Backup adicional
         sources = [
             self._fetch_alpha_vantage,
             self._fetch_twelve_data,
-            self._fetch_fmp,
+            self._fetch_finviz,        # ← Movido antes de FMP/Yahoo
             self._fetch_yahoo,
-            self._fetch_finviz,
+            self._fetch_fmp,           # ← Después de Finviz
             self._fetch_marketwatch,
             self._fetch_example_data,
         ]
