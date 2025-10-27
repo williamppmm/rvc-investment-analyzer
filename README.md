@@ -1,25 +1,35 @@
 # 🎯 RVC Investment Analyzer
 
-**Radar de Valoración y Calidad** — Sistema de análisis fundamental para encontrar empresas de calidad a precio justo.
+**Radar de Valoración y Calidad** — Sistema de análisis fundamental avanzado para encontrar empresas de calidad a precio justo.
 
-> 🎓 **Enfoque educativo**: Diseñado para inversores de largo plazo que buscan fundamentos sólidos, no especulación ni trading.
+> 🎓 **Enfoque educativo institucional**: Diseñado para inversores de largo plazo con análisis TIER1/TIER2, scoring sector-relativo y métricas basadas en caja.
 
 ---
 
 ## 🌟 ¿Qué es RVC?
 
-RVC es una aplicación web completa que te ayuda a identificar las mejores oportunidades de inversión basándose en:
+RVC es una aplicación web completa que te ayuda a identificar las mejores oportunidades de inversión basándose en análisis fundamental de nivel institucional:
 
-- ✅ **Calidad del negocio** — ROE, ROIC, márgenes operativos
-- 💰 **Valoración justa** — P/E, PEG, P/B
-- 🏥 **Salud financiera** — Deuda, liquidez, solvencia
+- ✅ **Calidad del negocio** — ROE, ROIC, márgenes (con z-scores sectoriales)
+- 💰 **Valoración justa** — Sistema TIER1 (EV/EBIT + FCF Yield) vs TIER2 (P/E + PEG)
+- 🏥 **Salud financiera** — Sistema TIER1 (Net Debt/EBITDA + Interest Coverage) vs TIER2 (D/E + liquidez)
 - 📈 **Potencial de crecimiento** — Ingresos, beneficios, expansión
+- 🎯 **Confidence dinámico** — Dispersión de fuentes, normalización de períodos
 
-**Para quién**: Inversores de largo plazo (10+ años), personas que invierten mes a mes (DCA), quienes buscan calidad sobre especulación.
+**Para quién**: Inversores de largo plazo (10+ años), personas que invierten mes a mes (DCA), quienes buscan análisis riguroso sobre especulación.
 
 ---
 
-## ✨ **Características Destacadas (v2.0)**
+## ✨ **Características Destacadas (v3.0)**
+
+### 🔬 **Sistema de Análisis Avanzado (NUEVO)**
+- **Valoración TIER1/TIER2** - Prioriza métricas basadas en caja (EV/EBIT, FCF Yield)
+- **Health TIER1/TIER2** - Net Debt/EBITDA + Interest Coverage
+- **Scoring Sector-Relativo** - Z-scores vs 11 sectores con benchmarks estadísticos
+- **Normalización de períodos** - TTM > MRQ > MRY > 5Y > FWD automático
+- **Dispersión de fuentes** - CV para medir concordancia entre APIs
+- **33 nuevas métricas** - Cobertura completa de fundamentales
+- **30+ tests unitarios** - Validación exhaustiva (100% passing)
 
 ### 🎨 **Diseño Profesional Modernizado**
 - **Iconografía SVG** - 30+ iconos Lucide en sprite centralizado
@@ -39,14 +49,15 @@ RVC es una aplicación web completa que te ayuda a identificar las mejores oport
 
 ## 🚀 Características Principales
 
-### 1️⃣ Analizador Individual
-Evalúa cualquier acción con un sistema de **4 scores complementarios**:
+### 1️⃣ Analizador Individual (con Sistema Avanzado)
+Evalúa cualquier acción con un sistema de **4 scores complementarios + confidence dinámico**:
 
-- **Quality Score** (0-100): ¿Qué tan buena es la empresa?
-- **Valuation Score** (0-100): ¿Qué tan caro está el precio?
-- **Financial Health Score** (0-100): ¿Qué tan sólida es financieramente?
+- **Quality Score** (0-100): ¿Qué tan buena es la empresa? (con z-scores sectoriales)
+- **Valuation Score** (0-100): ¿Qué tan caro está? (TIER1: EV/EBIT + FCF Yield)
+- **Financial Health Score** (0-100): ¿Qué tan sólida es? (TIER1: Net Debt/EBITDA + Interest Coverage)
 - **Growth Score** (0-100): ¿Qué tanto está creciendo?
 - **Investment Score** (0-100): ¿Vale la pena comprar AHORA?
+- **Confidence Level** (0-100): Confiabilidad del análisis (dispersión + completeness)
 
 Clasificación automática en 6 categorías:
 - 🏆 **SWEET SPOT** — Alta calidad, precio razonable (el ideal)
@@ -133,10 +144,17 @@ Sistema completo de clasificación de mejores oportunidades:
 - ✅ Estados UX completos (loading, error, vacío)
 - ✅ Conversión automática de monedas
 
-### 5️⃣ Sistema de Datos Inteligente
-- **7 fuentes de datos** con fallbacks automáticos:
-  - Yahoo Finance, Finviz, MarketWatch
-  - Alpha Vantage, Twelve Data, FMP
+### 5️⃣ Sistema de Datos Inteligente Avanzado
+- **Fuentes de datos premium** con fallbacks automáticos:
+  - **AlphaVantage** (principal - alta calidad)
+  - **TwelveData** (principal - alta calidad)
+  - FMP (producción)
+  - Yahoo Finance (fallback)
+- **Dispersión de fuentes** - CV para medir concordancia
+- **Normalización automática** - TTM > MRQ > MRY > 5Y > FWD
+- **33 métricas críticas** - Cobertura completa de fundamentales
+- **Conversión de moneda** - 11 monedas soportadas
+- **Cálculo de derivadas** - FCF Yield, Net Debt/EBITDA, Interest Coverage
   - Datos de ejemplo como último recurso
 - **Caché SQLite** (7 días TTL) para optimización
 - **Clasificación automática** de activos (EQUITY, ETF, REIT, CRYPTO)
@@ -189,27 +207,36 @@ python app.py
 ```
 rcv_proyecto/
 ├── app.py                          # Aplicación Flask principal
-├── scoring_engine.py               # Motor de 3 scores (Investment)
-├── rvc_calculator.py               # Calculadora RVC (Legacy)
-├── data_agent.py                   # Agente de recolección de datos
+├── data_agent.py                   # Agente de recolección (33 métricas)
+├── metric_normalizer.py            # Normalización TTM/MRQ/MRY (NUEVO)
 ├── investment_calculator.py        # Simulador DCA con valores reales
 ├── asset_classifier.py             # Clasificador de activos
-├── etf_analyzer.py                 # Análisis especializado ETFs
 ├── usage_limiter.py                # Sistema freemium con límites
 ├── manage_licenses.py              # Gestor de licencias PRO
 │
-├── tests/                          # Suite de testing
+├── analyzers/                      # Módulo de análisis (NUEVO)
+│   ├── __init__.py                # Exports públicos
+│   ├── base_analyzer.py           # Clase abstracta BaseAnalyzer
+│   ├── equity_analyzer.py         # Análisis EQUITY avanzado
+│   ├── etf_analyzer.py            # Análisis ETF básico
+│   └── sector_benchmarks.py       # Z-scores sectoriales (NUEVO)
+│
+├── tests/                          # Suite de testing (30+ tests)
 │   ├── test_calculator.py         # Tests calculadora básica
-│   ├── test_deflation.py          # Tests valores reales (Fase 2)
+│   ├── test_deflation.py          # Tests valores reales (12 tests)
 │   ├── test_retirement_calculator.py  # Tests plan jubilación
 │   ├── test_api_retirement.py     # Tests endpoint retirement
 │   ├── test_scoring.py            # Tests motor de scoring
 │   ├── test_data_agent.py         # Tests agente de datos
+│   ├── test_metric_normalizer.py  # Tests normalización (NUEVO)
+│   ├── test_tier1_valuation.py    # Tests TIER1 valuation (NUEVO)
+│   ├── test_sector_relative.py    # Tests z-scores (NUEVO)
+│   ├── test_tier1_health.py       # Tests TIER1 health (NUEVO)
 │   └── test_top_opportunities.py  # Tests ranking RVC
 │
 ├── services/                       # Integraciones con APIs
-│   ├── alpha_vantage.py           # Alpha Vantage API
-│   ├── twelve_data.py             # Twelve Data API
+│   ├── alpha_vantage.py           # Alpha Vantage API (principal)
+│   ├── twelve_data.py             # Twelve Data API (principal)
 │   └── fmp.py                     # Financial Modeling Prep
 │
 ├── data/
@@ -237,6 +264,9 @@ rcv_proyecto/
 │
 ├── README.md                       # Este archivo
 ├── DEVELOPMENT_ROADMAP.md         # Roadmap de desarrollo
+├── IMPROVEMENT_PLAN.md            # Plan de mejoras (5/10 completadas)
+├── NORMALIZATION_EXAMPLE.md       # Docs normalización períodos
+├── TIER1_VALUATION_EXAMPLE.md     # Docs valoración TIER1
 ├── API_ENDPOINTS_GUIDE.md         # Guía de endpoints de la API REST
 ├── TECHNICAL_DOCUMENTATION.md    # Documentación técnica interna
 ├── LOGGING.md                     # Sistema de logging

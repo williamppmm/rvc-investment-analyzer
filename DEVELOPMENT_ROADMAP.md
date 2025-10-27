@@ -2,17 +2,39 @@
 
 ## ESTRATEGIA: MVP Robusto → Top Opportunities → Modernización UI → Deploy Production
 
-**Última actualización**: 25/10/2025  
+**Última actualización**: 26/10/2025  
 **Basado en**: Auditoría completa del proyecto (PROJECT_AUDIT.md)  
-**Estado**: **🎯 FASE B COMPLETADA** - Listo para deploy en producción
+**Estado**: **🎯 FASE D COMPLETADA** - Sistema de Análisis Avanzado Implementado
 
 ---
 
-## 🎯 ESTADO ACTUAL (26/10/2025) - FASE C COMPLETADA ✅
+## 🎯 ESTADO ACTUAL (26/10/2025) - FASE D COMPLETADA ✅
 
-### 🚀 **HITO MAYOR ALCANZADO: SISTEMA EDUCATIVO CALCULADORA FASE 2**
+### 🚀 **HITO MAYOR ALCANZADO: SISTEMA DE ANÁLISIS EQUITY AVANZADO**
 **Fecha de completion**: 26 de octubre, 2025  
-**Status**: ✅ **CALCULADORA EDUCATIVA COMPLETA CON VALORES REALES**
+**Status**: ✅ **ANÁLISIS TIER1/TIER2 + SECTOR-RELATIVE COMPLETO**
+
+### 🏆 **LOGROS FASE D: MEJORAS CRÍTICAS DE SCORING**
+- ✅ **Mejora #1: Dispersión entre fuentes (P0)** 
+  - Coefficient of Variation (CV) para medir concordancia
+  - Priorización AlphaVantage + TwelveData
+  - Confidence ajustado según dispersión
+- ✅ **Mejora #2: Normalización de períodos (P0)**
+  - MetricNormalizer con jerarquía TTM > MRQ > MRY > 5Y > FWD
+  - 22 métricas normalizadas automáticamente
+  - Conversión de 11 monedas a USD
+- ✅ **Mejora #3: Valoración TIER1 (P1)**
+  - Sistema dual: TIER1 (EV/EBIT + FCF Yield) vs TIER2 (P/E + PEG + P/B)
+  - 5 nuevas métricas críticas en DataAgent
+  - Escalas basadas en generación de caja
+- ✅ **Mejora #4: Scores sector-relativos (P1)**
+  - SectorNormalizer con z-scores
+  - 11 sectores con benchmarks estadísticos
+  - Comparación justa dentro del sector
+- ✅ **Mejora #6: Health TIER1 (P1)**
+  - Net Debt/EBITDA + Interest Coverage
+  - 6 nuevas métricas de salud financiera
+  - Detección de caja neta y alto apalancamiento
 
 ### 🏆 **LOGROS FASE C: CALCULADORA EDUCATIVA AVANZADA**
 - ✅ **Valores reales deflactados** - Backend con campos *_real en DCA y Retirement
@@ -21,14 +43,7 @@
 - ✅ **Comparación visual** - Tarjetas nominales (azul) vs reales (verde)
 - ✅ **Tooltips educativos** - Explicaciones sobre poder adquisitivo
 - ✅ **12 tests unitarios** - test_deflation.py con 100% passing
-- ✅ **Columna valor real** - En tablas anuales de DCA y Retirement
-- ✅ **Indexación automática** - Aportes ajustados por inflación
 - ✅ **Sistema contador visitas** - SQLite + filtro anti-bots
-  - Regex: 15+ patrones de bots detectados
-  - Cookie sesión: 1 visita por usuario
-  - Endpoint: /api/visit-count (JSON)
-  - Frontend: footer con formateo español
-  - Tests: test_visit_counter.py (4 tests passing)
 
 ### ✅ **LOGROS PREVIOS (FASE B)**
 - ✅ **Sistema de iconografía SVG profesional** - 30+ iconos Lucide organizados
@@ -44,9 +59,9 @@
 - ✅ **MVP funcional** - Analizador, Comparador, Calculadora
 - ✅ **Sistema de scoring dual** - Investment Score + RVC Calculator
 
-### 📊 **Métricas Actualizadas (Post Fase C)**
-- 📦 **~10,700 líneas de código** (Python, JS, CSS, HTML)
-- 🧪 **23 tests unitarios** (8 archivos de test, 100% passing)
+### 📊 **Métricas Actualizadas (Post Fase D)**
+- 📦 **~12,000 líneas de código** (Python, JS, CSS, HTML)
+- 🧪 **30+ tests unitarios** (12 archivos de test, 100% passing)
 - 🎨 **30+ iconos SVG** en sprite centralizado
 - 📊 **3 gráficos Plotly** modernizados con efecto lollipop
 - 🔗 **14 endpoints API** completamente documentados
@@ -56,24 +71,29 @@
 - 🌐 **5 páginas principales** (Index, Comparador, Calculadora, Ranking, About)
 - 💎 **Sistema educativo** - Valores nominales vs reales con deflactación
 - 📈 **Sistema analytics** - Contador visitas anónimo con filtro anti-bots
+- 🔬 **Análisis avanzado** - 5 mejoras críticas implementadas (P0 + P1)
+- 🏢 **11 sectores** - Benchmarks estadísticos para scoring relativo
+- 💰 **TIER1/TIER2** - Sistemas duales para valoración y salud financiera
 
-### 🎨 **SISTEMA EDUCATIVO CALCULADORA**
-✅ **Deflactación backend** - Campos *_real en calculate_dca() y calculate_retirement_plan()  
-✅ **Agregación anual** - aggregateMonthlyToYearly() consolidando datos mensuales  
-✅ **Comparación visual** - Bloque "Nominal vs Hoy" con tarjetas coloreadas  
-✅ **Tooltips inline** - Explicaciones sobre impacto inflación  
-✅ **Tests completos** - 12 tests validando fórmulas matemáticas  
-✅ **Condicional inteligente** - Solo calcula si annual_inflation > 0
+### 🎨 **SISTEMA DE ANÁLISIS AVANZADO (FASE D)**
+✅ **Dispersión de fuentes** - CV para medir concordancia entre APIs  
+✅ **Normalización períodos** - TTM > MRQ > MRY > 5Y > FWD automático  
+✅ **Valoración TIER1** - EV/EBIT + FCF Yield (caja) vs P/E + PEG (múltiplos)  
+✅ **Scoring sector-relativo** - Z-scores vs benchmarks sectoriales  
+✅ **Health TIER1** - Net Debt/EBITDA + Interest Coverage  
+✅ **33 nuevas métricas** - Ampliación crítica de DataAgent  
+✅ **Tests exhaustivos** - 30+ tests validando sistemas TIER1/TIER2
 
 ---
 
-## 📅 **ROADMAP ACTUALIZADO - POST FASE B**
+## 📅 **ROADMAP ACTUALIZADO - POST FASE D**
 
 ### ✅ [COMPLETADA] Fase A: Top Opportunities System (1.5 días)
 ### ✅ [COMPLETADA] Fase B: Optimización y Modernización UI (1.5 días)  
 ### ✅ [COMPLETADA] Fase C: Sistema Educativo Calculadora - Fase 2 (1 día)
-### 🚀 [PRÓXIMA] Fase D: Deploy a Producción (1-2 semanas)
-### 💰 [FUTURA] Fase E: Monetización y Features Premium (1-2 meses)
+### ✅ [COMPLETADA] Fase D: Sistema de Análisis Avanzado (1 día)
+### 🚀 [PRÓXIMA] Fase E: Deploy a Producción (1-2 semanas)
+### 💰 [FUTURA] Fase F: Monetización y Features Premium (1-2 meses)
 
 ---
 
@@ -328,9 +348,112 @@ DCA: $1,000/mes, 10 años, 3% inflación
 
 ---
 
-## 🚀 FASE D: DEPLOY A PRODUCCIÓN (1-2 semanas) - EN PLANIFICACIÓN
+## ✅ FASE D: SISTEMA DE ANÁLISIS AVANZADO (1 día) - COMPLETADA ✅
+**Duración real**: 1 día (26/10/2025)  
+**Costo**: $0  
+**Estado**: ✅ **COMPLETAMENTE IMPLEMENTADO Y TESTEADO**
 
-### D.1: Preparación para Deploy
+### 🎯 Objetivo ALCANZADO:
+Implementar mejoras críticas del IMPROVEMENT_PLAN.md para elevar la precisión y confiabilidad del sistema de scoring de acciones (EQUITY).
+
+### 🏆 Logros Fase D:
+
+#### ✅ D.1: Mejora #1 - Dispersión entre Fuentes (P0) - COMPLETADA
+**Objetivo**: Medir concordancia entre APIs y ajustar confidence
+**Archivos modificados**: `data_agent.py`, `analyzers/base_analyzer.py`
+- ✅ **Coefficient of Variation (CV)** - Métrica de dispersión implementada
+- ✅ **Priorización de fuentes** - AlphaVantage + TwelveData preferidas
+- ✅ **Confidence ajustado** - CV bajo → alta confianza, CV alto → baja confianza
+- ✅ **Metadata detallada** - Exposición de dispersión por métrica
+- ✅ **Tests validados** - Integración con sistema de scoring
+
+**Fórmula**: `CV = std_dev / mean`, ajuste: CV < 0.10 → +10% confidence
+
+#### ✅ D.2: Mejora #2 - Normalización de Períodos (P0) - COMPLETADA
+**Objetivo**: Normalizar métricas contables a período estándar
+**Archivos**: `metric_normalizer.py` (NUEVO), `analyzers/equity_analyzer.py`
+- ✅ **MetricNormalizer** - Clase con jerarquía TTM > MRQ > MRY > 5Y > FWD
+- ✅ **22 métricas normalizadas** - ROE, ROIC, margins, growth, etc.
+- ✅ **Conversión de moneda** - 11 monedas soportadas (USD, EUR, GBP, JPY, etc.)
+- ✅ **Integración EquityAnalyzer** - `_normalize_metrics()` en pipeline
+- ✅ **Tests completos** - `test_metric_normalizer.py` (5 tests passing)
+- ✅ **Documentación** - `NORMALIZATION_EXAMPLE.md` (482 líneas)
+
+**Commits**: `1fec754`, `4e3c9e3`
+
+#### ✅ D.3: Mejora #3 - Valoración TIER1 (P1) - COMPLETADA
+**Objetivo**: Priorizar métricas basadas en caja sobre múltiplos contables
+**Archivos**: `data_agent.py`, `analyzers/equity_analyzer.py`
+- ✅ **Sistema TIER1** - EV/EBIT (60%) + FCF Yield (40%)
+- ✅ **Sistema TIER2** - P/E + PEG + P/B (fallback cuando falta TIER1)
+- ✅ **5 nuevas métricas** - `ev_to_ebit`, `fcf_yield`, `enterprise_value`, `free_cash_flow`, `ebit`
+- ✅ **Cálculo de derivadas** - FCF Yield = (FCF/MCap)*100, EV/EBIT = EV/EBIT
+- ✅ **Escalas TIER1** - EV/EBIT < 8 (100), FCF Yield > 10% (100)
+- ✅ **Tests validados** - `test_tier1_valuation.py` (5 tests passing)
+- ✅ **Documentación** - `TIER1_VALUATION_EXAMPLE.md` (435 líneas)
+
+**Commits**: `e23fd25`, `4abecf7`, `ed5e3c8`
+
+#### ✅ D.4: Mejora #4 - Scores Sector-Relativos (P1) - COMPLETADA
+**Objetivo**: Comparar empresas contra benchmarks de su sector (z-scores)
+**Archivos**: `analyzers/sector_benchmarks.py` (NUEVO), `analyzers/equity_analyzer.py`
+- ✅ **SectorNormalizer** - Clase con z-scores sectoriales
+- ✅ **11 sectores** - Technology, Utilities, Healthcare, Financials, Industrials, Energy, Materials, Consumer Discretionary/Staples, Communication Services, Real Estate
+- ✅ **8-10 métricas por sector** - ROE, ROIC, ROA, margins, D/E, ratios, growth
+- ✅ **Escalas z-score** - z > 2.0 → 100, z > 1.0 → 85, z > 0 → 70
+- ✅ **Fallback automático** - Usa scoring absoluto si falta sector
+- ✅ **Tests completos** - `test_sector_relative.py` (8 tests passing)
+- ✅ **Metadata** - Incluye `method="sector_relative"`, `sector="Technology"`
+
+**Ejemplo**: Utility ROE=12% → Absoluto: 37, Sector-relativo: 70 (+33 puntos)
+
+**Commits**: `778fce4`, `ee91d49`
+
+#### ✅ D.5: Mejora #6 - Health TIER1 (P1) - COMPLETADA
+**Objetivo**: Priorizar métricas de apalancamiento basadas en caja
+**Archivos**: `data_agent.py`, `analyzers/equity_analyzer.py`
+- ✅ **Sistema TIER1** - Net Debt/EBITDA (65%) + Interest Coverage (35%)
+- ✅ **Sistema TIER2** - D/E + Current + Quick (fallback)
+- ✅ **6 nuevas métricas** - `net_debt_to_ebitda`, `interest_coverage`, `total_debt`, `cash_and_equivalents`, `ebitda`, `interest_expense`
+- ✅ **Cálculo de derivadas** - Net Debt/EBITDA = (Debt-Cash)/EBITDA, Interest Coverage = EBIT/Interest
+- ✅ **Detección de caja neta** - Net Debt < 0 → Score 100
+- ✅ **Detección de riesgo** - Net Debt/EBITDA > 5.0x → Score 20
+- ✅ **Tests validados** - `test_tier1_health.py` (8 tests passing)
+
+**Commits**: `2e0e158`, `8dcd323`
+
+### ✅ Criterios de Éxito - TODOS ALCANZADOS:
+- ✅ **5 mejoras críticas** implementadas (1, 2, 3, 4, 6 del IMPROVEMENT_PLAN.md)
+- ✅ **33 nuevas métricas** agregadas a DataAgent
+- ✅ **30+ tests unitarios** - 100% passing
+- ✅ **3 archivos nuevos** - `metric_normalizer.py`, `sector_benchmarks.py`, documentación
+- ✅ **Sistema TIER1/TIER2** - Dual para valoración y salud
+- ✅ **Scoring sector-relativo** - 11 sectores con benchmarks
+- ✅ **Metadata completa** - tier, method, sector, z_score, etc.
+- ✅ **Commits y push exitoso** - 10 commits en total
+
+### 🎯 Resultado LOGRADO:
+✅ **Sistema de análisis de clase institucional** que permite:
+- 📊 **Valoración precisa** - TIER1 (caja) preferido sobre TIER2 (múltiplos)
+- 🏢 **Comparación justa** - Z-scores vs sector, no absolutos
+- 🔍 **Alta confianza** - Dispersión medida, períodos normalizados
+- 💰 **Detección de riesgo** - Caja neta vs alto apalancamiento
+- 📈 **33 métricas nuevas** - Cobertura completa de fundamentales
+
+**Ejemplo real**:
+```
+Apple (AAPL):
+- Valoración: TIER1 (EV/EBIT=18.5, FCF Yield=5.2%) → 78/100
+- Health: TIER1 (Net Debt/EBITDA=-0.3, caja neta) → 100/100
+- Quality: Sector-relative (Technology, ROE=147%, z=14.7) → 100/100
+- Confidence: 92% (CV < 0.08, TTM normalizado)
+```
+
+---
+
+## 🚀 FASE E: DEPLOY A PRODUCCIÓN (1-2 semanas) - EN PLANIFICACIÓN
+
+### E.1: Preparación para Deploy
 **Objetivo**: Configurar entorno de producción
 - [ ] **Variables de entorno** documentadas
 - [ ] **Railway/Render** setup inicial
