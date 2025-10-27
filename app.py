@@ -412,12 +412,18 @@ def count_visit():
 
             # Incrementar contador del día
             today = datetime.now().strftime('%Y-%m-%d')
-            query = '''
-                INSERT INTO daily_visits (date, visits) VALUES (?, 1)
-                ON CONFLICT(date) DO UPDATE SET visits = visits + 1
-            '''
             if db_manager.is_production:
-                query = query.replace('?', '%s')
+                # PostgreSQL requiere EXCLUDED para valores en conflicto
+                query = '''
+                    INSERT INTO daily_visits (date, visits) VALUES (%s, 1)
+                    ON CONFLICT(date) DO UPDATE SET visits = daily_visits.visits + 1
+                '''
+            else:
+                # SQLite usa sintaxis estándar
+                query = '''
+                    INSERT INTO daily_visits (date, visits) VALUES (?, 1)
+                    ON CONFLICT(date) DO UPDATE SET visits = visits + 1
+                '''
             cursor.execute(query, (today,))
 
             conn.commit()
