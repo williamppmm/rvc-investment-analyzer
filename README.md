@@ -40,7 +40,7 @@ RVC es una aplicación web completa que te ayuda a identificar las mejores oport
 - **Splash Screen** - Video de logo RVC en primera carga (2-3s, skippable)
 
 ### 💎 **Sistema Freemium**
-- **FREE** - 20 consultas diarias, acceso completo
+- **FREE** - 10 consultas diarias, acceso completo
 - **PRO** - 200 consultas/día, $3 USD/30 días
 - **Licencias** - Sistema con contador de 30 días
 - **Modal profesional** - Comparativa visual de planes

@@ -15,7 +15,7 @@ class UsageLimiter:
     """Gestor de límites de uso y licencias."""
     
     # Límites por plan
-    FREE_DAILY_LIMIT = 20      # 20 consultas por día (APIs gratuitas)
+    FREE_DAILY_LIMIT = 10      # 10 consultas por día (APIs gratuitas)
     PRO_DAILY_LIMIT = 200      # 200 consultas por día (APIs de pago también tienen límites)
     LICENSE_DURATION_DAYS = 30  # Licencias válidas por 30 días
     LICENSE_PRICE_USD = 3       # Precio sugerido por licencia mensual
@@ -53,6 +53,8 @@ class UsageLimiter:
                 plan_type TEXT DEFAULT 'PRO',
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 expires_at DATETIME,
+                last_renewed_at DATETIME,
+                renewal_count INTEGER DEFAULT 0,
                 is_active INTEGER DEFAULT 1,
                 max_monthly_queries INTEGER DEFAULT -1,
                 notes TEXT
@@ -181,7 +183,7 @@ class UsageLimiter:
                     "expires_at": license_info.get("expires_at")
                 }
         
-        # Usuario FREE - verificar límite de 20/día
+        # Usuario FREE - verificar límite de 10/día
         usage_count = self.get_usage_count(identifier, period="daily")
         remaining = max(0, self.FREE_DAILY_LIMIT - usage_count)
         allowed = usage_count < self.FREE_DAILY_LIMIT
@@ -307,6 +309,98 @@ class UsageLimiter:
         except Exception as e:
             logger.error(f"❌ Error al crear licencia: {e}")
             raise
+    
+    def renew_license(self, email_or_key: str, duration_days: int = 30) -> dict:
+        """
+        Renovar una licencia existente por email o clave.
+        Reactiva licencias inactivas/expiradas y extiende la fecha de expiración.
+        
+        Args:
+            email_or_key: Email del usuario o clave de licencia
+            duration_days: Días a extender (default: 30)
+        
+        Returns:
+            dict con información de la renovación
+        """
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # Buscar por email o clave
+            if email_or_key.startswith('RVC-'):
+                # Es una clave de licencia
+                cursor.execute("""
+                    SELECT license_key, email, expires_at, is_active, renewal_count
+                    FROM pro_licenses
+                    WHERE license_key = ?
+                """, (email_or_key,))
+            else:
+                # Es un email - buscar licencia más reciente
+                cursor.execute("""
+                    SELECT license_key, email, expires_at, is_active, renewal_count
+                    FROM pro_licenses
+                    WHERE email = ?
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                """, (email_or_key,))
+            
+            result = cursor.fetchone()
+            
+            if not result:
+                conn.close()
+                return {
+                    "success": False,
+                    "reason": "No se encontró licencia para este email/clave",
+                    "action": "create_new"
+                }
+            
+            license_key, email, old_expires_at, is_active, renewal_count = result
+            
+            # Calcular nueva fecha de expiración
+            # Si está expirada, extender desde HOY
+            # Si aún está activa, extender desde fecha de expiración actual
+            now = datetime.now()
+            old_expiry = datetime.fromisoformat(old_expires_at) if old_expires_at else now
+            
+            if old_expiry < now:
+                # Licencia expirada - extender desde hoy
+                new_expires_at = now + timedelta(days=duration_days)
+            else:
+                # Licencia activa - extender desde fecha actual de expiración
+                new_expires_at = old_expiry + timedelta(days=duration_days)
+            
+            # Actualizar licencia
+            cursor.execute("""
+                UPDATE pro_licenses
+                SET expires_at = ?,
+                    last_renewed_at = ?,
+                    renewal_count = renewal_count + 1,
+                    is_active = 1
+                WHERE license_key = ?
+            """, (new_expires_at.isoformat(), now.isoformat(), license_key))
+            
+            conn.commit()
+            conn.close()
+            
+            logger.info(f"♻️  Licencia renovada: {license_key} para {email} (expira: {new_expires_at.strftime('%d/%m/%Y')})")
+            
+            return {
+                "success": True,
+                "license_key": license_key,
+                "email": email,
+                "old_expires_at": old_expiry.strftime('%d/%m/%Y'),
+                "new_expires_at": new_expires_at.strftime('%d/%m/%Y'),
+                "days_extended": duration_days,
+                "renewal_count": renewal_count + 1,
+                "was_expired": old_expiry < now
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Error al renovar licencia: {e}")
+            return {
+                "success": False,
+                "reason": f"Error: {str(e)}"
+            }
     
     def get_usage_stats(self, identifier: str = None) -> dict:
         """

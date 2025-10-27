@@ -9,7 +9,7 @@
 ## 📊 **RESUMEN EJECUTIVO**
 
 RVC Analyzer ahora cuenta con un **modelo freemium sostenible** que permite:
-- ✅ Ofrecer 20 consultas diarias gratuitas
+- ✅ Ofrecer 10 consultas diarias gratuitas
 - ✅ Monetizar con licencias PRO de $3 USD/30 días
 - ✅ Sostener el costo de APIs premium
 - ✅ Escalar a más usuarios sin perder sostenibilidad
@@ -22,7 +22,7 @@ RVC Analyzer ahora cuenta con un **modelo freemium sostenible** que permite:
 
 ```python
 # Límites configurados
-FREE: 20 consultas por día
+FREE: 10 consultas por día
 PRO: Ilimitadas
 
 # Reset automático
@@ -353,7 +353,7 @@ python manage_licenses.py stats
 
 ```javascript
 // En el navegador
-// 1. Usar normalmente hasta alcanzar 20 consultas
+// 1. Usar normalmente hasta alcanzar 10 consultas
 // 2. Modal aparece automáticamente
 // 3. Clic en "Contribuir $3 USD/30 días"
 // 4. Enviar email predefinido

@@ -57,7 +57,7 @@ class UsageLimitManager {
                             <p>
                                 Las APIs de datos financieros gratuitas tienen limitaciones estrictas.
                                 Para mantener el servicio disponible para todos, limitamos a 
-                                <strong>20 consultas gratuitas por día</strong>. 
+                                <strong>10 consultas gratuitas por día</strong>. 
                                 <span id="reset-info"></span>
                             </p>
                         </div>
@@ -72,7 +72,7 @@ class UsageLimitManager {
                                         <small>/día</small>
                                     </div>
                                     <ul class="plan-features">
-                                        <li>20 consultas diarias</li>
+                                        <li>10 consultas diarias</li>
                                         <li>APIs gratuitas (limitadas)</li>
                                         <li>Datos con posible retraso</li>
                                         <li class="unavailable">Sin soporte prioritario</li>
