@@ -472,8 +472,13 @@ function renderRVCCompass(containerId, analysisData) {
         ]
     };
 
-    // Renderizar el gráfico - SOLO halo y punto (sin trazas invisibles)
+    // Renderizar el gráfico - SOLO halo y punto principal
+    // Si por alguna razón hay trazas extra, filtrarlas aquí
     const allTraces = [haloTrace, pointTrace];
+
+    // Limpieza defensiva: eliminar cualquier traza extra que venga del backend
+    // (por ejemplo, si analysisData.extra_traces existe)
+    // Si necesitas agregar benchmarks, deben tener showlegend=false y hoverinfo='skip'
 
     Plotly.newPlot(
         containerId,
