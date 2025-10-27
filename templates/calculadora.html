@@ -309,7 +309,7 @@
     <div class="calc-content" id="compound-content">
     <h2>Impacto del interés compuesto</h2>
         <p style="color: #6c757d; margin-bottom: 1.5rem;">
-            Visualiza cuánto proviene de tus aportes versus los intereses generados en distintos horizontes. La proyección se detiene si alcanzas $1.000.000.
+            Visualiza cuánto proviene de tus aportes versus los intereses generados. Elige <strong>modo determinista</strong> (fórmula pura) o <strong>simulación</strong> (con volatilidad del mercado).
         </p>
 
         <div class="form-grid">
@@ -362,6 +362,37 @@
                     <option value="optimista">Optimista (12%)</option>
                 </select>
             </div>
+            <div class="form-group">
+                <div class="label-with-tooltip">
+                    <label for="ci-mode">Modo de cálculo</label>
+                    <span class="info-tooltip">
+                        <span>ℹ</span>
+                        <div class="tooltip-content">
+                            <div class="tooltip-title">🎯 Modos de cálculo</div>
+                            <div class="tooltip-option">
+                                <strong>Determinista</strong>
+                                <small>Fórmula matemática pura. Rápido y educativo para entender el concepto.</small>
+                            </div>
+                            <div class="tooltip-option">
+                                <strong>Simulación</strong>
+                                <small>Incluye volatilidad del mercado. Muestra múltiples caminos posibles (más realista).</small>
+                            </div>
+                        </div>
+                    </span>
+                </div>
+                <select id="ci-mode">
+                    <option value="deterministic" selected>📐 Determinista (fórmula)</option>
+                    <option value="simulation">📊 Simulación (volatilidad)</option>
+                </select>
+            </div>
+            <div class="form-group" id="ci-paths-group" style="display: none;">
+                <label for="ci-paths">Número de simulaciones</label>
+                <div class="input-with-symbol">
+                    <input type="number" id="ci-paths" value="5" min="3" max="10" step="1" data-suffix="caminos">
+                    <span class="input-suffix">caminos</span>
+                </div>
+                <small class="field-hint">Recomendado: 5 simulaciones para balance entre visualización y rendimiento</small>
+            </div>
         </div>
 
         <button id="calculate-compound" type="button" class="btn btn--primary btn--block">
@@ -380,5 +411,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Plotly.js para gráficos interactivos -->
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
 <script src="{{ url_for('static', filename='calculadora.js') }}"></script>
 {% endblock %}

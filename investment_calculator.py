@@ -62,6 +62,21 @@ class InvestmentCalculator:
         """Inicializa la calculadora."""
         pass
 
+    def _monthly_rate(self, annual_rate: float) -> float:
+        """
+        Calcula la tasa mensual usando capitalización geométrica.
+        
+        Usa: r_m = (1 + r)^(1/12) - 1
+        En lugar de: r_m = r / 12 (menos preciso)
+        
+        Args:
+            annual_rate: Tasa anual (ej: 0.10 para 10%)
+            
+        Returns:
+            Tasa mensual equivalente
+        """
+        return (1 + annual_rate) ** (1/12) - 1
+
     def calculate_dca(
         self,
         monthly_amount: float,
@@ -322,6 +337,7 @@ class InvestmentCalculator:
             "total_amount": total_amount,
             "years": years,
             "scenario": scenario,
+            "annual_return": annual_return,  # Tasa anual para gráficos
             "lump_sum": {
                 "strategy": "Inversión Inicial Completa",
                 "final_value": round(lump_sum_final, 2),
@@ -539,8 +555,11 @@ class InvestmentCalculator:
         annual_inflation: float,
         max_portfolio_value: Optional[float] = None
     ) -> Dict[str, Any]:
-        """Calcula proyeccion con inflacion y limite opcional."""
-        monthly_return = annual_return / 12
+        """
+        Calcula proyección con inflación y límite opcional.
+        Usa tasa mensual geométrica para mayor precisión.
+        """
+        r_m = self._monthly_rate(annual_return)  # Tasa mensual geométrica
         portfolio_value = initial_amount
         total_contributions = initial_amount
         total_interest = 0.0
@@ -557,7 +576,7 @@ class InvestmentCalculator:
                 portfolio_value += adjusted_monthly
                 total_contributions += adjusted_monthly
 
-                interest_this_month = portfolio_value * monthly_return
+                interest_this_month = portfolio_value * r_m  # Usa tasa geométrica
                 portfolio_value += interest_this_month
                 total_interest += interest_this_month
 
@@ -598,7 +617,7 @@ class InvestmentCalculator:
         milestones = []
         targets = [100000, 250000, 500000, 1000000]
 
-        monthly_return = annual_return / 12
+        r_m = self._monthly_rate(annual_return)  # Tasa mensual geométrica
         portfolio_value = initial_amount
         max_value = max_portfolio_value or self.MAX_PORTFOLIO_VALUE
         cap_reached = False
@@ -609,7 +628,7 @@ class InvestmentCalculator:
 
             for month in range(12):
                 portfolio_value += adjusted_monthly
-                portfolio_value *= (1 + monthly_return)
+                portfolio_value *= (1 + r_m)  # Usa tasa geométrica
 
                 for target in targets[:]:
                     if portfolio_value >= target:
@@ -639,7 +658,7 @@ class InvestmentCalculator:
         annual_return: float = 0.10
     ) -> Dict[str, Any]:
         """
-        Demuestra el poder del interés compuesto.
+        Demuestra el poder del interés compuesto (modo determinista).
 
         Args:
             initial_amount: Inversión inicial
@@ -648,7 +667,7 @@ class InvestmentCalculator:
             annual_return: Retorno anual esperado
 
         Returns:
-            Desglose del impacto del interés compuesto
+            Desglose del impacto del interés compuesto con serie temporal anual
         """
         monthly_return = annual_return / 12
         total_months = years * 12
@@ -657,19 +676,34 @@ class InvestmentCalculator:
         total_contributed = initial_amount
         fv = initial_amount
         capped = False
+        yearly_series = []
 
-        for _ in range(total_months):
+        for month in range(1, total_months + 1):
             fv += monthly_contribution
             total_contributed += monthly_contribution
             fv *= (1 + monthly_return)
+            
             if max_value and fv >= max_value:
                 fv = max_value
                 capped = True
                 break
+            
+            # Guardar snapshot anual
+            if month % 12 == 0:
+                year = month // 12
+                interest_so_far = fv - total_contributed
+                yearly_series.append({
+                    "year": year,
+                    "contributions_accumulated": round(total_contributed, 2),
+                    "interest_accumulated": round(interest_so_far, 2),
+                    "portfolio_value": round(fv, 2),
+                    "interest_share_pct": round((interest_so_far / fv) * 100, 2) if fv > 0 else 0.0
+                })
 
         interest_earned = fv - total_contributed
 
         return {
+            "mode": "deterministic",
             "initial_amount": initial_amount,
             "monthly_contribution": monthly_contribution,
             "years": years,
@@ -678,12 +712,128 @@ class InvestmentCalculator:
             "final_value": round(fv, 2),
             "interest_earned": round(interest_earned, 2),
             "interest_contribution_pct": round((interest_earned / fv) * 100, 2) if fv > 0 else 0.0,
+            "yearly_series": yearly_series,
             "message": (
                 f"El {round((interest_earned / fv) * 100, 1)}% de tu riqueza final proviene del interes compuesto"
                 if fv > 0 else "Ingresa un monto o plazo valido para ver el efecto del interes compuesto."
             ),
             "cap_reached": capped,
             "max_portfolio_value": max_value
+        }
+
+    def calculate_compound_interest_simulation(
+        self,
+        initial_amount: float,
+        monthly_contribution: float,
+        years: int,
+        annual_return: float = 0.10,
+        scenario: str = "moderado",
+        use_stochastic: bool = True,
+        num_paths: int = 1
+    ) -> Dict[str, Any]:
+        """
+        Simulación del interés compuesto con volatilidad (modo realista).
+        
+        Args:
+            initial_amount: Inversión inicial
+            monthly_contribution: Aporte mensual
+            years: Años de inversión
+            annual_return: Retorno anual esperado (promedio)
+            scenario: conservador/moderado/optimista (define volatilidad)
+            use_stochastic: Si False, es determinista (sin ruido)
+            num_paths: Número de simulaciones (para visualizar rango)
+            
+        Returns:
+            Resultados con series temporales y múltiples caminos
+        """
+        r_m = self._monthly_rate(annual_return)
+        months = years * 12
+        max_value = self.MAX_PORTFOLIO_VALUE
+        volatility = self.VOLATILITY.get(scenario, 0.15)
+        monthly_vol = volatility / (12 ** 0.5)
+        
+        # Almacenar múltiples caminos simulados
+        paths = []
+        
+        for path_idx in range(num_paths):
+            value = initial_amount
+            aportes_acum = initial_amount
+            interes_acum = 0.0
+            series = []
+            capped = False
+            
+            for m in range(1, months + 1):
+                # Aporte mensual
+                value += monthly_contribution
+                aportes_acum += monthly_contribution
+                
+                # Retorno mensual con volatilidad
+                bump = (1 + r_m)
+                if use_stochastic:
+                    noise = random.gauss(0.0, monthly_vol)
+                    bump *= (1 + noise)
+                
+                prev_value = value
+                value *= bump
+                interes_mes = value - prev_value
+                interes_acum += interes_mes
+                
+                # Aplicar tope si existe
+                if max_value and value >= max_value:
+                    value = max_value
+                    capped = True
+                    break
+                
+                # Guardar snapshots anuales
+                if m % 12 == 0:
+                    year = m // 12
+                    series.append({
+                        "year": year,
+                        "month": m,
+                        "annual_contribution": monthly_contribution * 12,
+                        "contributions_accumulated": round(aportes_acum, 2),
+                        "interest_accumulated": round(interes_acum, 2),
+                        "portfolio_value": round(value, 2),
+                        "interest_share_pct": round((interes_acum / value) * 100, 2) if value > 0 else 0.0
+                    })
+            
+            paths.append({
+                "path_id": path_idx + 1,
+                "final_value": round(value, 2),
+                "total_contributed": round(aportes_acum, 2),
+                "interest_earned": round(value - aportes_acum, 2),
+                "capped": capped,
+                "yearly_series": series
+            })
+        
+        # Estadísticas agregadas (promedio de todos los caminos)
+        avg_final = sum(p["final_value"] for p in paths) / num_paths
+        avg_interest = sum(p["interest_earned"] for p in paths) / num_paths
+        min_final = min(p["final_value"] for p in paths)
+        max_final = max(p["final_value"] for p in paths)
+        
+        return {
+            "mode": "simulation",
+            "stochastic": use_stochastic,
+            "num_paths": num_paths,
+            "initial_amount": initial_amount,
+            "monthly_contribution": monthly_contribution,
+            "years": years,
+            "annual_return_pct": round(annual_return * 100, 2),
+            "volatility_pct": round(volatility * 100, 2),
+            "scenario": scenario,
+            "avg_final_value": round(avg_final, 2),
+            "avg_interest_earned": round(avg_interest, 2),
+            "avg_interest_contribution_pct": round((avg_interest / avg_final) * 100, 2) if avg_final > 0 else 0.0,
+            "min_final_value": round(min_final, 2),
+            "max_final_value": round(max_final, 2),
+            "range_pct": round(((max_final - min_final) / avg_final) * 100, 2) if avg_final > 0 else 0.0,
+            "paths": paths,
+            "message": (
+                f"En promedio, el {round((avg_interest / avg_final) * 100, 1)}% de tu riqueza final proviene del interés compuesto. "
+                f"Con volatilidad del {round(volatility * 100, 1)}%, el rango de resultados es ${round(min_final):,} - ${round(max_final):,}."
+                if avg_final > 0 else "Ingresa un monto o plazo válido."
+            )
         }
 
     def _calculate_price_factor(
@@ -693,26 +843,42 @@ class InvestmentCalculator:
         market_info: Dict[str, Any],
         annual_return: float
     ) -> float:
-        """Calcula el factor de precio considerando timing y volatilidad."""
-        base_growth = (1 + annual_return / 12) ** month
+        """
+        Calcula el factor de precio considerando timing y volatilidad.
+        
+        - Crisis: precio deprimido al inicio (-40%), recupera linealmente a 1
+        - Burbuja: precio inflado al inicio (+40%), corrige linealmente a 1  
+        - Normal: crecimiento base sin ajuste
+        """
+        # Crecimiento base con tasa mensual geométrica
+        r_m = self._monthly_rate(annual_return)
+        base = (1 + r_m) ** month
 
         # Aplicar efecto de timing
         if market_timing == "crisis":
-            # Inicio en crisis: caída inicial pero luego recuperación rápida
+            # Precio deprimido al inicio, recupera hacia 1
             if month <= market_info["recovery_months"]:
-                timing_factor = 1 + market_info["initial_drop"] * (1 - month / market_info["recovery_months"])
+                drop = abs(market_info["initial_drop"])  # 0.40
+                # Arranca en (1 - drop) y sube linealmente a 1
+                phase = month / market_info["recovery_months"]
+                timing = (1 - drop) + drop * phase
             else:
-                timing_factor = 1.0
-        elif market_timing == "burbuja":
-            # Inicio en burbuja: corrección en los primeros meses
-            if month <= market_info["recovery_months"]:
-                timing_factor = 1 + market_info["initial_drop"] * (1 - month / market_info["recovery_months"])
-            else:
-                timing_factor = 1.0
-        else:
-            timing_factor = 1.0
+                timing = 1.0
 
-        return base_growth * timing_factor
+        elif market_timing == "burbuja":
+            # Precio inflado al inicio, corrige hacia 1
+            if month <= market_info["recovery_months"]:
+                premium = abs(market_info["initial_drop"])  # 0.40
+                start = (1 + premium)  # 1.40
+                phase = month / market_info["recovery_months"]
+                timing = start - premium * phase  # Decae linealmente a 1
+            else:
+                timing = 1.0
+
+        else:
+            timing = 1.0
+
+        return base * timing
 
     def _calculate_compound_interest(
         self,
@@ -720,7 +886,10 @@ class InvestmentCalculator:
         monthly_return: float,
         total_months: int
     ) -> float:
-        """Calcula valor final con interés compuesto."""
+        """
+        Calcula valor final con interés compuesto.
+        Nota: monthly_return debe venir de _monthly_rate() para precisión geométrica.
+        """
         fv = 0.0
         for month in range(total_months):
             fv = (fv + monthly_amount) * (1 + monthly_return)

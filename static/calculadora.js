@@ -43,6 +43,16 @@ function initCalculators() {
     document.getElementById('calculate-lump-sum')?.addEventListener('click', calculateLumpSum);
     document.getElementById('calculate-compound')?.addEventListener('click', calculateCompound);
 
+    // Toggle visibility del campo "número de simulaciones" según el modo
+    document.getElementById('ci-mode')?.addEventListener('change', (e) => {
+        const pathsGroup = document.getElementById('ci-paths-group');
+        if (e.target.value === 'simulation') {
+            pathsGroup.style.display = 'block';
+        } else {
+            pathsGroup.style.display = 'none';
+        }
+    });
+
     const fields = [
         'ret-current-age', 'ret-retirement-age', 'ret-initial', 'ret-monthly', 'ret-return', 'ret-inflation',
         'dca-initial', 'dca-monthly', 'dca-years', 'dca-inflation',
@@ -116,6 +126,16 @@ function parseLocaleInt(text) {
 function formatPlain(value) {
     const n = Number(value) || 0;
     return new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(n);
+}
+
+/**
+ * Obtiene la tasa anual según el escenario
+ * (fallback si el backend no envía annual_return)
+ */
+function rateFromScenario(scenario) {
+    if (scenario === 'conservador') return 0.07;
+    if (scenario === 'optimista') return 0.12;
+    return 0.10; // moderado (default)
 }
 
 async function calculateDCA() {
@@ -254,19 +274,9 @@ function renderDCAResults(result) {
     if (milestones.length) {
         html += `
             <div class="chart-container">
-                <h3>Hitos alcanzados</h3>
-                <div class="milestone-timeline">
+                <div id="chart-dca-milestones" style="width: 100%; height: 400px;"></div>
+            </div>
         `;
-        milestones.forEach((milestone) => {
-            html += `
-                <div class="milestone-item">
-                    <div class="milestone-year">${milestone.years} años</div>
-                    <div class="milestone-value">${formatMoney(milestone.value)}</div>
-                    <div class="milestone-bar"></div>
-                </div>
-            `;
-        });
-        html += `</div></div>`;
     }
 
     if (timeline && timeline.length) {
@@ -378,6 +388,19 @@ function renderDCAResults(result) {
 
     container.innerHTML = html;
     container.classList.remove('hidden');
+
+    // Renderizar gráfico de hitos DCA si existen
+    if (milestones.length) {
+        setTimeout(() => {
+            const milestonesData = milestones.map(m => ({
+                year: m.years,
+                amount: m.value,
+                gain: m.gain
+            }));
+            createDCAMilestonesChart(milestonesData);
+        }, 100);
+    }
+
     container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -446,32 +469,15 @@ function renderLumpSumResults(result) {
             </div>
         </div>
 
-        <table class="comparison-table">
-            <thead>
-                <tr>
-                    <th>Parametro</th>
-                    <th>Lump Sum</th>
-                    <th>DCA</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Capital inicial</td>
-                    <td>${formatMoney(result.total_amount)}</td>
-                    <td>${formatMoney(dca.monthly_amount)} mensual</td>
-                </tr>
-                <tr>
-                    <td>Valor final</td>
-                    <td>${formatMoney(lump.final_value)} ${comparison.winner === 'Lump Sum' ? '<span class="winner-badge">Ganador</span>' : ''}</td>
-                    <td>${formatMoney(dca.final_value)} ${comparison.winner === 'DCA' ? '<span class="winner-badge">Ganador</span>' : ''}</td>
-                </tr>
-                <tr>
-                    <td>Ganancia total</td>
-                    <td>${formatMoney(lump.total_gain)}</td>
-                    <td>${formatMoney(dca.total_gain)}</td>
-                </tr>
-            </tbody>
-        </table>
+        <!-- Gráfico 1: Evolución del valor (Lump Sum vs DCA) -->
+        <div class="chart-container">
+            <div id="chart-ls-vs-dca-evolution" style="width: 100%; height: 450px;"></div>
+        </div>
+
+        <!-- Gráfico 2: Composición final (Aportes vs Intereses) -->
+        <div class="chart-container">
+            <div id="chart-ls-vs-dca-composition" style="width: 100%; height: 400px;"></div>
+        </div>
 
         <div class="insights-section" style="margin-top: 2rem;">
             <h3>Recomendación</h3>
@@ -486,6 +492,12 @@ function renderLumpSumResults(result) {
 
     container.innerHTML = html;
     container.classList.remove('hidden');
+
+    // Renderizar gráficos Plotly
+    setTimeout(() => {
+        createLumpSumVsDCACharts(result);
+    }, 100);
+
     container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -494,6 +506,8 @@ async function calculateCompound() {
     const monthlyContribution = parseLocaleInt(document.getElementById('ci-monthly').value);
     const years = parseInt(document.getElementById('ci-years').value, 10);
     const scenario = document.getElementById('ci-scenario').value;
+    const mode = document.getElementById('ci-mode').value;
+    const numPaths = parseInt(document.getElementById('ci-paths').value, 10) || 5;
 
     if (initialAmount < 0 || monthlyContribution < 0) {
         alert('Los montos no pueden ser negativos.');
@@ -517,16 +531,23 @@ async function calculateCompound() {
     results.classList.add('hidden');
 
     try {
+        const payload = {
+            calculation_type: 'compound_interest',
+            initial_amount: initialAmount,
+            monthly_amount: monthlyContribution,
+            years,
+            scenario,
+            mode
+        };
+
+        if (mode === 'simulation') {
+            payload.num_paths = Math.min(Math.max(numPaths, 1), 20);
+        }
+
         const response = await fetch('/api/calcular-inversion', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                calculation_type: 'compound_interest',
-                initial_amount: initialAmount,
-                monthly_amount: monthlyContribution,
-                years,
-                scenario
-            })
+            body: JSON.stringify(payload)
         });
 
         const data = await response.json();
@@ -544,69 +565,146 @@ async function calculateCompound() {
 
 function renderCompoundResults(result) {
     const container = document.getElementById('ci-results');
-    const interestPct = result.interest_contribution_pct;
-    const aportesPct = 100 - interestPct;
+    const mode = result.mode || 'deterministic';
+    
+    let html = '';
 
-    let html = `
-    <h3>Resumen del interés compuesto (${result.annual_return_pct}% anual)</h3>
-        <div class="results-grid">
-            <div class="result-card">
-                <div class="label">Aportes totales</div>
-                <div class="value">${formatMoney(result.total_contributed)}</div>
-                <div class="subvalue">Capital propio acumulado</div>
-            </div>
-            <div class="result-card success">
-                <div class="label">Valor final</div>
-                <div class="value">${formatMoney(result.final_value)}</div>
-                <div class="subvalue">Después de ${result.years} años</div>
-            </div>
-            <div class="result-card warning">
-                <div class="label">Intereses generados</div>
-                <div class="value">${formatMoney(result.interest_earned)}</div>
-                <div class="subvalue">${formatPercent(interestPct)} del total</div>
-            </div>
-        </div>
+    if (mode === 'deterministic') {
+        // Modo determinista (fórmula pura)
+        const interestPct = result.interest_contribution_pct;
+        const aportesPct = 100 - interestPct;
 
-        <div class="chart-container">
-            <h3>Desglose de aportes vs intereses</h3>
-            <div style="display: flex; gap: 1rem; margin-top: 1rem; height: 60px;">
-                <div style="flex: ${aportesPct}; background: linear-gradient(135deg, #17a2b8, #0056b3); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
-                    ${formatPercent(aportesPct)} aportes
+        html = `
+        <h3>📐 Modo determinista: ${result.annual_return_pct}% anual</h3>
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="label">Aportes totales</div>
+                    <div class="value">${formatMoney(result.total_contributed)}</div>
+                    <div class="subvalue">Capital propio acumulado</div>
                 </div>
-                <div style="flex: ${interestPct}; background: linear-gradient(135deg, #28a745, #20c997); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
-                    ${formatPercent(interestPct)} intereses
+                <div class="result-card success">
+                    <div class="label">Valor final</div>
+                    <div class="value">${formatMoney(result.final_value)}</div>
+                    <div class="subvalue">Después de ${result.years} años</div>
+                </div>
+                <div class="result-card warning">
+                    <div class="label">Intereses generados</div>
+                    <div class="value">${formatMoney(result.interest_earned)}</div>
+                    <div class="subvalue">${formatPercent(interestPct)} del total</div>
                 </div>
             </div>
-        </div>
-    `;
 
-    if (result.cap_reached) {
+            <div class="chart-container" style="margin-top: 2rem;">
+                <div id="chart-compound-deterministic" style="width: 100%; height: 450px;"></div>
+            </div>
+
+            <div class="chart-container" style="margin-top: 2rem;">
+                <h3>Desglose de aportes vs intereses</h3>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem; height: 60px;">
+                    <div style="flex: ${aportesPct}; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
+                        ${formatPercent(aportesPct)} aportes
+                    </div>
+                    <div style="flex: ${interestPct}; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
+                        ${formatPercent(interestPct)} intereses
+                    </div>
+                </div>
+            </div>
+        `;
+
+        if (result.cap_reached) {
+            html += `
+                <div class="insights-section" style="margin-top: 2rem;">
+                    <h3>🎯 Límite alcanzado</h3>
+                    <div class="insight-item">
+                        <p style="margin: 0;">El cálculo se detuvo al llegar a ${formatMoney(1000000)} para mantener cifras realistas.</p>
+                    </div>
+                </div>
+            `;
+        }
+
         html += `
             <div class="insights-section" style="margin-top: 2rem;">
-                <h3>Límite alcanzado</h3>
+                <h3>💡 Lecturas clave</h3>
                 <div class="insight-item">
-                    <p style="margin: 0;">El cálculo se detuvo al llegar a ${formatMoney(1000000)} para mantener cifras realistas.</p>
+                    <strong>Mensaje</strong>
+                    <p style="margin: 0;">${result.message}</p>
+                </div>
+                <div class="insight-item">
+                    <strong>Multiplicador</strong>
+                    <p style="margin: 0;">Tu capital final es ${(result.final_value / result.total_contributed).toFixed(2)}x lo aportado.</p>
+                </div>
+            </div>
+        `;
+
+    } else {
+        // Modo simulación (con volatilidad)
+        const avgInterestPct = result.avg_interest_contribution_pct;
+        const avgAportesPct = 100 - avgInterestPct;
+
+        html = `
+        <h3>📊 Modo simulación: ${result.annual_return_pct}% anual ± ${result.volatility_pct}% vol</h3>
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="label">Promedio final</div>
+                    <div class="value">${formatMoney(result.avg_final_value)}</div>
+                    <div class="subvalue">De ${result.num_paths} simulaciones</div>
+                </div>
+                <div class="result-card warning">
+                    <div class="label">Rango de resultados</div>
+                    <div class="value">${formatMoney(result.min_final_value)} - ${formatMoney(result.max_final_value)}</div>
+                    <div class="subvalue">Variación ±${formatPercent(result.range_pct / 2)}</div>
+                </div>
+                <div class="result-card success">
+                    <div class="label">Intereses promedio</div>
+                    <div class="value">${formatMoney(result.avg_interest_earned)}</div>
+                    <div class="subvalue">${formatPercent(avgInterestPct)} del total</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div id="chart-compound-simulation" style="width: 100%; height: 500px;"></div>
+            </div>
+
+            <div class="chart-container" style="margin-top: 2rem;">
+                <h3>Desglose promedio: aportes vs intereses</h3>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem; height: 60px;">
+                    <div style="flex: ${avgAportesPct}; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
+                        ${formatPercent(avgAportesPct)} aportes
+                    </div>
+                    <div style="flex: ${avgInterestPct}; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
+                        ${formatPercent(avgInterestPct)} intereses
+                    </div>
+                </div>
+            </div>
+
+            <div class="insights-section" style="margin-top: 2rem;">
+                <h3>💡 Interpretación</h3>
+                <div class="insight-item">
+                    <strong>Mensaje</strong>
+                    <p style="margin: 0;">${result.message}</p>
+                </div>
+                <div class="insight-item">
+                    <strong>Volatilidad</strong>
+                    <p style="margin: 0;">Con ${result.volatility_pct}% de volatilidad (${result.scenario}), los resultados pueden variar significativamente según el orden de retornos mensuales.</p>
                 </div>
             </div>
         `;
     }
 
-    html += `
-        <div class="insights-section" style="margin-top: 2rem;">
-            <h3>Lecturas sugeridas</h3>
-            <div class="insight-item">
-                <strong>Mensaje clave</strong>
-                <p style="margin: 0;">${result.message}</p>
-            </div>
-            <div class="insight-item">
-                <strong>Multiplicador</strong>
-                <p style="margin: 0;">Tu capital final es ${(result.final_value / result.total_contributed).toFixed(2)} veces lo aportado.</p>
-            </div>
-        </div>
-    `;
-
     container.innerHTML = html;
     container.classList.remove('hidden');
+
+    // Renderizar gráfico según el modo
+    if (mode === 'simulation') {
+        setTimeout(() => {
+            createCompoundSimulationChart(result);
+        }, 100);
+    } else if (mode === 'deterministic' && result.yearly_series && result.yearly_series.length > 0) {
+        setTimeout(() => {
+            createCompoundDeterministicChart(result);
+        }, 100);
+    }
+
     container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -741,6 +839,42 @@ function renderRetirementResults(result) {
         `;
     }
 
+    // GRÁFICOS MODERNOS PLOTLY
+    if (yearly && yearly.length) {
+        // Preparar datos para los gráficos
+        const yearLabels = yearly.map(row => row.year);
+        const ageLabels = yearly.map(row => row.age);
+        const nominalValues = yearly.map(row => row.portfolio_value);
+        const realValues = inflationPct > 0 ? yearly.map(row => calculateRealValue(row.portfolio_value, row.year, inflationPct)) : [];
+        const annualContributions = yearly.map(row => row.annual_contribution);
+        const annualInterest = yearly.map(row => row.interest_this_year);
+        const cumulativeContributions = yearly.map(row => row.contributions_accumulated);
+        const cumulativeInterest = yearly.map(row => row.interest_accumulated);
+
+        // Gráfico 1: Evolución del capital (nominal vs real)
+        if (inflationPct > 0) {
+            html += `
+                <div class="chart-container">
+                    <div id="chart-nominal-vs-real" style="width: 100%; height: 450px;"></div>
+                </div>
+            `;
+        }
+
+        // Gráfico 2: Desglose anual (barras apiladas)
+        html += `
+            <div class="chart-container">
+                <div id="chart-annual-breakdown" style="width: 100%; height: 450px;"></div>
+            </div>
+        `;
+
+        // Gráfico 3: Acumulados (líneas de área)
+        html += `
+            <div class="chart-container">
+                <div id="chart-cumulative" style="width: 100%; height: 450px;"></div>
+            </div>
+        `;
+    }
+
     html += `
         <div class="chart-container">
             <h3>Escenarios de rendimiento</h3>
@@ -797,19 +931,9 @@ function renderRetirementResults(result) {
     if (milestones && milestones.length) {
         html += `
             <div class="chart-container">
-                <h3>Hitos relevantes</h3>
-                <div class="milestone-timeline">
+                <div id="chart-milestones" style="width: 100%; height: 400px;"></div>
+            </div>
         `;
-        milestones.forEach((row) => {
-            html += `
-                <div class="milestone-item">
-                    <div class="milestone-year">${row.amount >= 1000000 ? 'Meta final' : `${formatMoney(row.amount)}`}</div>
-                    <div class="milestone-value">Se alcanza en el año ${row.year} (edad ${row.age})</div>
-                    <div class="milestone-bar"></div>
-                </div>
-            `;
-        });
-        html += `</div></div>`;
     }
 
     if (yearly && yearly.length) {
@@ -861,6 +985,42 @@ function renderRetirementResults(result) {
 
     container.innerHTML = html;
     container.classList.remove('hidden');
+
+    // Renderizar gráficos Plotly después de insertar el HTML
+    if (yearly && yearly.length) {
+        const yearLabels = yearly.map(row => row.year);
+        const nominalValues = yearly.map(row => row.portfolio_value);
+        const realValues = inflationPct > 0 ? yearly.map(row => calculateRealValue(row.portfolio_value, row.year, inflationPct)) : [];
+        const annualContributions = yearly.map(row => row.annual_contribution);
+        const annualInterest = yearly.map(row => row.interest_this_year);
+        const cumulativeContributions = yearly.map(row => row.contributions_accumulated);
+        const cumulativeInterest = yearly.map(row => row.interest_accumulated);
+
+        // Gráfico 1: Nominal vs Real
+        if (inflationPct > 0) {
+            setTimeout(() => {
+                createNominalVsRealChart(yearLabels, nominalValues, realValues);
+            }, 100);
+        }
+
+        // Gráfico 2: Desglose anual
+        setTimeout(() => {
+            createAnnualBreakdownChart(yearLabels, annualContributions, annualInterest);
+        }, 100);
+
+        // Gráfico 3: Acumulados
+        setTimeout(() => {
+            createCumulativeChart(yearLabels, cumulativeContributions, cumulativeInterest);
+        }, 100);
+    }
+
+    // Gráfico 4: Hitos (si existen)
+    if (milestones && milestones.length) {
+        setTimeout(() => {
+            createMilestonesChart(milestones, yearly);
+        }, 100);
+    }
+
     container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -972,4 +1132,804 @@ function calculateRealValue(nominalValue, years, annualInflationPct) {
     const inflationRate = annualInflationPct / 100;
     const realValue = nominalValue / Math.pow(1 + inflationRate, years);
     return realValue;
+}
+
+// ============================================
+// GRÁFICOS PLOTLY MODERNOS - PLAN DE JUBILACIÓN
+// ============================================
+
+/**
+ * Gráfico 1: Evolución del capital (nominal vs real)
+ */
+function createNominalVsRealChart(yearLabels, nominalValues, realValues) {
+    const trace1 = {
+        x: yearLabels,
+        y: nominalValues,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Capital nominal',
+        line: {
+            color: '#f59e0b',
+            width: 3
+        },
+        hovertemplate: '<b>Año %{x}</b><br>Nominal: $%{y:,.0f}<extra></extra>'
+    };
+
+    const trace2 = {
+        x: yearLabels,
+        y: realValues,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Capital real (hoy)',
+        line: {
+            color: '#3b82f6',
+            width: 3
+        },
+        hovertemplate: '<b>Año %{x}</b><br>Real: $%{y:,.0f}<extra></extra>'
+    };
+
+    const layout = {
+        title: {
+            text: 'Evolución del capital: nominal vs equivalente en dólares de hoy',
+            font: { size: 16, color: '#1f2937' }
+        },
+        xaxis: {
+            title: 'Año',
+            gridcolor: '#e5e7eb',
+            showgrid: true
+        },
+        yaxis: {
+            title: 'USD',
+            gridcolor: '#e5e7eb',
+            showgrid: true,
+            tickformat: ',.0f'
+        },
+        legend: {
+            x: 0.02,
+            y: 0.98,
+            bgcolor: 'rgba(255,255,255,0.8)',
+            bordercolor: '#d1d5db',
+            borderwidth: 1
+        },
+        hovermode: 'x unified',
+        plot_bgcolor: '#ffffff',
+        paper_bgcolor: '#ffffff',
+        margin: { t: 60, b: 60, l: 80, r: 40 }
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+    };
+
+    Plotly.newPlot('chart-nominal-vs-real', [trace1, trace2], layout, config);
+}
+
+/**
+ * Gráfico 2: Desglose anual (aporte vs interés generado)
+ */
+function createAnnualBreakdownChart(yearLabels, annualContributions, annualInterest) {
+    const trace1 = {
+        x: yearLabels,
+        y: annualContributions,
+        type: 'bar',
+        name: 'Aporte anual',
+        marker: {
+            color: '#f59e0b'
+        },
+        hovertemplate: '<b>Año %{x}</b><br>Aporte: $%{y:,.0f}<extra></extra>'
+    };
+
+    const trace2 = {
+        x: yearLabels,
+        y: annualInterest,
+        type: 'bar',
+        name: 'Interés del año',
+        marker: {
+            color: '#3b82f6'
+        },
+        hovertemplate: '<b>Año %{x}</b><br>Interés: $%{y:,.0f}<extra></extra>'
+    };
+
+    const layout = {
+        title: {
+            text: 'Desglose anual: aporte vs interés generado',
+            font: { size: 16, color: '#1f2937' }
+        },
+        xaxis: {
+            title: 'Año',
+            gridcolor: '#e5e7eb'
+        },
+        yaxis: {
+            title: 'USD',
+            gridcolor: '#e5e7eb',
+            showgrid: true,
+            tickformat: ',.0f'
+        },
+        barmode: 'stack',
+        legend: {
+            x: 0.02,
+            y: 0.98,
+            bgcolor: 'rgba(255,255,255,0.8)',
+            bordercolor: '#d1d5db',
+            borderwidth: 1
+        },
+        hovermode: 'x unified',
+        plot_bgcolor: '#ffffff',
+        paper_bgcolor: '#ffffff',
+        margin: { t: 60, b: 60, l: 80, r: 40 }
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+    };
+
+    Plotly.newPlot('chart-annual-breakdown', [trace1, trace2], layout, config);
+}
+
+/**
+ * Gráfico 3: Acumulados (aportes vs intereses)
+ */
+function createCumulativeChart(yearLabels, cumulativeContributions, cumulativeInterest) {
+    const trace1 = {
+        x: yearLabels,
+        y: cumulativeContributions,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Aportes acumulados',
+        fill: 'tonexty',
+        line: {
+            color: '#f59e0b',
+            width: 2
+        },
+        fillcolor: 'rgba(245, 158, 11, 0.3)',
+        hovertemplate: '<b>Año %{x}</b><br>Aportes: $%{y:,.0f}<extra></extra>'
+    };
+
+    const trace2 = {
+        x: yearLabels,
+        y: cumulativeInterest,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Interés acumulado',
+        fill: 'tozeroy',
+        line: {
+            color: '#3b82f6',
+            width: 2
+        },
+        fillcolor: 'rgba(59, 130, 246, 0.3)',
+        hovertemplate: '<b>Año %{x}</b><br>Interés: $%{y:,.0f}<extra></extra>'
+    };
+
+    const layout = {
+        title: {
+            text: 'Acumulados: aportes vs intereses',
+            font: { size: 16, color: '#1f2937' }
+        },
+        xaxis: {
+            title: 'Año',
+            gridcolor: '#e5e7eb',
+            showgrid: true
+        },
+        yaxis: {
+            title: 'USD',
+            gridcolor: '#e5e7eb',
+            showgrid: true,
+            tickformat: ',.0f'
+        },
+        legend: {
+            x: 0.02,
+            y: 0.98,
+            bgcolor: 'rgba(255,255,255,0.8)',
+            bordercolor: '#d1d5db',
+            borderwidth: 1
+        },
+        hovermode: 'x unified',
+        plot_bgcolor: '#ffffff',
+        paper_bgcolor: '#ffffff',
+        margin: { t: 60, b: 60, l: 80, r: 40 }
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+    };
+
+    Plotly.newPlot('chart-cumulative', [trace2, trace1], layout, config);
+}
+
+/**
+ * Gráfico 4: Hitos relevantes (línea ascendente con marcadores)
+ */
+function createMilestonesChart(milestones, yearlyData) {
+    // Construir datos para la línea de progreso
+    const years = milestones.map(m => m.year);
+    const amounts = milestones.map(m => m.amount);
+    const ages = milestones.map(m => m.age);
+    const labels = milestones.map(m => {
+        if (m.amount >= 1000000) return 'Meta final';
+        return formatMoney(m.amount);
+    });
+
+    // Línea de progreso
+    const trace = {
+        x: years,
+        y: amounts,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Progreso',
+        line: {
+            color: '#10b981',
+            width: 3,
+            shape: 'spline'
+        },
+        marker: {
+            color: '#10b981',
+            size: 12,
+            symbol: 'circle',
+            line: {
+                color: '#ffffff',
+                width: 2
+            }
+        },
+        text: labels.map((label, i) => `${label}<br>Año ${years[i]} (edad ${ages[i]})`),
+        hovertemplate: '<b>%{text}</b><br>Capital: $%{y:,.0f}<extra></extra>'
+    };
+
+    const layout = {
+        title: {
+            text: 'Hitos relevantes: progreso hacia tus metas',
+            font: { size: 16, color: '#1f2937' }
+        },
+        xaxis: {
+            title: 'Año',
+            gridcolor: '#e5e7eb',
+            showgrid: true,
+            dtick: 5  // Marcas cada 5 años
+        },
+        yaxis: {
+            title: 'Capital acumulado (USD)',
+            gridcolor: '#e5e7eb',
+            showgrid: true,
+            tickformat: ',.0f'
+        },
+        annotations: milestones.map((m, i) => ({
+            x: m.year,
+            y: m.amount,
+            text: labels[i],
+            showarrow: true,
+            arrowhead: 2,
+            arrowsize: 1,
+            arrowwidth: 2,
+            arrowcolor: '#10b981',
+            ax: 0,
+            ay: -40,
+            font: {
+                size: 11,
+                color: '#1f2937',
+                family: 'system-ui, sans-serif'
+            },
+            bgcolor: 'rgba(255,255,255,0.9)',
+            bordercolor: '#10b981',
+            borderwidth: 1,
+            borderpad: 4
+        })),
+        showlegend: false,
+        hovermode: 'closest',
+        plot_bgcolor: '#ffffff',
+        paper_bgcolor: '#ffffff',
+        margin: { t: 60, b: 60, l: 80, r: 40 }
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+    };
+
+    Plotly.newPlot('chart-milestones', [trace], layout, config);
+}
+
+/**
+ * Gráfico: Hitos DCA (simplificado para milestone breakdown)
+ */
+function createDCAMilestonesChart(milestonesData) {
+    const years = milestonesData.map(m => m.year);
+    const amounts = milestonesData.map(m => m.amount);
+    const gains = milestonesData.map(m => m.gain || 0);
+    
+    // Crear texto personalizado con ganancia
+    const customText = milestonesData.map((m, i) => 
+        `Año ${m.year}<br>Capital: ${formatMoney(m.amount)}<br>Ganancia: ${formatMoney(m.gain || 0)}`
+    );
+
+    const trace = {
+        x: years,
+        y: amounts,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Progreso DCA',
+        line: {
+            color: '#f59e0b',
+            width: 3,
+            shape: 'spline'
+        },
+        marker: {
+            color: '#f59e0b',
+            size: 12,
+            symbol: 'circle',
+            line: {
+                color: '#ffffff',
+                width: 2
+            }
+        },
+        text: customText,
+        hovertemplate: '<b>%{text}</b><extra></extra>'
+    };
+
+    const layout = {
+        title: {
+            text: 'Hitos alcanzados: progreso de tu inversión DCA',
+            font: { size: 16, color: '#1f2937' }
+        },
+        xaxis: {
+            title: 'Años',
+            gridcolor: '#e5e7eb',
+            showgrid: true
+        },
+        yaxis: {
+            title: 'Capital acumulado (USD)',
+            gridcolor: '#e5e7eb',
+            showgrid: true,
+            tickformat: ',.0f'
+        },
+        annotations: milestonesData.map((m) => ({
+            x: m.year,
+            y: m.amount,
+            text: formatMoney(m.amount),
+            showarrow: true,
+            arrowhead: 2,
+            arrowsize: 1,
+            arrowwidth: 2,
+            arrowcolor: '#f59e0b',
+            ax: 0,
+            ay: -40,
+            font: {
+                size: 11,
+                color: '#1f2937',
+                family: 'system-ui, sans-serif'
+            },
+            bgcolor: 'rgba(255,255,255,0.9)',
+            bordercolor: '#f59e0b',
+            borderwidth: 1,
+            borderpad: 4
+        })),
+        showlegend: false,
+        hovermode: 'closest',
+        plot_bgcolor: '#ffffff',
+        paper_bgcolor: '#ffffff',
+        margin: { t: 60, b: 60, l: 80, r: 40 }
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+    };
+
+    Plotly.newPlot('chart-dca-milestones', [trace], layout, config);
+}
+
+/**
+ * Gráficos: Lump Sum vs DCA (evolución + composición)
+ */
+function createLumpSumVsDCACharts(result) {
+    const years = result.years;
+    const months = years * 12;
+    
+    // Generar series mensuales simuladas
+    // Para Lump Sum: todo invertido mes 1, crece con tasa compuesta
+    // Para DCA: aportes mensuales graduales
+    
+    // Obtener tasa anual (con fallback si no viene del backend)
+    const annualReturn = result.annual_return ?? rateFromScenario(result.scenario);
+    const monthlyReturn = Math.pow(1 + annualReturn, 1/12) - 1;
+    const monthlyAmount = result.total_amount / months;
+    
+    const lumpSumSeries = [];
+    const dcaSeries = [];
+    const monthLabels = [];
+    
+    let lumpValue = result.total_amount;
+    let dcaValue = 0;
+    
+    for (let month = 1; month <= months; month++) {
+        // Lump Sum: crece desde el inicio
+        lumpValue *= (1 + monthlyReturn);
+        lumpSumSeries.push(lumpValue);
+        
+        // DCA: aporte mensual + crecimiento
+        dcaValue += monthlyAmount;
+        dcaValue *= (1 + monthlyReturn);
+        dcaSeries.push(dcaValue);
+        
+        monthLabels.push(month);
+    }
+    
+    // Gráfico 1: Evolución del portafolio
+    createEvolutionChart(monthLabels, lumpSumSeries, dcaSeries, years);
+    
+    // Gráfico 2: Composición final (aportes vs intereses)
+    createCompositionChart(result);
+}
+
+function createEvolutionChart(monthLabels, lumpSumSeries, dcaSeries, years) {
+    const trace1 = {
+        x: monthLabels,
+        y: lumpSumSeries,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Lump Sum',
+        line: {
+            color: '#3b82f6',
+            width: 3
+        },
+        hovertemplate: '<b>Lump Sum</b><br>Mes %{x}<br>Valor: $%{y:,.0f}<extra></extra>'
+    };
+
+    const trace2 = {
+        x: monthLabels,
+        y: dcaSeries,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'DCA',
+        line: {
+            color: '#f59e0b',
+            width: 3
+        },
+        hovertemplate: '<b>DCA</b><br>Mes %{x}<br>Valor: $%{y:,.0f}<extra></extra>'
+    };
+
+    const layout = {
+        title: {
+            text: 'Evolución del portafolio: Lump Sum vs DCA',
+            font: { size: 16, color: '#1f2937' }
+        },
+        xaxis: {
+            title: 'Meses',
+            gridcolor: '#e5e7eb',
+            showgrid: true,
+            dtick: 12  // Marcas cada año
+        },
+        yaxis: {
+            title: 'Valor del portafolio (USD)',
+            gridcolor: '#e5e7eb',
+            showgrid: true,
+            tickformat: ',.0f'
+        },
+        legend: {
+            x: 0.02,
+            y: 0.98,
+            bgcolor: 'rgba(255,255,255,0.8)',
+            bordercolor: '#d1d5db',
+            borderwidth: 1
+        },
+        hovermode: 'x unified',
+        plot_bgcolor: '#ffffff',
+        paper_bgcolor: '#ffffff',
+        margin: { t: 60, b: 60, l: 80, r: 40 }
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+    };
+
+    Plotly.newPlot('chart-ls-vs-dca-evolution', [trace1, trace2], layout, config);
+}
+
+function createCompositionChart(result) {
+    const totalAmount = result.total_amount;
+    const years = result.years;
+    const months = years * 12;
+    const monthlyAmount = totalAmount / months;
+    
+    // Definir los 3 escenarios con tasas anuales
+    const scenarios = [
+        { name: 'Conservador (7%)', rate: 0.07, color: '#ef4444' },
+        { name: 'Moderado (10%)', rate: 0.10, color: '#3b82f6' },
+        { name: 'Optimista (12%)', rate: 0.12, color: '#10b981' }
+    ];
+    
+    // Calcular valores finales para cada escenario
+    const lumpSumData = [];
+    const dcaData = [];
+    const labels = [];
+    const colors = [];
+    
+    scenarios.forEach(scenario => {
+        const monthlyRate = Math.pow(1 + scenario.rate, 1/12) - 1;
+        
+        // Lump Sum: inversión completa desde el inicio
+        const lumpFinal = totalAmount * Math.pow(1 + scenario.rate, years);
+        const lumpGain = lumpFinal - totalAmount;
+        
+        // DCA: aportes mensuales graduales
+        let dcaValue = 0;
+        for (let month = 1; month <= months; month++) {
+            dcaValue += monthlyAmount;
+            dcaValue *= (1 + monthlyRate);
+        }
+        const dcaGain = dcaValue - totalAmount;
+        
+        // Guardar datos
+        labels.push(`LS - ${scenario.name}`, `DCA - ${scenario.name}`);
+        lumpSumData.push(lumpGain, 0);  // Interés LS, 0 para DCA
+        dcaData.push(0, dcaGain);        // 0 para LS, Interés DCA
+        colors.push(scenario.color, scenario.color);
+    });
+    
+    // Trace de aportes (base común)
+    const traceAportes = {
+        x: labels,
+        y: new Array(labels.length).fill(totalAmount),
+        type: 'bar',
+        name: 'Aportes',
+        marker: { color: '#f59e0b' },
+        hovertemplate: '<b>%{x}</b><br>Aportes: $%{y:,.0f}<extra></extra>'
+    };
+    
+    // Trace de intereses (varía según estrategia y escenario)
+    const traceIntereses = {
+        x: labels,
+        y: lumpSumData.map((ls, i) => ls + dcaData[i]),
+        type: 'bar',
+        name: 'Intereses',
+        marker: { color: colors },
+        hovertemplate: '<b>%{x}</b><br>Intereses: $%{y:,.0f}<extra></extra>'
+    };
+
+    const layout = {
+        title: {
+            text: 'Composición por escenario: aportes vs intereses',
+            font: { size: 16, color: '#1f2937' }
+        },
+        xaxis: {
+            title: '',
+            gridcolor: '#e5e7eb',
+            tickangle: -45
+        },
+        yaxis: {
+            title: 'USD',
+            gridcolor: '#e5e7eb',
+            showgrid: true,
+            tickformat: ',.0f'
+        },
+        barmode: 'stack',
+        legend: {
+            x: 0.02,
+            y: 0.98,
+            bgcolor: 'rgba(255,255,255,0.8)',
+            bordercolor: '#d1d5db',
+            borderwidth: 1
+        },
+        hovermode: 'closest',
+        plot_bgcolor: '#ffffff',
+        paper_bgcolor: '#ffffff',
+        margin: { t: 60, b: 100, l: 80, r: 40 }
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+    };
+
+    Plotly.newPlot('chart-ls-vs-dca-composition', [traceAportes, traceIntereses], layout, config);
+}
+
+/**
+ * Gráfico: Simulación de Interés Compuesto con múltiples caminos
+ */
+function createCompoundSimulationChart(result) {
+    const paths = result.paths || [];
+    if (paths.length === 0) return;
+
+    const traces = [];
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+
+    // Crear una línea por cada camino simulado
+    paths.forEach((path, idx) => {
+        const yearLabels = path.yearly_series.map(s => s.year);
+        const values = path.yearly_series.map(s => s.portfolio_value);
+
+        traces.push({
+            x: yearLabels,
+            y: values,
+            type: 'scatter',
+            mode: 'lines',
+            name: `Camino ${path.path_id}`,
+            line: {
+                color: colors[idx % colors.length],
+                width: 2
+            },
+            hovertemplate: '<b>Camino %{data.name}</b><br>Año %{x}<br>Valor: $%{y:,.0f}<extra></extra>'
+        });
+    });
+
+    // Calcular promedio de todos los caminos
+    const firstPath = paths[0].yearly_series;
+    const avgValues = firstPath.map((_, yearIdx) => {
+        const sum = paths.reduce((acc, path) => {
+            return acc + (path.yearly_series[yearIdx]?.portfolio_value || 0);
+        }, 0);
+        return sum / paths.length;
+    });
+
+    // Agregar línea de promedio (más gruesa y destacada)
+    traces.push({
+        x: firstPath.map(s => s.year),
+        y: avgValues,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Promedio',
+        line: {
+            color: '#1f2937',
+            width: 4,
+            dash: 'dash'
+        },
+        hovertemplate: '<b>Promedio</b><br>Año %{x}<br>Valor: $%{y:,.0f}<extra></extra>'
+    });
+
+    const layout = {
+        title: {
+            text: `Múltiples caminos simulados (volatilidad ${result.volatility_pct}%)`,
+            font: { size: 16, color: '#1f2937' }
+        },
+        xaxis: {
+            title: 'Años',
+            gridcolor: '#e5e7eb',
+            showgrid: true
+        },
+        yaxis: {
+            title: 'Valor del portafolio (USD)',
+            gridcolor: '#e5e7eb',
+            showgrid: true,
+            tickformat: ',.0f'
+        },
+        legend: {
+            x: 0.02,
+            y: 0.98,
+            bgcolor: 'rgba(255,255,255,0.9)',
+            bordercolor: '#d1d5db',
+            borderwidth: 1
+        },
+        hovermode: 'x unified',
+        plot_bgcolor: '#ffffff',
+        paper_bgcolor: '#ffffff',
+        margin: { t: 60, b: 60, l: 80, r: 40 }
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+    };
+
+    Plotly.newPlot('chart-compound-simulation', traces, layout, config);
+}
+
+/**
+ * Gráfico: Interés Compuesto modo determinista (evolución aportes vs intereses)
+ */
+function createCompoundDeterministicChart(result) {
+    const series = result.yearly_series || [];
+    if (series.length === 0) return;
+
+    const years = series.map(s => s.year);
+    const contributions = series.map(s => s.contributions_accumulated);
+    const interests = series.map(s => s.interest_accumulated);
+    const totals = series.map(s => s.portfolio_value);
+
+    // Trace 1: Aportes acumulados
+    const traceContributions = {
+        x: years,
+        y: contributions,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Aportes acumulados',
+        fill: 'tozeroy',
+        line: {
+            color: '#f59e0b',
+            width: 2
+        },
+        fillcolor: 'rgba(245, 158, 11, 0.2)',
+        hovertemplate: '<b>Aportes</b><br>Año %{x}<br>$%{y:,.0f}<extra></extra>'
+    };
+
+    // Trace 2: Intereses acumulados (apilado sobre aportes)
+    const traceInterests = {
+        x: years,
+        y: interests,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Intereses acumulados',
+        fill: 'tonexty',
+        line: {
+            color: '#3b82f6',
+            width: 2
+        },
+        fillcolor: 'rgba(59, 130, 246, 0.3)',
+        hovertemplate: '<b>Intereses</b><br>Año %{x}<br>$%{y:,.0f}<extra></extra>'
+    };
+
+    // Trace 3: Valor total (línea destacada)
+    const traceTotal = {
+        x: years,
+        y: totals,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Valor total',
+        line: {
+            color: '#10b981',
+            width: 3,
+            dash: 'dot'
+        },
+        marker: {
+            color: '#10b981',
+            size: 6
+        },
+        hovertemplate: '<b>Valor total</b><br>Año %{x}<br>$%{y:,.0f}<extra></extra>'
+    };
+
+    const layout = {
+        title: {
+            text: 'Evolución del portafolio: aportes vs intereses',
+            font: { size: 16, color: '#1f2937' }
+        },
+        xaxis: {
+            title: 'Años',
+            gridcolor: '#e5e7eb',
+            showgrid: true
+        },
+        yaxis: {
+            title: 'USD',
+            gridcolor: '#e5e7eb',
+            showgrid: true,
+            tickformat: ',.0f'
+        },
+        legend: {
+            x: 0.02,
+            y: 0.98,
+            bgcolor: 'rgba(255,255,255,0.9)',
+            bordercolor: '#d1d5db',
+            borderwidth: 1
+        },
+        hovermode: 'x unified',
+        plot_bgcolor: '#ffffff',
+        paper_bgcolor: '#ffffff',
+        margin: { t: 60, b: 60, l: 80, r: 40 }
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+    };
+
+    Plotly.newPlot('chart-compound-deterministic', [traceContributions, traceInterests, traceTotal], layout, config);
 }
