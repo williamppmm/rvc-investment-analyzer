@@ -121,6 +121,13 @@ class UsageLimitManager {
                                     </svg>
                                     Contribuir ($3 USD/30 días)
                                 </a>
+                                <a href="https://paypal.me/williamppmm?locale.x=es_XC&country.x=CO" class="contact-btn primary" target="_blank" style="background:#0070ba;color:#fff;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;">
+                                        <rect x="2" y="6" width="20" height="12" rx="3" fill="#0070ba"/>
+                                        <text x="12" y="16" text-anchor="middle" font-size="10" fill="#fff">PayPal</text>
+                                    </svg>
+                                    Pagar con PayPal ($3 USD/30 días)
+                                </a>
                                 <a href="/about" class="contact-btn secondary">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <circle cx="12" cy="12" r="10"/>
