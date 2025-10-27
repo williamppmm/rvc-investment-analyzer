@@ -1228,7 +1228,13 @@ class DataAgent:
         self._apply_asset_special_cases(metrics, classification)
         self._attach_currency_metadata(metrics)
         metrics["schema_version"] = METRIC_SCHEMA_VERSION
-        metrics["provenance"] = self.provenance
+        
+        # Usar deepcopy para provenance (evitar referencias a objetos no serializables)
+        try:
+            metrics["provenance"] = deepcopy(self.provenance)
+        except Exception:
+            metrics["provenance"] = {}  # Fallback a dict vacío si deepcopy falla
+        
         metrics["scraped_at"] = datetime.utcnow().isoformat(timespec="seconds")
         return metrics
 
