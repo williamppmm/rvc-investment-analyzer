@@ -857,18 +857,35 @@ class EquityAnalyzer(BaseAnalyzer):
         Responde: "¿Compro AHORA o no?"
 
         Filosofía:
-        - Calidad mínima 60 requerida
-        - Valoración mínima 40 requerida para calidad alta
+        - Calidad mínima 40 requerida (era 60, muy severo)
+        - Valoración puede compensar calidad media-baja (casos VALUE)
         - Balance óptimo: calidad 70-90 + valoración 60-80
         - Bonuses por salud excepcional y crecimiento
         """
 
-        # CASO 1: Calidad insuficiente → Rechazar
-        if quality < 50:
-            return quality * 0.40  # Penalización muy fuerte
+        # CASO 1: Calidad muy baja (<35) → Rechazar incluso con precio bajo
+        if quality < 35:
+            return quality * 0.50  # Penalización fuerte (era 0.40)
 
-        if quality < 60:
-            return quality * 0.50  # Penalización fuerte
+        # CASO 2: Calidad media-baja (35-60) + Valoración alta → VALUE
+        # Precio atractivo puede compensar calidad modesta
+        if 35 <= quality < 60 and valuation >= 70:
+            # Dar más peso a valoración en casos VALUE
+            investment = (quality * 0.35) + (valuation * 0.55)
+
+            # Bonus por salud aceptable
+            if health >= 50:
+                investment += 5
+
+            # Bonus por crecimiento razonable
+            if growth >= 40:
+                investment += 3
+
+            return min(85, investment)  # Máximo 85 (no es excelente, pero VALUE)
+
+        # CASO 3: Calidad media-baja pero valoración no suficiente → CAUTION
+        if 35 <= quality < 60:
+            return quality * 0.60  # Menos severo que antes (era 0.50)
 
         # CASO 2: Sweet Spot (calidad buena + precio justo)
         if 70 <= quality <= 95 and valuation >= 60:
@@ -950,12 +967,13 @@ class EquityAnalyzer(BaseAnalyzer):
                 "emoji": "⭐"
             }
 
-        # 💎 VALOR: Calidad decente, buen precio
-        elif quality >= 60 and valuation >= 70:
+        # 💎 VALOR: Calidad aceptable + precio atractivo
+        # Reducir umbral de calidad de 60 a 45 para capturar casos VALUE
+        elif quality >= 45 and valuation >= 70:
             return {
                 "name": "VALOR",
                 "color": "cyan",
-                "desc": "Calidad decente, buen precio",
+                "desc": "Calidad aceptable a buen precio",
                 "emoji": "💎"
             }
 
@@ -968,12 +986,13 @@ class EquityAnalyzer(BaseAnalyzer):
                 "emoji": "⚠️"
             }
 
-        # 🪤 TRAMPA: Barata pero baja calidad
-        elif quality < 60 and valuation >= 60:
+        # 🪤 TRAMPA: Calidad muy baja pero barata
+        # Subir umbral de calidad de <60 a <45 (más estricto)
+        elif quality < 45 and valuation >= 60:
             return {
                 "name": "TRAMPA",
                 "color": "orange",
-                "desc": "Barata pero baja calidad",
+                "desc": "Precio bajo no compensa la baja calidad",
                 "emoji": "🪤"
             }
 
