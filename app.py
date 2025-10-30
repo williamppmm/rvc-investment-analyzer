@@ -35,6 +35,7 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 DB_PATH = DATA_DIR / "cache.db"
 LOG_DIR = BASE_DIR / "logs"
+CACHE_EXPIRATION_HOURS = int(os.getenv("CACHE_EXPIRATION_HOURS", "24"))
 
 # Crear directorio de logs si no existe
 LOG_DIR.mkdir(exist_ok=True)
@@ -211,10 +212,17 @@ def init_database() -> None:
 # Asegurar el esquema de la base de datos al importar el módulo (modo WSGI)
 try:
     init_database()
-    logger.info("✓ Base de datos inicializada (tablas aseguradas)")
-    logger.info("✓ Contador de visitas inicializado")
+    purged_entries = purge_expired_cache()
+    if purged_entries:
+        logger.info(
+            "Limpieza inicial de cache: %s entradas eliminadas (>%s horas).",
+            purged_entries,
+            CACHE_EXPIRATION_HOURS,
+        )
+    logger.info("Base de datos inicializada (tablas aseguradas)")
+    logger.info("Contador de visitas inicializado")
 except Exception as e:
-    logger.error("✗ Error inicializando base de datos al importar: %s", e, exc_info=True)
+    logger.error("Error inicializando base de datos al importar: %s", e, exc_info=True)
 
 
 def get_cached_data(ticker: str) -> Optional[Dict[str, Any]]:
@@ -231,12 +239,47 @@ def get_cached_data(ticker: str) -> Optional[Dict[str, Any]]:
         row = cursor.fetchone()
     if not row:
         return None
-    return {"data": row[0], "last_updated": row[1], "source": row[2]}
+    cache_entry = {"data": row[0], "last_updated": row[1], "source": row[2]}
+    if cache_expired(cache_entry["last_updated"]):
+        logger.info(
+            "Cache expirado para %s (>%s horas); eliminando entrada.",
+            ticker,
+            CACHE_EXPIRATION_HOURS,
+        )
+        delete_cache_entry(ticker)
+        return None
+    return cache_entry
 
 
-def cache_expired(last_updated: str, days: int = 7) -> bool:
+def cache_expired(last_updated: str, max_age_hours: int = CACHE_EXPIRATION_HOURS) -> bool:
     dt = datetime.fromisoformat(last_updated)
-    return datetime.now() - dt > timedelta(days=days)
+    return datetime.now() - dt > timedelta(hours=max_age_hours)
+
+
+def delete_cache_entry(ticker: str) -> None:
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM financial_cache WHERE ticker = ?",
+            (ticker,),
+        )
+        conn.commit()
+
+
+def purge_expired_cache() -> int:
+    cutoff = datetime.now() - timedelta(hours=CACHE_EXPIRATION_HOURS)
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            DELETE FROM financial_cache
+            WHERE last_updated < ?
+            """,
+            (cutoff.isoformat(timespec="seconds"),),
+        )
+        removed = cursor.rowcount
+        conn.commit()
+    return removed
 
 
 def save_cache(ticker: str, metrics: Dict[str, Any]) -> None:
