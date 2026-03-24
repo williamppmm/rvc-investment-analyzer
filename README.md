@@ -263,13 +263,13 @@ rcv_proyecto/
 │   └── backup.sh                  # Backup Unix/Mac
 │
 ├── README.md                       # Este archivo
-├── DEVELOPMENT_ROADMAP.md         # Roadmap de desarrollo
-├── IMPROVEMENT_PLAN.md            # Plan de mejoras (5/10 completadas)
-├── NORMALIZATION_EXAMPLE.md       # Docs normalización períodos
-├── TIER1_VALUATION_EXAMPLE.md     # Docs valoración TIER1
-├── API_ENDPOINTS_GUIDE.md         # Guía de endpoints de la API REST
-├── TECHNICAL_DOCUMENTATION.md    # Documentación técnica interna
-├── LOGGING.md                     # Sistema de logging
+├── docs/                           # Documentación consolidada
+│   ├── ARCHITECTURE.md            # Arquitectura, scoring, endpoints, APIs, cache
+│   ├── METHODOLOGY.md             # Dispersión, normalización TTM, TIER1/TIER2
+│   ├── MOBILE.md                  # Responsividad móvil e implementación de testing
+│   ├── FEATURES.md                # Freemium, licencias PRO, email automático
+│   ├── OPERATIONS.md              # Logging, PostgreSQL, splash screen, .env
+│   └── ROADMAP.md                 # Estado del proyecto y trabajo pendiente
 └── requirements.txt               # Dependencias Python
 ```
 
@@ -435,13 +435,15 @@ self.quality_weights = {
 
 ## 📚 Recursos Adicionales
 
-- **[DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md)**: Plan de desarrollo detallado por fases
-- **[API_ENDPOINTS_GUIDE.md](API_ENDPOINTS_GUIDE.md)**: Guía práctica de endpoints de la API REST
-- **[TECHNICAL_DOCUMENTATION.md](TECHNICAL_DOCUMENTATION.md)**: Documentación técnica y arquitectura interna
-- **[LOGGING.md](LOGGING.md)**: Sistema de logs y debugging
-- **[FREEMIUM_SYSTEM.md](FREEMIUM_SYSTEM.md)**: Documentación completa del modelo freemium
-- **[SPLASH_SCREEN.md](SPLASH_SCREEN.md)**: Guía del splash screen con video de logo
-- **[Glosario Interactivo](static/glossary.js)**: 60+ términos financieros explicados
+| Documento | Descripción |
+|-----------|-------------|
+| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** | Arquitectura modular, motor de scoring, endpoints, fuentes de datos y cache |
+| **[docs/METHODOLOGY.md](docs/METHODOLOGY.md)** | Dispersión entre fuentes, normalización TTM/MRQ/MRY, valoración TIER1/TIER2 |
+| **[docs/MOBILE.md](docs/MOBILE.md)** | Implementación responsive, breakpoints, testing mobile y guía de mantenimiento |
+| **[docs/FEATURES.md](docs/FEATURES.md)** | Sistema freemium, licencias PRO y configuración de email automático |
+| **[docs/OPERATIONS.md](docs/OPERATIONS.md)** | Logging, persistencia SQLite/PostgreSQL, splash screen y variables de entorno |
+| **[docs/ROADMAP.md](docs/ROADMAP.md)** | Estado del proyecto, fases completadas y trabajo pendiente |
+| **[Glosario Interactivo](static/glossary.js)** | 60+ términos financieros explicados |
 
 ---
 
